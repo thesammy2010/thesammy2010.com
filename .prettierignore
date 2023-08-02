@@ -1,0 +1,15 @@
+# Ignore artifacts:
+build
+coverage
+node_modules
+
+
+package.json
+package-lock.json
+tsconfig.json
+.prettierrc.json
+README.md
+
+**/*.html
+public/site.webmanifest
+public/manifest.json
