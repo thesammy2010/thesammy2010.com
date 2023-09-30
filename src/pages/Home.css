@@ -1,0 +1,35 @@
+.header {
+  text-align: center;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.wrapper-logo {
+  width: 40%;
+  height: 40%;
+  display: block;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: auto;
+  margin-right: auto;
+  animation: rotate 2s infinite linear;
+  animation-delay: calc(var(--delay) * -1s);
+  transition: 300ms ease-in-out;
+}
+
+.wrapper-logo:hover {
+  width: 45%;
+  height: 45%;
+  transition: 300ms ease-in-out;
+}
+
+
+@keyframes rotate {
+  from {
+      transform: rotate(0deg);
+  }
+  to {
+      transform: rotate(360deg);
+  }
+}
