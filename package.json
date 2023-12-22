@@ -1,6 +1,6 @@
 {
   "name": "thesammy2010.com",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "homepage": "https://thesammy2010.com",
   "private": true,
   "dependencies": {
@@ -14,8 +14,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.2",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "react-svg": "^16.1.19",
+    "schema-utils": "^4.2.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -47,7 +48,6 @@
     ]
   },
   "devDependencies": {
-    "eslint": "^8.46.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.3",
     "prettier": "3.0.0"
@@ -64,5 +64,9 @@
     ],
     "*.js": "eslint --cache --fix",
     "*.{js,md}": "prettier --write"
+  },
+  "engines": {
+    "npm": ">=9.0.0 <10.0.0",
+    "node": ">=20.5.0 <20.6.0"
   }
 }
