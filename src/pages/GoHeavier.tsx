@@ -1,12 +1,14 @@
 import React from "react"
 
-import { API_URL } from "../configs"
+// import { API_URL } from "../configs"
 import Config from "../components/Config"
 
 interface State {
     configLoaded?: boolean | null
     config?: string
 }
+
+const API_URL = process.env.REACT_APP_API_URL
 
 export default class GoHeavier extends React.Component<{}, State> {
     constructor(props: {}) {
