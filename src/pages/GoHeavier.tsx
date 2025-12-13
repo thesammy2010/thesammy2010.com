@@ -2,6 +2,7 @@ import React from "react"
 
 import { API_URL } from "../configs"
 import Config from "../components/Config"
+import GoHeavierNavBar from "../components/go_heavier/NavBar"
 
 interface State {
     configLoaded?: boolean | null
@@ -45,10 +46,7 @@ export default class GoHeavier extends React.Component<{}, State> {
     render(): React.ReactNode {
         return (
             <div className="center-container-grid">
-                <div className="header">
-                    <h2>Go Heavier</h2>
-                    <p>This is the newly created page using React Router.</p>
-                </div>
+                <GoHeavierNavBar />
                 <br />
 
                 <div className="header">

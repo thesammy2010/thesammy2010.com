@@ -37,7 +37,6 @@ export default class Home extends React.Component<Props, State> {
                         }}
                     ></img>
                 </div>
-                <Footer />
             </div>
         )
     }
