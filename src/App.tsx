@@ -1,24 +1,42 @@
 import React from "react"
 import "./App.css"
 
-import { Routes, Route } from "react-router-dom"
-
 import Footer from "./components/Footer"
-import HomePage from "./pages/Home"
+import Home from "./pages/Home"
+import About from "./pages/About"
 import NotFound from "./pages/NotFound"
 
-export default function App() {
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom"
+import GoHeavier from "./pages/GoHeavier"
+
+const NavBar: React.FC = () => (
+    <nav className="navbar">
+        <Link to="/">Home</Link>
+        {" | "}
+        <Link to="/go-heavier">Go Heavier</Link> | <Link to="/about">About</Link>
+    </nav>
+)
+
+const App: React.FC = () => {
     return (
-        <div id="page-container">
-            <div id="router">
-                <Routes>
-                    <Route path="/">
-                        <Route index element={<HomePage />} />
+        <div>
+            <div>
+                <BrowserRouter>
+                    <NavBar />
+                    <hr />
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/go-heavier" element={<GoHeavier />} />
+                        <Route path="/about" element={<About />} />
                         <Route path="*" element={<NotFound />} />
-                    </Route>
-                </Routes>
+                    </Routes>
+                </BrowserRouter>
             </div>
-            <Footer />
+            <div>
+                <Footer />
+            </div>
         </div>
     )
 }
+
+export default App

@@ -18,3 +18,11 @@
   height: 2.5rem;
   text-align: center;
 }
+
+.navbar {
+  display: flex;
+  justify-content: center; /* Centers items horizontally */
+  align-items: center;    /* Centers items vertically (if needed) */
+  text-align: center;     /* Ensures text alignment */
+  padding: 10px;          /* Optional: Adds some padding */
+}
