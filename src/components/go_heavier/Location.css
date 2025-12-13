@@ -28,3 +28,42 @@
     font-size: 0.8rem;
     color: #777;
 }
+
+.delete-button {
+    position: relative;
+    top: 0px;
+    right: 0px;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-button:hover .delete-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.delete-tooltip {
+    position: absolute;
+    top: -30px; /* Position the tooltip above the button */
+    left: 50%;
+    transform: translateX(-50%);
+    background: black;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
