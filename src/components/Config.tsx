@@ -31,7 +31,7 @@ export default class Config extends React.Component<Props, {}> {
                     <label htmlFor="countries">Countries: </label>
                     <select id="countries" name="countries">
                         {cfg.default.IsoCountryCode.map((country, index) => (
-                            <option key={index} value={country}>
+                            <option key={index} value={country} selected={true ? country === "GBR" : false}>
                                 {country}
                             </option>
                         ))}
@@ -40,22 +40,28 @@ export default class Config extends React.Component<Props, {}> {
                 <br />
                 <h4 className="header">Go Heavier</h4>
                 <div className="dropdowns">
-                    <label htmlFor="muscleGroup">Muscle Groups: </label>
-                    <select id="muscleGroup" name="muscleGroup">
-                        {cfg["go-heavier"].MuscleGroup.map((muscleGroup, index) => (
-                            <option key={index} value={muscleGroup}>
-                                {muscleGroup}
-                            </option>
-                        ))}
-                    </select>
-                    <label htmlFor="specificMuscle"> Muscle Groups: </label>
-                    <select id="specificMuscle" name="specificMuscle">
-                        {cfg["go-heavier"].SpecificMuscle.map((specificMuscle, index) => (
-                            <option key={index} value={specificMuscle}>
-                                {specificMuscle}
-                            </option>
-                        ))}
-                    </select>
+                    <ul className="ul">
+                        <li>
+                            <label htmlFor="muscleGroup">Muscle Groups: </label>
+                            <select id="muscleGroup" name="muscleGroup">
+                                {cfg["go-heavier"].MuscleGroup.map((muscleGroup, index) => (
+                                    <option key={index} value={muscleGroup}>
+                                        {muscleGroup}
+                                    </option>
+                                ))}
+                            </select>
+                        </li>
+                        <li>
+                            <label htmlFor="specificMuscle">Specific Muscles: </label>
+                            <select id="specificMuscle" name="specificMuscle">
+                                {cfg["go-heavier"].SpecificMuscle.map((specificMuscle, index) => (
+                                    <option key={index} value={specificMuscle}>
+                                        {specificMuscle}
+                                    </option>
+                                ))}
+                            </select>
+                        </li>
+                    </ul>
                 </div>
             </div>
         )
