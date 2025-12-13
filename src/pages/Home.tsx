@@ -1,6 +1,5 @@
 import React from "react"
 import "./Home.css"
-import Footer from "../components/Footer"
 
 interface Props {}
 
