@@ -8,7 +8,7 @@ interface State {
     active: boolean
 }
 
-export default class HomePage extends React.Component<Props, State> {
+export default class Home extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
         this.state = {

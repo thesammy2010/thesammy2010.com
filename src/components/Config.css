@@ -1,0 +1,18 @@
+.dropdowns {
+    display: flex;
+    flex-direction: row; /* Align dropdowns horizontally */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+   
+}
+
+.dropdowns label {
+    margin-right: 8px; /* Add spacing between label and dropdown */
+}
+
+.dropdowns select {
+    padding: 8px;        /* Add padding inside the dropdown */
+    border-radius: 4px;  /* Rounded corners */
+    border: 1px solid #ccc; /* Light border */
+    font-size: 1rem;     /* Adjust font size */
+}

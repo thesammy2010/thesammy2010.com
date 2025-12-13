@@ -1,0 +1,30 @@
+.location-container {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 400px;
+    margin: 16px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.location-title {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.location-description {
+    font-size: 1rem;
+    margin-bottom: 16px;
+    color: #555;
+}
+
+.location-address {
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    color: #333;
+}
+
+.location-timestamps {
+    font-size: 0.8rem;
+    color: #777;
+}
