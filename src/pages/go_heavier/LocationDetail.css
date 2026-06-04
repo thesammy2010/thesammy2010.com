@@ -1,0 +1,393 @@
+/* Page fade-in animation */
+.page-container {
+    animation: pageTransition 0.25s ease-out;
+}
+
+@keyframes pageTransition {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Back button */
+.back-button {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 24px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.back-button:hover {
+    background: #5568d3;
+    transform: translateX(-2px);
+}
+
+/* Loading and error states */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-container {
+    text-align: center;
+    padding: 40px;
+}
+
+.error-message {
+    color: #ef4444;
+    font-weight: 500;
+    margin: 20px 0;
+}
+
+/* Location detail container */
+.location-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.location-detail-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.location-detail-header h1 {
+    margin: 0 0 16px 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.location-detail-description {
+    font-size: 1.25rem;
+    margin: 0 0 24px 0;
+    opacity: 0.95;
+}
+
+/* Action buttons */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.edit-action-button,
+.delete-action-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edit-action-button {
+    background: #667eea;
+    color: white;
+}
+
+.edit-action-button:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.delete-action-button {
+    background: #ef4444;
+    color: white;
+}
+
+.delete-action-button:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Custom confirmation dialog */
+.confirm-dialog {
+    background: white;
+    border-radius: 12px;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out;
+}
+
+.confirm-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    text-align: center;
+}
+
+.confirm-header h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.confirm-content {
+    padding: 30px;
+    text-align: center;
+}
+
+.confirm-content h3 {
+    margin: 0 0 16px 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.confirm-content p {
+    margin: 8px 0;
+    color: #5a6c7d;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.warning-text {
+    color: #ef4444;
+    font-weight: 600;
+    margin-top: 16px !important;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 30px 30px 30px;
+}
+
+.confirm-cancel-button,
+.confirm-delete-button {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-cancel-button {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.confirm-cancel-button:hover {
+    background: #d1d5db;
+}
+
+.confirm-delete-button {
+    background: #ef4444;
+    color: white;
+}
+
+.confirm-delete-button:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Detail content */
+.location-detail-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 768px) {
+    .location-detail-content {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.detail-section h3 {
+    color: #2c3e50;
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.detail-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.detail-card p {
+    margin: 8px 0;
+    color: #5a6c7d;
+    line-height: 1.6;
+}
+
+/* Info rows */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #2c3e50;
+    flex-shrink: 0;
+    margin-right: 16px;
+}
+
+.info-value {
+    color: #5a6c7d;
+    text-align: right;
+    word-break: break-word;
+}
+
+.info-id {
+    font-family: monospace;
+    font-size: 0.85rem;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .location-detail-header h1 {
+        font-size: 2rem;
+    }
+
+    .location-detail-description {
+        font-size: 1.1rem;
+    }
+
+    .info-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .info-value {
+        text-align: left;
+    }
+
+    .back-button {
+        margin: 16px;
+    }
+}
+
+/* Refresh arrow button */
+.refresh-arrow-button {
+    position: fixed;
+    top: 90px;
+    right: 24px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.refresh-arrow-button:hover:not(:disabled) {
+    background: #357abd;
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+}
+
+.refresh-arrow-button:active:not(:disabled) {
+    transform: rotate(180deg) scale(0.95);
+}
+
+.refresh-arrow-button.spinning {
+    animation: spin 1s linear infinite;
+    background: #357abd;
+    cursor: not-allowed;
+}
+
+.refresh-arrow-button:disabled {
+    opacity: 0.8;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Fade effect during refresh */
+.location-detail-container {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.location-detail-container.refreshing {
+    opacity: 0.5;
+}

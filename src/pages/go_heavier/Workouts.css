@@ -1,0 +1,15 @@
+/* Page fade-in animation */
+.page-container {
+    animation: pageTransition 0.25s ease-out;
+}
+
+@keyframes pageTransition {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
