@@ -141,15 +141,17 @@ export default class Locations extends React.Component<{}, State> {
                         ))}
                     </div>
                 )}
-                <div className="header">
-                    <button
+                {this.state.configLoaded && (
+                    <button 
+                        className="add-location-button"
                         onClick={() => {
                             this.setState({ showForm: true })
                         }}
                     >
-                        Add Location
+                        <span className="button-icon">➕</span>
+                        Add New Location
                     </button>
-                </div>
+                )}
                 {this.state.showForm && (
                     <div>
                         <LocationForm

@@ -1,0 +1,89 @@
+/* Inherit common styles from LocationDetail.css */
+
+/* Exercise-specific detail container */
+.exercise-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.exercise-detail-container.refreshing {
+    opacity: 0.5;
+}
+
+/* Exercise detail header */
+.exercise-detail-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.exercise-detail-header h1 {
+    margin: 0 0 16px 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.exercise-detail-description {
+    font-size: 1.25rem;
+    margin: 0 0 24px 0;
+    opacity: 0.95;
+}
+
+/* Main content area with image and details side-by-side */
+.exercise-detail-main {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+/* Exercise detail image - half width on side */
+.exercise-detail-image {
+    flex: 0 0 45%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 24px;
+}
+
+.exercise-detail-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+/* Details content takes remaining space */
+.exercise-detail-content {
+    flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .exercise-detail-header h1 {
+        font-size: 2rem;
+    }
+
+    .exercise-detail-description {
+        font-size: 1.1rem;
+    }
+
+    /* Stack image and content vertically on mobile */
+    .exercise-detail-main {
+        flex-direction: column;
+    }
+
+    .exercise-detail-image {
+        flex: 1;
+        width: 100%;
+        position: relative;
+        top: 0;
+    }
+}

@@ -10,14 +10,20 @@ export default function GoHeavierNavBar() {
                 <h1 className="navbar-brand">💪 Go Heavier</h1>
                 <nav className="navbar-links">
                     <Link 
+                        to="/go-heavier" 
+                        className={location.pathname === "/go-heavier" ? "active" : ""}
+                    >
+                        🏠 Dashboard
+                    </Link>
+                    <Link 
                         to="/go-heavier/locations" 
-                        className={location.pathname === "/go-heavier/locations" ? "active" : ""}
+                        className={location.pathname === "/go-heavier/locations" || location.pathname.startsWith("/go-heavier/locations/") ? "active" : ""}
                     >
                         📍 Locations
                     </Link>
                     <Link 
                         to="/go-heavier/exercises" 
-                        className={location.pathname === "/go-heavier/exercises" ? "active" : ""}
+                        className={location.pathname === "/go-heavier/exercises" || location.pathname.startsWith("/go-heavier/exercises/") ? "active" : ""}
                     >
                         🏋️ Exercises
                     </Link>
