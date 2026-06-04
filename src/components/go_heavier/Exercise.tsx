@@ -1,7 +1,6 @@
 import React from "react"
 import "./Exercise.css"
 import "./ExerciseForm.css"
-import { API_URL } from "../../configs"
 import { useNavigate } from "react-router-dom"
 
 interface Props {
