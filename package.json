@@ -4,6 +4,7 @@
   "homepage": "https://thesammy2010.com",
   "private": true,
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -27,7 +28,7 @@
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   },
   "eslintConfig": {
     "extends": [
@@ -48,7 +49,6 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.3",
     "prettier": "3.0.0"
