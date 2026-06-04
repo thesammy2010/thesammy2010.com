@@ -2,3 +2,214 @@
     list-style-type: none;
     display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;
 }
+
+/* Responsive grid for locations */
+.locations-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 24px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    justify-content: center;
+}
+
+.locations-grid > * {
+    flex: 0 0 auto;
+    width: calc((100% - 48px) / 3);
+    min-width: 280px;
+    max-width: 400px;
+}
+
+/* Page fade-in animation */
+.page-container {
+    animation: pageTransition 0.25s ease-out;
+}
+
+@keyframes pageTransition {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive breakpoints */
+@media (max-width: 640px) {
+    .locations-grid {
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .locations-grid > * {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 960px) {
+    .locations-grid {
+        gap: 20px;
+    }
+    
+    .locations-grid > * {
+        width: calc((100% - 20px) / 2);
+        min-width: 260px;
+    }
+}
+
+@media (min-width: 961px) and (max-width: 1440px) {
+    .locations-grid > * {
+        width: calc((100% - 48px) / 3);
+        min-width: 280px;
+    }
+}
+
+@media (min-width: 1441px) {
+    .locations-grid {
+        max-width: 1600px;
+    }
+    
+    .locations-grid > * {
+        width: calc((100% - 72px) / 4);
+        min-width: 300px;
+    }
+}
+
+/* Refresh arrow button in top right */
+.refresh-arrow-button {
+    position: fixed;
+    top: 90px;
+    right: 24px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.refresh-arrow-button:hover:not(:disabled) {
+    background: #357abd;
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+}
+
+.refresh-arrow-button:active:not(:disabled) {
+    transform: rotate(180deg) scale(0.95);
+}
+
+.refresh-arrow-button.spinning {
+    animation: spin 1s linear infinite;
+    background: #357abd;
+    cursor: not-allowed;
+}
+
+.refresh-arrow-button:disabled {
+    opacity: 0.8;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.error-message {
+    color: #ef4444;
+    font-weight: 500;
+    padding: 20px;
+}
+
+/* Toast notification */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 16px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 2.7s;
+    min-width: 300px;
+    text-align: center;
+}
+
+.toast-success {
+    background: #10b981;
+    color: white;
+}
+
+.toast-error {
+    background: #ef4444;
+    color: white;
+}
+
+.toast-info {
+    background: #3b82f6;
+    color: white;
+}
+
+@keyframes slideUp {
+    from {
+        bottom: -50px;
+        opacity: 0;
+    }
+    to {
+        bottom: 24px;
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* Fade effect for locations grid during refresh */
+.locations-grid {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.locations-grid.refreshing {
+    opacity: 0.5;
+}

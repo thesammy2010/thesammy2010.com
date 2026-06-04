@@ -19,6 +19,7 @@ interface LocationFormState {
         description: string
         address_line1: string
         address_line2: string
+        address_city: string
         address_country_iso3: string
         address_postal_code: string
     }
@@ -35,6 +36,7 @@ export default class LocationForm extends React.Component<LocationFormProps, Loc
                 description: "",
                 address_line1: "",
                 address_line2: "",
+                address_city: "",
                 address_country_iso3: "",
                 address_postal_code: ""
             },
@@ -82,15 +84,15 @@ export default class LocationForm extends React.Component<LocationFormProps, Loc
         const { formData, loading, error } = this.state
 
         return (
-            <div className="popup-overlay">
-                <div className="popup-form">
+            <div className="popup-overlay" onClick={this.props.onClose}>
+                <div className="popup-form" onClick={(e) => e.stopPropagation()}>
                     <button className="close-button" onClick={this.props.onClose}>
                         ✖
                     </button>
                     <h2>Create New Location</h2>
                     <form onSubmit={this.handleSubmit}>
                         <label>
-                            Name:
+                            Name: <span className="required">*</span>
                             <input
                                 type="text"
                                 name="name"
@@ -101,10 +103,10 @@ export default class LocationForm extends React.Component<LocationFormProps, Loc
                         </label>
                         <label>
                             Description:
-                            <textarea name="description" value={formData.description} onChange={this.handleChange} />
+                            <textarea name="description" value={formData.description} onChange={this.handleChange} rows={3} />
                         </label>
                         <label>
-                            Address Line 1:
+                            Address Line 1: <span className="required">*</span>
                             <input
                                 type="text"
                                 name="address_line1"
@@ -123,17 +125,29 @@ export default class LocationForm extends React.Component<LocationFormProps, Loc
                             />
                         </label>
                         <label>
-                            Country (ISO3):
+                            City: <span className="required">*</span>
                             <input
                                 type="text"
-                                name="address_country_iso3"
-                                value={formData.address_country_iso3}
+                                name="address_city"
+                                value={formData.address_city}
                                 onChange={this.handleChange}
                                 required
                             />
                         </label>
                         <label>
-                            Postal Code:
+                            Country Code (ISO3): <span className="required">*</span>
+                            <input
+                                type="text"
+                                name="address_country_iso3"
+                                value={formData.address_country_iso3}
+                                onChange={this.handleChange}
+                                maxLength={3}
+                                placeholder="e.g., USA, GBR"
+                                required
+                            />
+                        </label>
+                        <label>
+                            Postal Code: <span className="required">*</span>
                             <input
                                 type="text"
                                 name="address_postal_code"
@@ -145,7 +159,7 @@ export default class LocationForm extends React.Component<LocationFormProps, Loc
                         {error && <p className="error-message">{error}</p>}
                         <div className="form-actions">
                             <button type="submit" disabled={loading}>
-                                {loading ? "Creating..." : "Create"}
+                                {loading ? "Creating..." : "Create Location"}
                             </button>
                             <button type="button" onClick={this.props.onClose}>
                                 Cancel

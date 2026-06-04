@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound"
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom"
 import GoHeavier from "./pages/GoHeavier"
 import Locations from "./pages/go_heavier/Locations"
+import LocationDetail from "./pages/go_heavier/LocationDetail"
 import Exercises from "./pages/go_heavier/Exercises"
 import Workouts from "./pages/go_heavier/Workouts"
 
@@ -38,6 +39,7 @@ const App: React.FC = () => {
                         <Route path="/" element={<Home />} />
                         <Route path="/go-heavier" element={<GoHeavier />} />
                         <Route path="/go-heavier/locations" element={<Locations />} />
+                        <Route path="/go-heavier/locations/:id" element={<LocationDetail />} />
                         <Route path="/go-heavier/exercises" element={<Exercises />} />
                         <Route path="/go-heavier/workouts" element={<Workouts />} />
                         {/* <Route path="/go-heavier/exercises/:locationId" element={<Exercises />} /> */}
