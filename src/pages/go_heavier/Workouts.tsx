@@ -3,23 +3,29 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
 import { API_URL, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
+import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import "../GoHeavier.css"
 import "./Workouts.css"
 
 interface WorkoutData {
     id: string
-    location_id: string
+    session_id: string
     exercise_id: string
-    exercise_index: number
-    workout_time: string
     index: number
     repetitions: number
     weight_kg: number
-    bar_weight_kg: number
-    supplementary_weight_kg: number
-    notes: string
+    bar_weight_kg: number | null
+    supplementary_weight_kg: number | null
+    notes: string | null
     created_at: string
-    updated_at: string
+    updated_at: string | null
+}
+
+// A set plus the time and location resolved from its session.
+type WorkoutRow = WorkoutData & {
+    workout_time: string | null
+    location_id: string | null
+    location: string | null
 }
 
 // Safety cap on the page walk so a misbehaving endpoint can't loop forever.
@@ -37,6 +43,7 @@ const dedupeById = (workouts: WorkoutData[]): WorkoutData[] => mergeById([], wor
 interface State {
     configLoaded: boolean | null
     workouts?: WorkoutData[]
+    sessionsById: Record<string, SessionSummary>
     locations?: any[]
     exercises?: any[]
     showForm?: boolean
@@ -85,6 +92,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         this.state = {
             configLoaded: cachedWorkouts ? true : null,
             workouts: cachedWorkouts,
+            sessionsById: {},
             locations: [],
             exercises: [],
             showForm: false,
@@ -137,8 +145,9 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
 
         this.setState({ isRefreshing: true })
         try {
-            const [workouts, locationsRes, exercisesRes] = await Promise.all([
+            const [workouts, sessions, locationsRes, exercisesRes] = await Promise.all([
                 this.fetchAllWorkouts(),
+                fetchAllSessions(),
                 fetch(`${API_URL}/go-heavier/locations`),
                 fetch(`${API_URL}/go-heavier/exercises`)
             ])
@@ -151,6 +160,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             await waitOut()
             this.setState({ 
                 workouts, 
+                sessionsById: indexSessions(sessions),
                 locations,
                 exercises,
                 configLoaded: true, 
@@ -177,14 +187,16 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         if (!this.state.hasFetchedOnce) {
             this.handleRefresh()
         } else {
-            // If workouts are cached, still need to fetch locations and exercises for name lookup
-            this.fetchLocationsAndExercises()
+            // Cached sets carry only a session_id, so the sessions still have to be
+            // fetched to resolve each row's time and location.
+            this.fetchSupportingData()
         }
     }
 
-    fetchLocationsAndExercises = async () => {
+    fetchSupportingData = async () => {
         try {
-            const [locationsRes, exercisesRes] = await Promise.all([
+            const [sessions, locationsRes, exercisesRes] = await Promise.all([
+                fetchAllSessions(),
                 fetch(`${API_URL}/go-heavier/locations`),
                 fetch(`${API_URL}/go-heavier/exercises`)
             ])
@@ -192,15 +204,10 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
             
-            this.setState({ locations, exercises })
+            this.setState({ sessionsById: indexSessions(sessions), locations, exercises })
         } catch (error) {
-            console.error("Error fetching locations/exercises:", error)
+            console.error("Error fetching sessions/locations/exercises:", error)
         }
-    }
-
-    getLocationName = (locationId: string): string => {
-        const location = this.state.locations?.find(l => l.id === locationId)
-        return location ? location.name : 'Unknown Location'
     }
 
     getExerciseName = (exerciseId: string): string => {
@@ -208,7 +215,10 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         return exercise ? exercise.name : 'Unknown Exercise'
     }
 
-    formatDateTime = (dateString: string): string => {
+    formatDateTime = (dateString: string | null): string => {
+        if (!dateString) {
+            return "\u2014"
+        }
         const date = new Date(dateString)
         return date.toLocaleDateString("en-US", {
             year: "numeric",
@@ -314,15 +324,27 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         this.props.setSearchParams(params)
     }
 
-    getFilteredWorkouts = (): WorkoutData[] => {
+    // The time and location live on the session a set belongs to.
+    resolveSessions = (workouts: WorkoutData[]): WorkoutRow[] =>
+        workouts.map(workout => {
+            const session = this.state.sessionsById[workout.session_id]
+            return {
+                ...workout,
+                workout_time: session?.workout_time ?? null,
+                location_id: session?.location_id ?? null,
+                location: session?.location ?? null
+            }
+        })
+
+    getFilteredWorkouts = (): WorkoutRow[] => {
         if (!this.state.workouts) return []
 
-        let filtered = [...this.state.workouts]
+        let filtered = this.resolveSessions(this.state.workouts)
 
         // Apply date filter if set
         if (this.state.dateFilter.startDate || this.state.dateFilter.endDate) {
             filtered = filtered.filter(workout => {
-                // Parse workout time - handle both ISO string and other formats
+                if (!workout.workout_time) return false
                 const workoutDate = new Date(workout.workout_time)
                 
                 // Reset time to start of day for comparison
@@ -354,7 +376,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         // Apply location filter
         if (this.state.filters.locationIds.length > 0) {
             filtered = filtered.filter(workout => 
-                this.state.filters.locationIds.includes(workout.location_id)
+                workout.location_id !== null && this.state.filters.locationIds.includes(workout.location_id)
             )
         }
 
@@ -550,7 +572,16 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                         return (
                                             <tr key={workout.id}>
                                                 <td className="workout-time">
-                                                    {this.formatDateTime(workout.workout_time)}
+                                                    <a
+                                                        href={`/go-heavier/sessions/${workout.session_id}`}
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            this.props.navigate(`/go-heavier/sessions/${workout.session_id}`)
+                                                        }}
+                                                        className="table-link"
+                                                    >
+                                                        {this.formatDateTime(workout.workout_time)}
+                                                    </a>
                                                 </td>
                                                 <td className="workout-exercise">
                                                     <a 
@@ -565,16 +596,18 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                                     </a>
                                                 </td>
                                                 <td className="workout-location">
-                                                    <a 
-                                                        href={`/go-heavier/locations/${workout.location_id}`}
-                                                        onClick={(e) => {
-                                                            e.preventDefault()
-                                                            this.props.navigate(`/go-heavier/locations/${workout.location_id}`)
-                                                        }}
-                                                        className="table-link"
-                                                    >
-                                                        {this.getLocationName(workout.location_id)}
-                                                    </a>
+                                                    {workout.location_id ? (
+                                                        <a 
+                                                            href={`/go-heavier/locations/${workout.location_id}`}
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                this.props.navigate(`/go-heavier/locations/${workout.location_id}`)
+                                                            }}
+                                                            className="table-link"
+                                                        >
+                                                            {workout.location}
+                                                        </a>
+                                                    ) : '\u2014'}
                                                 </td>
                                                 <td className="workout-set">
                                                     {workout.index}
