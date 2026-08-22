@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 
 import { API_URL } from "../configs"
 import GoHeavierNavBar from "../components/go_heavier/NavBar"
@@ -131,27 +132,27 @@ export default class GoHeavier extends React.Component<{}, State> {
                             </div>
 
                             <div className="stats-overview">
-                                <div className="stat-card">
+                                <Link to="/go-heavier/locations" className="stat-card">
                                     <div className="stat-icon">📍</div>
                                     <div className="stat-content">
                                         <div className="stat-value">{this.state.locationCount ?? '...'}</div>
                                         <div className="stat-label">Locations</div>
                                     </div>
-                                </div>
-                                <div className="stat-card">
+                                </Link>
+                                <Link to="/go-heavier/exercises" className="stat-card">
                                     <div className="stat-icon">🏋️</div>
                                     <div className="stat-content">
                                         <div className="stat-value">{this.state.exerciseCount ?? '...'}</div>
                                         <div className="stat-label">Exercises</div>
                                     </div>
-                                </div>
-                                <div className="stat-card">
+                                </Link>
+                                <Link to="/go-heavier/workouts" className="stat-card">
                                     <div className="stat-icon">📊</div>
                                     <div className="stat-content">
                                         <div className="stat-value">{this.state.workoutCount ?? '...'}</div>
                                         <div className="stat-label">Workouts</div>
                                     </div>
-                                </div>
+                                </Link>
                             </div>
 
                             <div className="config-grid">

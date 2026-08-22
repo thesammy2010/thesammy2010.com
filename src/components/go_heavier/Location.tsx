@@ -17,7 +17,7 @@ interface State {
         address_city: string
         address_country_iso3: string
         address_postal_code: string
-        logo: string
+        logo_url: string
     }
     loading: boolean
     error: string | null
@@ -32,7 +32,7 @@ interface Props {
     address_city: string
     address_country_iso3: string
     address_postal_code: string
-    logo?: string
+    logo_url?: string
     created_at: string
     updated_at: string
     onDeleted?: (locationName: string) => void
@@ -54,7 +54,7 @@ export class Location extends React.Component<Props, State> {
                 address_city: props.address_city,
                 address_country_iso3: props.address_country_iso3,
                 address_postal_code: props.address_postal_code,
-                logo: props.logo ?? ""
+                logo_url: props.logo_url ?? ""
             },
             loading: false,
             error: null
@@ -98,7 +98,7 @@ export class Location extends React.Component<Props, State> {
                 address_city: this.props.address_city,
                 address_country_iso3: this.props.address_country_iso3,
                 address_postal_code: this.props.address_postal_code,
-                logo: this.props.logo ?? ""
+                logo_url: this.props.logo_url ?? ""
             },
             error: null
         })
@@ -112,7 +112,7 @@ export class Location extends React.Component<Props, State> {
     }
 
     validateForm = (): boolean => {
-        const { name, address_line1, address_city, address_country_iso3, address_postal_code, logo } = this.state.formData
+        const { name, address_line1, address_city, address_country_iso3, address_postal_code, logo_url } = this.state.formData
 
         if (!name.trim()) {
             this.setState({ error: "Name is required" })
@@ -144,11 +144,11 @@ export class Location extends React.Component<Props, State> {
             return false
         }
 
-        if (logo.trim()) {
+        if (logo_url.trim()) {
             try {
-                new URL(logo.trim())
+                new URL(logo_url.trim())
             } catch {
-                this.setState({ error: "Logo must be a valid URL" })
+                this.setState({ error: "Logo URL must be a valid URL" })
                 return false
             }
         }
@@ -280,10 +280,10 @@ export class Location extends React.Component<Props, State> {
                                 Logo URL:
                                 <input
                                     type="url"
-                                    name="logo"
-                                    value={this.state.formData.logo}
+                                    name="logo_url"
+                                    value={this.state.formData.logo_url}
                                     onChange={this.handleChange}
-                                    placeholder="https://example.com/logo.png"
+                                    placeholder="https://..."
                                 />
                             </label>
                             {this.state.error && <p className="error-message">{this.state.error}</p>}
@@ -303,6 +303,11 @@ export class Location extends React.Component<Props, State> {
 
         return (
             <div className="location-container" onClick={this.handleCardClick}>
+                {this.props.logo_url && (
+                    <div className="location-logo">
+                        <img src={this.props.logo_url} alt={`${this.props.name} logo`} />
+                    </div>
+                )}
                 <div className="location-main-content">
                     <h2 className="location-title">{this.props.name}</h2>
                     <p className="location-description">

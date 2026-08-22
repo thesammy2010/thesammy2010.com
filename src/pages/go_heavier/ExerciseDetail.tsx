@@ -1,7 +1,8 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL } from "../../configs"
+import { API_URL, formatNotes } from "../../configs"
+import "../../components/go_heavier/Stats.css"
 import "./ExerciseDetail.css"
 import "../go_heavier/Exercises.css"
 import "../../components/go_heavier/ExerciseForm.css"
@@ -19,8 +20,56 @@ interface ExerciseData {
     updated_at: string
 }
 
+// Guard on the page walk so a misbehaving endpoint can't loop forever.
+const MAX_WORKOUT_PAGES = 500
+
+interface WorkoutSet {
+    id: string
+    location_id: string
+    exercise_id: string
+    workout_time: string
+    index: number
+    repetitions: number
+    weight_kg: number
+    bar_weight_kg: number
+    supplementary_weight_kg: number
+    notes: string
+}
+
+interface TopLocation {
+    location_id: string
+    name: string
+    sessions: number
+    sets: number
+    repetitions: number
+    volume_kg: number
+}
+
+interface ExerciseStatsData {
+    exercise_id: string
+    name: string
+    sessions: number
+    first_performed: string | null
+    last_performed: string | null
+    total_sets: number
+    total_repetitions: number
+    total_volume_kg: number
+    heaviest_weight_kg: number | null
+    average_sets_per_session: number
+    average_repetitions_per_set: number
+    distinct_locations: number
+    top_locations?: TopLocation[]
+}
+
 interface State {
     exercise: ExerciseData | null
+    stats: ExerciseStatsData | null
+    statsLoading: boolean
+    statsError: string | null
+    exerciseSets: WorkoutSet[] | null
+    setsLoading: boolean
+    setsError: string | null
+    locationNames: Record<string, string>
     loading: boolean
     error: string | null
     isRefreshing: boolean
@@ -44,6 +93,13 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         super(props)
         this.state = {
             exercise: null,
+            stats: null,
+            statsLoading: true,
+            statsError: null,
+            exerciseSets: null,
+            setsLoading: true,
+            setsError: null,
+            locationNames: {},
             loading: true,
             error: null,
             isRefreshing: false,
@@ -65,6 +121,79 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
 
     componentDidMount() {
         this.fetchExercise()
+        this.fetchStats()
+        this.fetchExerciseSets()
+        this.fetchLocationNames()
+    }
+
+    fetchLocationNames = async () => {
+        try {
+            const response = await fetch(`${API_URL}/go-heavier/locations`)
+            const locations = await response.json()
+            const locationNames: Record<string, string> = {}
+            locations.forEach((location: { id: string; name: string }) => {
+                locationNames[location.id] = location.name
+            })
+            this.setState({ locationNames })
+        } catch (error) {
+            console.error("Error fetching locations:", error)
+        }
+    }
+
+    // Every set of this exercise, needed for the latest session and the best set.
+    // The workouts endpoint's exercise_id filter currently returns a 500, so the
+    // pages are walked and matched here. Swap to ?exercise_id= once the API is fixed.
+    fetchExerciseSets = async () => {
+        this.setState({ setsLoading: true, setsError: null })
+        try {
+            const workouts: WorkoutSet[] = []
+            const batchSize = 4
+            let page = 1
+            let exhausted = false
+
+            while (!exhausted && page <= MAX_WORKOUT_PAGES) {
+                const firstPage = page
+                const pageNumbers = Array.from({ length: batchSize }, (_, offset) => firstPage + offset)
+                const responses = await Promise.all(
+                    pageNumbers.map(pageNumber => fetch(`${API_URL}/go-heavier/workouts?page=${pageNumber}`))
+                )
+
+                for (const response of responses) {
+                    if (!response.ok) {
+                        throw new Error("Failed to load workouts")
+                    }
+                    const pageWorkouts: WorkoutSet[] = await response.json()
+                    if (pageWorkouts.length === 0) {
+                        exhausted = true
+                    } else {
+                        workouts.push(...pageWorkouts)
+                    }
+                }
+                page += batchSize
+            }
+
+            const exerciseSets = workouts.filter(workout => workout.exercise_id === this.props.id)
+            this.setState({ exerciseSets, setsLoading: false })
+        } catch (error) {
+            console.error("Error fetching workouts for this exercise:", error)
+            this.setState({ setsError: (error as Error).message, setsLoading: false })
+        }
+    }
+
+
+    fetchStats = async () => {
+        this.setState({ statsLoading: true, statsError: null })
+        try {
+            const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}/stats`)
+            if (!response.ok) {
+                throw new Error("Failed to load stats")
+            }
+            const stats = await response.json()
+            this.setState({ stats, statsLoading: false })
+        } catch (error) {
+            console.error("Error fetching exercise stats:", error)
+            this.setState({ statsError: (error as Error).message, statsLoading: false })
+        }
     }
 
     fetchExercise = async () => {
@@ -96,6 +225,8 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
 
     handleRefresh = async () => {
         this.setState({ isRefreshing: true })
+        this.fetchStats()
+        this.fetchExerciseSets()
         try {
             const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
             if (!response.ok) {
@@ -223,7 +354,105 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         }
     }
 
+    formatCount = (value: number): string => value.toLocaleString()
+
+    formatWeight = (value: number | null): string =>
+        value === null || value === undefined ? "\u2014" : `${Math.round(value).toLocaleString()} kg`
+
+    formatPerformedDate = (value: string | null): string => {
+        if (!value) {
+            return "\u2014"
+        }
+        return new Date(value).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
+    }
+
+    // Every set from the most recent day this exercise was performed.
+    getLatestSets = (): WorkoutSet[] => {
+        const sets = this.state.exerciseSets ?? []
+        if (sets.length === 0) {
+            return []
+        }
+
+        const latest = new Date(Math.max(...sets.map(set => new Date(set.workout_time).getTime())))
+        const onLatestDay = (value: string) => {
+            const performed = new Date(value)
+            return performed.getFullYear() === latest.getFullYear()
+                && performed.getMonth() === latest.getMonth()
+                && performed.getDate() === latest.getDate()
+        }
+
+        return sets.filter(set => onLatestDay(set.workout_time)).sort((a, b) => a.index - b.index)
+    }
+
+    // Heaviest set, the same measure as the "Heaviest lift" stat. Ties go to the
+    // set with the most repetitions, then to the most recent one.
+    getBestSet = (): WorkoutSet | null => {
+        const sets = this.state.exerciseSets ?? []
+        if (sets.length === 0) {
+            return null
+        }
+
+        return sets.reduce((best, set) => {
+            if (set.weight_kg !== best.weight_kg) {
+                return set.weight_kg > best.weight_kg ? set : best
+            }
+            if (set.repetitions !== best.repetitions) {
+                return set.repetitions > best.repetitions ? set : best
+            }
+            return new Date(set.workout_time) > new Date(best.workout_time) ? set : best
+        })
+    }
+
+    formatSessionDate = (value: string): string =>
+        new Date(value).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
+
+    // The bar length encodes sessions, the same measure the list is ordered by.
+    renderTopLocations = (topLocations: TopLocation[]): React.ReactNode => {
+        const mostSessions = Math.max(...topLocations.map(location => location.sessions), 1)
+
+        return topLocations.map((location) => (
+            <li key={location.location_id} className="top-list-item">
+                <div className="top-list-head">
+                    <a
+                        className="top-list-name"
+                        href={`/go-heavier/locations/${location.location_id}`}
+                        onClick={(e) => {
+                            e.preventDefault()
+                            this.props.navigate(`/go-heavier/locations/${location.location_id}`)
+                        }}
+                    >
+                        {location.name}
+                    </a>
+                    <span className="top-list-metric">
+                        {this.formatCount(location.sessions)} sessions
+                    </span>
+                </div>
+                <div className="top-list-bar-track">
+                    <div
+                        className="top-list-bar"
+                        style={{ width: `${(location.sessions / mostSessions) * 100}%` }}
+                    />
+                </div>
+                <div className="top-list-meta">
+                    {this.formatCount(location.sets)} sets · {this.formatCount(location.repetitions)} reps · {this.formatWeight(location.volume_kg)}
+                </div>
+            </li>
+        ))
+    }
+
     render(): React.ReactNode {
+        const latestSets = this.getLatestSets()
+        const bestSet = this.getBestSet()
+
         if (this.state.showDeleteConfirm) {
             return (
                 <div className="center-container-grid">
@@ -475,6 +704,214 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                     </div>
                                 </div>
                             </div>
+                            </div>
+
+                            <div className="detail-section stats-section">
+                                <h3>🕒 Latest Workout</h3>
+
+                                {this.state.setsLoading && (
+                                    <div className="detail-card">
+                                        <p>Loading latest workout...</p>
+                                    </div>
+                                )}
+
+                                {this.state.setsError && (
+                                    <div className="detail-card">
+                                        <p className="error-message">{this.state.setsError}</p>
+                                    </div>
+                                )}
+
+                                {!this.state.setsLoading && !this.state.setsError && this.state.exerciseSets && (
+                                    latestSets.length === 0 ? (
+                                        <div className="detail-card">
+                                            <p>This exercise has not been logged yet.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="detail-card">
+                                            <div className="latest-workout-meta">
+                                                <span className="latest-workout-date">
+                                                    {this.formatSessionDate(latestSets[0].workout_time)}
+                                                </span>
+                                                {this.state.locationNames[latestSets[0].location_id] && (
+                                                    <a
+                                                        className="latest-workout-location"
+                                                        href={`/go-heavier/locations/${latestSets[0].location_id}`}
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            this.props.navigate(`/go-heavier/locations/${latestSets[0].location_id}`)
+                                                        }}
+                                                    >
+                                                        📍 {this.state.locationNames[latestSets[0].location_id]}
+                                                    </a>
+                                                )}
+                                                <span className="latest-workout-count">
+                                                    {latestSets.length} {latestSets.length === 1 ? "set" : "sets"}
+                                                </span>
+                                            </div>
+
+                                            <div className="set-table-wrapper">
+                                                <table className="set-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Set</th>
+                                                            <th>Reps</th>
+                                                            <th>Weight</th>
+                                                            <th>Bar</th>
+                                                            <th>Supp.</th>
+                                                            <th>Total</th>
+                                                            <th>Notes</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {latestSets.map((set) => {
+                                                            const total = set.weight_kg +
+                                                                (set.bar_weight_kg || 0) +
+                                                                (set.supplementary_weight_kg || 0)
+                                                            return (
+                                                                <tr key={set.id}>
+                                                                    <td>{set.index}</td>
+                                                                    <td>{set.repetitions}</td>
+                                                                    <td>{set.weight_kg.toFixed(1)}</td>
+                                                                    <td>{set.bar_weight_kg ? set.bar_weight_kg.toFixed(1) : "-"}</td>
+                                                                    <td>{set.supplementary_weight_kg ? set.supplementary_weight_kg.toFixed(1) : "-"}</td>
+                                                                    <td><strong>{total.toFixed(1)}</strong></td>
+                                                                    <td className="set-notes">{formatNotes(set.notes)}</td>
+                                                                </tr>
+                                                            )
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+
+                            <div className="detail-section stats-section">
+                                <h3>🏆 Best Set</h3>
+
+                                {this.state.setsLoading && (
+                                    <div className="detail-card">
+                                        <p>Loading best set...</p>
+                                    </div>
+                                )}
+
+                                {this.state.setsError && (
+                                    <div className="detail-card">
+                                        <p className="error-message">{this.state.setsError}</p>
+                                    </div>
+                                )}
+
+                                {!this.state.setsLoading && !this.state.setsError && this.state.exerciseSets && (
+                                    bestSet === null ? (
+                                        <div className="detail-card">
+                                            <p>This exercise has not been logged yet.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="detail-card">
+                                            <div className="best-set-headline">
+                                                <span className="best-set-weight">{bestSet.weight_kg.toFixed(1)} kg</span>
+                                                <span className="best-set-reps">× {bestSet.repetitions} reps</span>
+                                            </div>
+                                            <div className="best-set-meta">
+                                                <span>{this.formatSessionDate(bestSet.workout_time)}</span>
+                                                {this.state.locationNames[bestSet.location_id] && (
+                                                    <a
+                                                        className="latest-workout-location"
+                                                        href={`/go-heavier/locations/${bestSet.location_id}`}
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            this.props.navigate(`/go-heavier/locations/${bestSet.location_id}`)
+                                                        }}
+                                                    >
+                                                        📍 {this.state.locationNames[bestSet.location_id]}
+                                                    </a>
+                                                )}
+                                                <span>Set {bestSet.index}</span>
+                                            </div>
+                                            {formatNotes(bestSet.notes) && (
+                                                <p className="best-set-notes">{formatNotes(bestSet.notes)}</p>
+                                            )}
+                                        </div>
+                                    )
+                                )}
+                            </div>
+
+                            <div className="detail-section stats-section">
+                                <h3>📊 Stats</h3>
+
+                                {this.state.statsLoading && (
+                                    <div className="detail-card">
+                                        <p>Loading stats...</p>
+                                    </div>
+                                )}
+
+                                {this.state.statsError && (
+                                    <div className="detail-card">
+                                        <p className="error-message">{this.state.statsError}</p>
+                                    </div>
+                                )}
+
+                                {!this.state.statsLoading && !this.state.statsError && this.state.stats && (
+                                    <>
+                                        <div className="stats-grid">
+                                            <div className="stat-tile">
+                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.sessions)}</div>
+                                                <div className="stat-tile-label">Sessions</div>
+                                            </div>
+                                            <div className="stat-tile">
+                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.total_sets)}</div>
+                                                <div className="stat-tile-label">Sets</div>
+                                            </div>
+                                            <div className="stat-tile">
+                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.total_repetitions)}</div>
+                                                <div className="stat-tile-label">Reps</div>
+                                            </div>
+                                            <div className="stat-tile">
+                                                <div className="stat-tile-value">{this.formatWeight(this.state.stats.total_volume_kg)}</div>
+                                                <div className="stat-tile-label">Total volume</div>
+                                            </div>
+                                            <div className="stat-tile">
+                                                <div className="stat-tile-value">{this.formatWeight(this.state.stats.heaviest_weight_kg)}</div>
+                                                <div className="stat-tile-label">Heaviest lift</div>
+                                            </div>
+                                            <div className="stat-tile">
+                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.distinct_locations)}</div>
+                                                <div className="stat-tile-label">Locations</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="stats-detail">
+                                            <div className="detail-card">
+                                                <div className="info-row">
+                                                    <span className="info-label">First performed:</span>
+                                                    <span className="info-value">{this.formatPerformedDate(this.state.stats.first_performed)}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="info-label">Last performed:</span>
+                                                    <span className="info-value">{this.formatPerformedDate(this.state.stats.last_performed)}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="info-label">Sets per session:</span>
+                                                    <span className="info-value">{this.state.stats.average_sets_per_session.toFixed(1)}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="info-label">Reps per set:</span>
+                                                    <span className="info-value">{this.state.stats.average_repetitions_per_set.toFixed(1)}</span>
+                                                </div>
+                                            </div>
+
+                                            {(this.state.stats.top_locations ?? []).length > 0 && (
+                                                <div className="detail-card">
+                                                    <h4 className="top-list-title">Top locations by sessions</h4>
+                                                    <ol className="top-list">
+                                                        {this.renderTopLocations(this.state.stats.top_locations ?? [])}
+                                                    </ol>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}

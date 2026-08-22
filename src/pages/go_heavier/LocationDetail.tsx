@@ -2,6 +2,7 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import { API_URL, countryCodeToEmoji } from "../../configs"
+import "../../components/go_heavier/Stats.css"
 import "./LocationDetail.css"
 import "../go_heavier/Locations.css"
 import "../../components/go_heavier/LocationForm.css"
@@ -15,12 +16,41 @@ interface LocationData {
     address_city: string
     address_country_iso3: string
     address_postal_code: string
+    logo_url: string
     created_at: string
     updated_at: string
 }
 
+interface TopExercise {
+    exercise_id: string
+    name: string
+    visits: number
+    sets: number
+    repetitions: number
+    volume_kg: number
+}
+
+interface LocationStatsData {
+    location_id: string
+    name: string
+    visits: number
+    first_visit: string | null
+    last_visit: string | null
+    total_sets: number
+    total_repetitions: number
+    total_volume_kg: number
+    heaviest_weight_kg: number | null
+    average_sets_per_visit: number
+    average_exercises_per_visit: number
+    distinct_exercises: number
+    top_exercises?: TopExercise[]
+}
+
 interface State {
     location: LocationData | null
+    stats: LocationStatsData | null
+    statsLoading: boolean
+    statsError: string | null
     loading: boolean
     error: string | null
     isRefreshing: boolean
@@ -34,6 +64,7 @@ interface State {
         address_city: string
         address_country_iso3: string
         address_postal_code: string
+        logo_url: string
     }
     formLoading: boolean
     formError: string | null
@@ -44,6 +75,9 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         super(props)
         this.state = {
             location: null,
+            stats: null,
+            statsLoading: true,
+            statsError: null,
             loading: true,
             error: null,
             isRefreshing: false,
@@ -56,7 +90,8 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                 address_line2: "",
                 address_city: "",
                 address_country_iso3: "",
-                address_postal_code: ""
+                address_postal_code: "",
+                logo_url: ""
             },
             formLoading: false,
             formError: null
@@ -65,6 +100,22 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
 
     componentDidMount() {
         this.fetchLocation()
+        this.fetchStats()
+    }
+
+    fetchStats = async () => {
+        this.setState({ statsLoading: true, statsError: null })
+        try {
+            const response = await fetch(`${API_URL}/go-heavier/locations/${this.props.id}/stats`)
+            if (!response.ok) {
+                throw new Error("Failed to load stats")
+            }
+            const stats = await response.json()
+            this.setState({ stats, statsLoading: false })
+        } catch (error) {
+            console.error("Error fetching location stats:", error)
+            this.setState({ statsError: (error as Error).message, statsLoading: false })
+        }
     }
 
     fetchLocation = async () => {
@@ -85,7 +136,8 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                     address_line2: result.address_line2,
                     address_city: result.address_city,
                     address_country_iso3: result.address_country_iso3,
-                    address_postal_code: result.address_postal_code
+                    address_postal_code: result.address_postal_code,
+                    logo_url: result.logo_url || ""
                 }
             })
         } catch (error) {
@@ -96,6 +148,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
 
     handleRefresh = async () => {
         this.setState({ isRefreshing: true })
+        this.fetchStats()
         try {
             const response = await fetch(`${API_URL}/go-heavier/locations/${this.props.id}`)
             if (!response.ok) {
@@ -156,7 +209,8 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                 address_line2: this.state.location.address_line2,
                 address_city: this.state.location.address_city,
                 address_country_iso3: this.state.location.address_country_iso3,
-                address_postal_code: this.state.location.address_postal_code
+                address_postal_code: this.state.location.address_postal_code,
+                logo_url: this.state.location.logo_url || ""
             },
             formError: null
         })
@@ -170,7 +224,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
     }
 
     validateForm = (): boolean => {
-        const { name, address_line1, address_city, address_country_iso3, address_postal_code } = this.state.formData
+        const { name, address_line1, address_city, address_country_iso3, address_postal_code, logo_url } = this.state.formData
 
         if (!name.trim()) {
             this.setState({ formError: "Name is required" })
@@ -200,6 +254,15 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         if (!address_postal_code.trim()) {
             this.setState({ formError: "Postal code is required" })
             return false
+        }
+
+        if (logo_url.trim()) {
+            try {
+                new URL(logo_url.trim())
+            } catch {
+                this.setState({ formError: "Logo URL must be a valid URL" })
+                return false
+            }
         }
 
         return true
@@ -240,6 +303,56 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         } catch (err) {
             this.setState({ formError: (err as Error).message, formLoading: false })
         }
+    }
+
+    formatCount = (value: number): string => value.toLocaleString()
+
+    formatWeight = (value: number | null): string =>
+        value === null || value === undefined ? "\u2014" : `${Math.round(value).toLocaleString()} kg`
+
+    formatVisitDate = (value: string | null): string => {
+        if (!value) {
+            return "\u2014"
+        }
+        return new Date(value).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
+    }
+
+    // The bar length encodes visits, the same measure the list is ordered by.
+    renderTopExercises = (topExercises: TopExercise[]): React.ReactNode => {
+        const mostVisits = Math.max(...topExercises.map(exercise => exercise.visits), 1)
+
+        return topExercises.map((exercise) => (
+            <li key={exercise.exercise_id} className="top-list-item">
+                <div className="top-list-head">
+                    <a
+                        className="top-list-name"
+                        href={`/go-heavier/exercises/${exercise.exercise_id}`}
+                        onClick={(e) => {
+                            e.preventDefault()
+                            this.props.navigate(`/go-heavier/exercises/${exercise.exercise_id}`)
+                        }}
+                    >
+                        {exercise.name}
+                    </a>
+                    <span className="top-list-metric">
+                        {this.formatCount(exercise.visits)} visits
+                    </span>
+                </div>
+                <div className="top-list-bar-track">
+                    <div
+                        className="top-list-bar"
+                        style={{ width: `${(exercise.visits / mostVisits) * 100}%` }}
+                    />
+                </div>
+                <div className="top-list-meta">
+                    {this.formatCount(exercise.sets)} sets · {this.formatCount(exercise.repetitions)} reps · {this.formatWeight(exercise.volume_kg)}
+                </div>
+            </li>
+        ))
     }
 
     render(): React.ReactNode {
@@ -355,6 +468,16 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                                             required
                                         />
                                     </label>
+                                    <label>
+                                        Logo URL:
+                                        <input
+                                            type="url"
+                                            name="logo_url"
+                                            value={this.state.formData.logo_url}
+                                            onChange={this.handleChange}
+                                            placeholder="https://..."
+                                        />
+                                    </label>
                                     {this.state.formError && <p className="error-message">{this.state.formError}</p>}
                                     <div className="form-actions">
                                         <button type="submit" disabled={this.state.formLoading}>
@@ -408,6 +531,11 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                     {this.state.location && (
                         <div className={`location-detail-container ${this.state.isRefreshing ? 'refreshing' : ''}`}>
                             <div className="location-detail-header">
+                                {this.state.location.logo_url && (
+                                    <div className="location-detail-logo">
+                                        <img src={this.state.location.logo_url} alt={`${this.state.location.name} logo`} />
+                                    </div>
+                                )}
                                 <h1>{this.state.location.name} {countryCodeToEmoji(this.state.location.address_country_iso3.substring(0, 2))}</h1>
                                 <p className="location-detail-description">{this.state.location.description}</p>
                                 <div className="action-buttons">
@@ -421,6 +549,83 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                             </div>
 
                             <div className="location-detail-content">
+                                <div className="detail-section stats-section">
+                                    <h3>📊 Stats</h3>
+
+                                    {this.state.statsLoading && (
+                                        <div className="detail-card">
+                                            <p>Loading stats...</p>
+                                        </div>
+                                    )}
+
+                                    {this.state.statsError && (
+                                        <div className="detail-card">
+                                            <p className="error-message">{this.state.statsError}</p>
+                                        </div>
+                                    )}
+
+                                    {!this.state.statsLoading && !this.state.statsError && this.state.stats && (
+                                        <>
+                                            <div className="stats-grid">
+                                                <div className="stat-tile">
+                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.visits)}</div>
+                                                    <div className="stat-tile-label">Visits</div>
+                                                </div>
+                                                <div className="stat-tile">
+                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.total_sets)}</div>
+                                                    <div className="stat-tile-label">Sets</div>
+                                                </div>
+                                                <div className="stat-tile">
+                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.total_repetitions)}</div>
+                                                    <div className="stat-tile-label">Reps</div>
+                                                </div>
+                                                <div className="stat-tile">
+                                                    <div className="stat-tile-value">{this.formatWeight(this.state.stats.total_volume_kg)}</div>
+                                                    <div className="stat-tile-label">Total volume</div>
+                                                </div>
+                                                <div className="stat-tile">
+                                                    <div className="stat-tile-value">{this.formatWeight(this.state.stats.heaviest_weight_kg)}</div>
+                                                    <div className="stat-tile-label">Heaviest lift</div>
+                                                </div>
+                                                <div className="stat-tile">
+                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.distinct_exercises)}</div>
+                                                    <div className="stat-tile-label">Exercises</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="stats-detail">
+                                                <div className="detail-card">
+                                                    <div className="info-row">
+                                                        <span className="info-label">First visit:</span>
+                                                        <span className="info-value">{this.formatVisitDate(this.state.stats.first_visit)}</span>
+                                                    </div>
+                                                    <div className="info-row">
+                                                        <span className="info-label">Last visit:</span>
+                                                        <span className="info-value">{this.formatVisitDate(this.state.stats.last_visit)}</span>
+                                                    </div>
+                                                    <div className="info-row">
+                                                        <span className="info-label">Sets per visit:</span>
+                                                        <span className="info-value">{this.state.stats.average_sets_per_visit.toFixed(1)}</span>
+                                                    </div>
+                                                    <div className="info-row">
+                                                        <span className="info-label">Exercises per visit:</span>
+                                                        <span className="info-value">{this.state.stats.average_exercises_per_visit.toFixed(1)}</span>
+                                                    </div>
+                                                </div>
+
+                                                {(this.state.stats.top_exercises ?? []).length > 0 && (
+                                                    <div className="detail-card">
+                                                        <h4 className="top-list-title">Top exercises by visits</h4>
+                                                        <ol className="top-list">
+                                                            {this.renderTopExercises(this.state.stats.top_exercises ?? [])}
+                                                        </ol>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
                                 <div className="detail-section">
                                     <h3>📍 Address</h3>
                                     <div className="detail-card">
