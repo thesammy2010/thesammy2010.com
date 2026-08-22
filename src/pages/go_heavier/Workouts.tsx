@@ -2,7 +2,7 @@ import React from "react"
 import { useSearchParams } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
-import { API_URL } from "../../configs"
+import { API_URL, formatNotes } from "../../configs"
 import "./Workouts.css"
 
 interface WorkoutData {
@@ -20,6 +20,19 @@ interface WorkoutData {
     created_at: string
     updated_at: string
 }
+
+const WORKOUTS_CACHE_KEY = 'go-heavier-workouts'
+// Safety cap on the page walk so a misbehaving endpoint can't loop forever.
+const MAX_WORKOUT_PAGES = 500
+
+// Pagination is offset-based, so a page can overlap another when rows are
+// inserted between requests. Always merge on id rather than concatenating.
+const mergeById = (existing: WorkoutData[], incoming: WorkoutData[]): WorkoutData[] => {
+    const seen = new Set(existing.map(workout => workout.id))
+    return [...existing, ...incoming.filter(workout => !seen.has(workout.id))]
+}
+
+const dedupeById = (workouts: WorkoutData[]): WorkoutData[] => mergeById([], workouts)
 
 interface State {
     configLoaded: boolean | null
@@ -44,9 +57,6 @@ interface State {
         exerciseIds: string[]
         locationIds: string[]
     }
-    currentPage: number
-    hasMore: boolean
-    isLoadingMore: boolean
 }
 
 interface WorkoutsProps {
@@ -60,8 +70,8 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
     constructor(props: WorkoutsProps) {
         super(props)
         
-        const cachedData = localStorage.getItem('go-heavier-workouts')
-        const cachedWorkouts = cachedData ? JSON.parse(cachedData) : undefined
+        const cachedData = localStorage.getItem(WORKOUTS_CACHE_KEY)
+        const cachedWorkouts = cachedData ? dedupeById(JSON.parse(cachedData)) : undefined
         
         // Read filters from URL
         const startDate = props.searchParams.get('startDate') || ''
@@ -90,10 +100,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             filters: {
                 exerciseIds,
                 locationIds
-            },
-            currentPage: 1,
-            hasMore: true,
-            isLoadingMore: false
+            }
         }
     }
 
@@ -104,20 +111,36 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         }, 3000)
     }
 
+    // The API pages its results, so walk pages until one comes back empty.
+    fetchAllWorkouts = async (): Promise<WorkoutData[]> => {
+        const all: WorkoutData[] = []
+
+        for (let page = 1; page <= MAX_WORKOUT_PAGES; page++) {
+            const response = await fetch(`${API_URL}/go-heavier/workouts?page=${page}`)
+            const pageWorkouts: WorkoutData[] = await response.json()
+
+            if (pageWorkouts.length === 0) {
+                break
+            }
+            all.push(...pageWorkouts)
+        }
+
+        return dedupeById(all)
+    }
+
     handleRefresh = async () => {
-        this.setState({ isRefreshing: true, currentPage: 1, hasMore: true })
+        this.setState({ isRefreshing: true })
         try {
-            const [workoutsRes, locationsRes, exercisesRes] = await Promise.all([
-                fetch(`${API_URL}/go-heavier/workouts?page=1`),
+            const [workouts, locationsRes, exercisesRes] = await Promise.all([
+                this.fetchAllWorkouts(),
                 fetch(`${API_URL}/go-heavier/locations`),
                 fetch(`${API_URL}/go-heavier/exercises`)
             ])
             
-            const workouts = await workoutsRes.json()
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
             
-            localStorage.setItem('go-heavier-workouts', JSON.stringify(workouts))
+            localStorage.setItem(WORKOUTS_CACHE_KEY, JSON.stringify(workouts))
             
             setTimeout(() => {
                 this.setState({ 
@@ -126,8 +149,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                     exercises,
                     configLoaded: true, 
                     isRefreshing: false,
-                    hasFetchedOnce: true,
-                    hasMore: workouts.length > 0
+                    hasFetchedOnce: true
                 })
             }, 300)
         } catch (error) {
@@ -142,59 +164,6 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         } else {
             // If workouts are cached, still need to fetch locations and exercises for name lookup
             this.fetchLocationsAndExercises()
-        }
-        
-        // Add scroll listener for infinite scroll
-        window.addEventListener('scroll', this.handleScroll)
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('scroll', this.handleScroll)
-    }
-
-    handleScroll = () => {
-        // Check if we're near the bottom of the page
-        const scrollPosition = window.innerHeight + window.scrollY
-        const pageHeight = document.documentElement.scrollHeight
-        const threshold = 300 // pixels from bottom to trigger load
-        
-        if (scrollPosition >= pageHeight - threshold && 
-            !this.state.isLoadingMore && 
-            this.state.hasMore && 
-            this.state.configLoaded) {
-            this.loadMoreWorkouts()
-        }
-    }
-
-    loadMoreWorkouts = async () => {
-        this.setState({ isLoadingMore: true })
-        const nextPage = this.state.currentPage + 1
-        
-        try {
-            const response = await fetch(`${API_URL}/go-heavier/workouts?page=${nextPage}`)
-            const newWorkouts = await response.json()
-            
-            if (newWorkouts.length === 0) {
-                // No more data
-                this.setState({ 
-                    isLoadingMore: false, 
-                    hasMore: false 
-                })
-            } else {
-                // Append new workouts to existing ones
-                const allWorkouts = [...(this.state.workouts || []), ...newWorkouts]
-                localStorage.setItem('go-heavier-workouts', JSON.stringify(allWorkouts))
-                
-                this.setState({ 
-                    workouts: allWorkouts,
-                    currentPage: nextPage,
-                    isLoadingMore: false,
-                    hasMore: newWorkouts.length > 0
-                })
-            }
-        } catch (error) {
-            console.error("Error loading more workouts:", error)
-            this.setState({ isLoadingMore: false })
         }
     }
 
@@ -599,26 +568,13 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                                     <strong>{totalWeight.toFixed(1)}</strong>
                                                 </td>
                                                 <td className="workout-notes">
-                                                    {workout.notes || '-'}
+                                                    {formatNotes(workout.notes)}
                                                 </td>
                                             </tr>
                                         )
                                     })}
                                 </tbody>
                             </table>
-                            
-                            {this.state.isLoadingMore && (
-                                <div className="loading-more">
-                                    <div className="spinner"></div>
-                                    <span>Loading more workouts...</span>
-                                </div>
-                            )}
-                            
-                            {!this.state.hasMore && this.state.workouts && this.state.workouts.length > 0 && (
-                                <div className="no-more-data">
-                                    ✓ All workouts loaded ({this.state.workouts.length} total)
-                                </div>
-                            )}
                         </div>
                     )}
                     {this.state.configLoaded && (
@@ -638,9 +594,10 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                 onClose={() => {
                                     this.setState({ showForm: false })
                                 }}
-                                onSuccess={(newWorkout) => {
-                                    this.state.workouts?.push(newWorkout)
-                                    localStorage.removeItem('go-heavier-workouts')
+                                onSuccess={() => {
+                                    // handleRefresh below repopulates from page 1,
+                                    // which already includes the new workout.
+                                    localStorage.removeItem(WORKOUTS_CACHE_KEY)
                                     this.setState({ showForm: false })
                                     this.showToast("Workout created successfully", 'success')
                                     this.handleRefresh()

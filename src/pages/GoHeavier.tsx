@@ -36,7 +36,12 @@ export default class GoHeavier extends React.Component<{}, State> {
         }
     }
 
-    fetchConfig = async () => {
+    fetchConfig = async (minDuration: number = 300) => {
+        const startedAt = Date.now()
+        const waitOut = () => new Promise<void>(resolve =>
+            setTimeout(resolve, Math.max(0, minDuration - (Date.now() - startedAt)))
+        )
+
         this.setState({ isRefreshing: true })
         try {
             // Get workout count from cache
@@ -53,18 +58,18 @@ export default class GoHeavier extends React.Component<{}, State> {
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
             
-            setTimeout(() => {
-                this.setState({ 
-                    config, 
-                    configLoaded: true, 
-                    isRefreshing: false,
-                    locationCount: locations.length,
-                    exerciseCount: exercises.length,
-                    workoutCount: workoutCount
-                })
-            }, 300)
+            await waitOut()
+            this.setState({ 
+                config, 
+                configLoaded: true, 
+                isRefreshing: false,
+                locationCount: locations.length,
+                exerciseCount: exercises.length,
+                workoutCount: workoutCount
+            })
         } catch (error) {
             console.error("Error fetching config:", error)
+            await waitOut()
             this.setState({ configLoaded: false, isRefreshing: false })
         }
     }
@@ -75,6 +80,11 @@ export default class GoHeavier extends React.Component<{}, State> {
 
     handleRefresh = () => {
         this.fetchConfig()
+    }
+
+    handleRetry = () => {
+        // Keep the loading state on screen long enough to be visible
+        this.fetchConfig(1000)
     }
 
     render(): React.ReactNode {
@@ -99,10 +109,17 @@ export default class GoHeavier extends React.Component<{}, State> {
                     )}
 
                     {this.state.configLoaded === false && (
-                        <div className="error-container">
+                        <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Configuration</h2>
                             <p className="error-message">Unable to fetch config from server</p>
-                            <button onClick={this.fetchConfig}>Retry</button>
+                            <button onClick={this.handleRetry} disabled={this.state.isRefreshing}>
+                                {this.state.isRefreshing ? (
+                                    <>
+                                        <span className="button-spinner"></span>
+                                        Retrying...
+                                    </>
+                                ) : 'Retry'}
+                            </button>
                         </div>
                     )}
 
