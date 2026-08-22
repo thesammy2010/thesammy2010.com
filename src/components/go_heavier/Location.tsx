@@ -17,6 +17,7 @@ interface State {
         address_city: string
         address_country_iso3: string
         address_postal_code: string
+        logo_url: string
     }
     loading: boolean
     error: string | null
@@ -31,6 +32,7 @@ interface Props {
     address_city: string
     address_country_iso3: string
     address_postal_code: string
+    logo_url?: string
     created_at: string
     updated_at: string
     onDeleted?: (locationName: string) => void
@@ -51,7 +53,8 @@ export class Location extends React.Component<Props, State> {
                 address_line2: props.address_line2,
                 address_city: props.address_city,
                 address_country_iso3: props.address_country_iso3,
-                address_postal_code: props.address_postal_code
+                address_postal_code: props.address_postal_code,
+                logo_url: props.logo_url ?? ""
             },
             loading: false,
             error: null
@@ -94,7 +97,8 @@ export class Location extends React.Component<Props, State> {
                 address_line2: this.props.address_line2,
                 address_city: this.props.address_city,
                 address_country_iso3: this.props.address_country_iso3,
-                address_postal_code: this.props.address_postal_code
+                address_postal_code: this.props.address_postal_code,
+                logo_url: this.props.logo_url ?? ""
             },
             error: null
         })
@@ -108,7 +112,7 @@ export class Location extends React.Component<Props, State> {
     }
 
     validateForm = (): boolean => {
-        const { name, address_line1, address_city, address_country_iso3, address_postal_code } = this.state.formData
+        const { name, address_line1, address_city, address_country_iso3, address_postal_code, logo_url } = this.state.formData
 
         if (!name.trim()) {
             this.setState({ error: "Name is required" })
@@ -138,6 +142,15 @@ export class Location extends React.Component<Props, State> {
         if (!address_postal_code.trim()) {
             this.setState({ error: "Postal code is required" })
             return false
+        }
+
+        if (logo_url.trim()) {
+            try {
+                new URL(logo_url.trim())
+            } catch {
+                this.setState({ error: "Logo URL must be a valid URL" })
+                return false
+            }
         }
 
         return true
@@ -263,6 +276,16 @@ export class Location extends React.Component<Props, State> {
                                     required
                                 />
                             </label>
+                            <label>
+                                Logo URL:
+                                <input
+                                    type="url"
+                                    name="logo_url"
+                                    value={this.state.formData.logo_url}
+                                    onChange={this.handleChange}
+                                    placeholder="https://..."
+                                />
+                            </label>
                             {this.state.error && <p className="error-message">{this.state.error}</p>}
                             <div className="form-actions">
                                 <button type="submit" disabled={this.state.loading}>
@@ -280,6 +303,11 @@ export class Location extends React.Component<Props, State> {
 
         return (
             <div className="location-container" onClick={this.handleCardClick}>
+                {this.props.logo_url && (
+                    <div className="location-logo">
+                        <img src={this.props.logo_url} alt={`${this.props.name} logo`} />
+                    </div>
+                )}
                 <div className="location-main-content">
                     <h2 className="location-title">{this.props.name}</h2>
                     <p className="location-description">

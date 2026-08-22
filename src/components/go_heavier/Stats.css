@@ -1,0 +1,233 @@
+/* Shared stats presentation for the location and exercise detail pages */
+
+.stats-section {
+    grid-column: 1 / -1;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-tile {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stat-tile-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+}
+
+.stat-tile-label {
+    font-size: 0.75rem;
+    color: #718096;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-detail {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 768px) {
+    .stats-detail {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Ranked breakdown list */
+.top-list-title {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.top-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.top-list-item + .top-list-item {
+    margin-top: 16px;
+}
+
+.top-list-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.top-list-name {
+    color: #2c3e50;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.top-list-name:hover {
+    color: #667eea;
+    text-decoration: underline;
+}
+
+.top-list-metric {
+    color: #5a6c7d;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.top-list-bar-track {
+    height: 8px;
+    border-radius: 4px;
+    background: #f0f0f0;
+    overflow: hidden;
+}
+
+.top-list-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: #667eea;
+    min-width: 2px;
+    transition: width 0.3s ease;
+}
+
+.top-list-meta {
+    margin-top: 6px;
+    font-size: 0.8125rem;
+    color: #718096;
+}
+
+/* Latest session summary */
+.latest-workout-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.latest-workout-date {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.latest-workout-location {
+    color: #5a6c7d;
+    text-decoration: none;
+}
+
+.latest-workout-location:hover {
+    color: #667eea;
+    text-decoration: underline;
+}
+
+.latest-workout-count {
+    margin-left: auto;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+/* Set breakdown table */
+.set-table-wrapper {
+    overflow-x: auto;
+}
+
+.set-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+}
+
+.set-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+.set-table td {
+    padding: 10px 12px;
+    color: #5a6c7d;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.set-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.set-table tbody tr:hover td {
+    background: #f8f9fa;
+}
+
+.set-table .set-notes {
+    white-space: normal;
+    color: #718096;
+    font-size: 0.875rem;
+}
+
+/* Best set */
+.best-set-headline {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.best-set-weight {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.best-set-reps {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #5a6c7d;
+}
+
+.best-set-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 12px;
+    font-size: 0.9375rem;
+    color: #718096;
+}
+
+.best-set-notes {
+    margin: 12px 0 0 0;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+    color: #718096;
+    font-size: 0.875rem;
+}

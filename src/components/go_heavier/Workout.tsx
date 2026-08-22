@@ -1,5 +1,6 @@
 import React from "react"
 import { useNavigate } from "react-router-dom"
+import { formatNotes } from "../../configs"
 import "./Workout.css"
 
 interface WorkoutProps {
@@ -37,6 +38,7 @@ class WorkoutClass extends React.Component<WorkoutProps & { navigate: any }> {
     }
 
     render(): React.ReactNode {
+        const notes = formatNotes(this.props.notes)
         const totalWeight = this.props.weight_kg + 
                           (this.props.bar_weight_kg || 0) + 
                           (this.props.supplementary_weight_kg || 0)
@@ -71,9 +73,9 @@ class WorkoutClass extends React.Component<WorkoutProps & { navigate: any }> {
                     </div>
                 </div>
 
-                {this.props.notes && (
+                {notes && (
                     <div className="workout-notes">
-                        💬 {this.props.notes}
+                        💬 {notes}
                     </div>
                 )}
             </div>

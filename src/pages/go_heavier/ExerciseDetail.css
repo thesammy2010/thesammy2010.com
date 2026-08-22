@@ -65,6 +65,11 @@
     flex: 1;
 }
 
+/* Stats sit full width below the image and details row */
+.exercise-detail-container .stats-section {
+    margin-top: 32px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 767px) {
     .exercise-detail-header h1 {

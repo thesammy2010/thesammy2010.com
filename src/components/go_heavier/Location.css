@@ -22,6 +22,22 @@
     min-height: 220px;
 }
 
+.location-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64px;
+    width: 100%;
+}
+
+.location-logo img {
+    max-height: 100%;
+    max-width: 160px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
 .location-main-content {
     width: 100%;
 }
