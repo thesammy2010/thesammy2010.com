@@ -1,7 +1,7 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, formatNotes } from "../../configs"
+import { API_URL, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
 import "../../components/go_heavier/Stats.css"
 import "./ExerciseDetail.css"
 import "../go_heavier/Exercises.css"
@@ -142,35 +142,14 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
 
     // Every set of this exercise, needed for the latest session and the best set.
     // The workouts endpoint's exercise_id filter currently returns a 500, so the
-    // pages are walked and matched here. Swap to ?exercise_id= once the API is fixed.
-    fetchExerciseSets = async () => {
+    // whole list is matched here. Swap to ?exercise_id= once the API is fixed.
+    fetchExerciseSets = async (useCache: boolean = true) => {
         this.setState({ setsLoading: true, setsError: null })
         try {
-            const workouts: WorkoutSet[] = []
-            const batchSize = 4
-            let page = 1
-            let exhausted = false
-
-            while (!exhausted && page <= MAX_WORKOUT_PAGES) {
-                const firstPage = page
-                const pageNumbers = Array.from({ length: batchSize }, (_, offset) => firstPage + offset)
-                const responses = await Promise.all(
-                    pageNumbers.map(pageNumber => fetch(`${API_URL}/go-heavier/workouts?page=${pageNumber}`))
-                )
-
-                for (const response of responses) {
-                    if (!response.ok) {
-                        throw new Error("Failed to load workouts")
-                    }
-                    const pageWorkouts: WorkoutSet[] = await response.json()
-                    if (pageWorkouts.length === 0) {
-                        exhausted = true
-                    } else {
-                        workouts.push(...pageWorkouts)
-                    }
-                }
-                page += batchSize
-            }
+            // The workouts page caches every page it fetched, so arriving from there
+            // costs nothing. Refreshing always goes back to the API.
+            const cached = useCache ? localStorage.getItem(WORKOUTS_CACHE_KEY) : null
+            const workouts: WorkoutSet[] = cached ? JSON.parse(cached) : await this.fetchAllWorkouts()
 
             const exerciseSets = workouts.filter(workout => workout.exercise_id === this.props.id)
             this.setState({ exerciseSets, setsLoading: false })
@@ -178,6 +157,36 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
             console.error("Error fetching workouts for this exercise:", error)
             this.setState({ setsError: (error as Error).message, setsLoading: false })
         }
+    }
+
+    fetchAllWorkouts = async (): Promise<WorkoutSet[]> => {
+        const workouts: WorkoutSet[] = []
+        const batchSize = 4
+        let page = 1
+        let exhausted = false
+
+        while (!exhausted && page <= MAX_WORKOUT_PAGES) {
+            const firstPage = page
+            const pageNumbers = Array.from({ length: batchSize }, (_, offset) => firstPage + offset)
+            const responses = await Promise.all(
+                pageNumbers.map(pageNumber => fetch(`${API_URL}/go-heavier/workouts?page=${pageNumber}`))
+            )
+
+            for (const response of responses) {
+                if (!response.ok) {
+                    throw new Error("Failed to load workouts")
+                }
+                const pageWorkouts: WorkoutSet[] = await response.json()
+                if (pageWorkouts.length === 0) {
+                    exhausted = true
+                } else {
+                    workouts.push(...pageWorkouts)
+                }
+            }
+            page += batchSize
+        }
+
+        return workouts
     }
 
 
@@ -226,7 +235,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
     handleRefresh = async () => {
         this.setState({ isRefreshing: true })
         this.fetchStats()
-        this.fetchExerciseSets()
+        this.fetchExerciseSets(false)
         try {
             const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
             if (!response.ok) {

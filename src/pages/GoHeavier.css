@@ -37,22 +37,32 @@
     font-weight: 300;
 }
 
+.dashboard-tagline {
+    max-width: 620px;
+    margin: 0 auto !important;
+    line-height: 1.6;
+}
+
 /* Stats Overview */
 .stats-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
     margin-bottom: 48px;
 }
 
 .stat-card {
     background: white;
-    border-radius: 16px;
-    padding: 28px;
+    border-radius: 20px;
+    padding: 40px 32px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 20px;
+    text-align: center;
+    gap: 16px;
+    min-height: 240px;
+    justify-content: center;
     transition: all 0.3s ease;
     border: 1px solid rgba(0, 0, 0, 0.06);
 }
@@ -70,16 +80,17 @@ a.stat-card {
 }
 
 .stat-icon {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     opacity: 0.9;
+    line-height: 1;
 }
 
 .stat-content {
-    flex: 1;
+    width: 100%;
 }
 
 .stat-value {
-    font-size: 2.25rem;
+    font-size: 3rem;
     font-weight: 700;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
@@ -90,108 +101,18 @@ a.stat-card {
 }
 
 .stat-label {
-    font-size: 0.875rem;
-    color: #718096;
+    font-size: 1rem;
+    color: #2c3e50;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Config Grid */
-.config-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 32px;
-    margin-bottom: 48px;
-}
-
-/* Config Cards */
-.config-card {
-    background: white;
-    border-radius: 16px;
-    padding: 32px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.config-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-.config-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.config-card-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #2d3748;
-}
-
-.count-badge {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.config-description {
+.stat-caption {
+    margin: 8px 0 0 0;
+    font-size: 0.9375rem;
     color: #718096;
-    margin: 0 0 20px 0;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-/* Tag Container */
-.tag-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-}
-
-.tag {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-transform: capitalize;
-    transition: all 0.2s ease;
-}
-
-.tag-country {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-}
-
-.tag-muscle {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
-}
-
-.tag-specific {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: white;
-}
-
-.tag-more {
-    background: #e2e8f0;
-    color: #4a5568;
-    font-style: italic;
-}
-
-.tag:hover {
-    transform: scale(1.05);
-    opacity: 0.9;
+    line-height: 1.5;
 }
 
 /* Dashboard Footer */
@@ -229,28 +150,16 @@ a.stat-card {
     }
 
     .stat-card {
-        padding: 20px;
+        padding: 32px 24px;
+        min-height: 0;
     }
 
     .stat-icon {
-        font-size: 2rem;
+        font-size: 2.75rem;
     }
 
     .stat-value {
-        font-size: 1.75rem;
-    }
-
-    .config-grid {
-        grid-template-columns: 1fr;
-        gap: 24px;
-    }
-
-    .config-card {
-        padding: 24px;
-    }
-
-    .config-card-header h2 {
-        font-size: 1.25rem;
+        font-size: 2.25rem;
     }
 }
 

@@ -1,8 +1,9 @@
 import React from "react"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
-import { API_URL, formatNotes } from "../../configs"
+import { API_URL, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
+import "../GoHeavier.css"
 import "./Workouts.css"
 
 interface WorkoutData {
@@ -21,7 +22,6 @@ interface WorkoutData {
     updated_at: string
 }
 
-const WORKOUTS_CACHE_KEY = 'go-heavier-workouts'
 // Safety cap on the page walk so a misbehaving endpoint can't loop forever.
 const MAX_WORKOUT_PAGES = 500
 
@@ -62,6 +62,7 @@ interface State {
 interface WorkoutsProps {
     searchParams: URLSearchParams
     setSearchParams: (params: URLSearchParams) => void
+    navigate: (path: string) => void
 }
 
 export class Workouts extends React.Component<WorkoutsProps, State> {
@@ -128,7 +129,12 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         return dedupeById(all)
     }
 
-    handleRefresh = async () => {
+    fetchWorkouts = async (minDuration: number = 300) => {
+        const startedAt = Date.now()
+        const waitOut = () => new Promise<void>(resolve =>
+            setTimeout(resolve, Math.max(0, minDuration - (Date.now() - startedAt)))
+        )
+
         this.setState({ isRefreshing: true })
         try {
             const [workouts, locationsRes, exercisesRes] = await Promise.all([
@@ -142,20 +148,29 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             
             localStorage.setItem(WORKOUTS_CACHE_KEY, JSON.stringify(workouts))
             
-            setTimeout(() => {
-                this.setState({ 
-                    workouts, 
-                    locations,
-                    exercises,
-                    configLoaded: true, 
-                    isRefreshing: false,
-                    hasFetchedOnce: true
-                })
-            }, 300)
+            await waitOut()
+            this.setState({ 
+                workouts, 
+                locations,
+                exercises,
+                configLoaded: true, 
+                isRefreshing: false,
+                hasFetchedOnce: true
+            })
         } catch (error) {
             console.error("Error fetching workouts:", error)
+            await waitOut()
             this.setState({ configLoaded: false, isRefreshing: false })
         }
+    }
+
+    handleRefresh = () => {
+        this.fetchWorkouts()
+    }
+
+    handleRetry = () => {
+        // Keep the loading state on screen long enough to be visible
+        this.fetchWorkouts(1000)
     }
 
     componentDidMount() {
@@ -351,7 +366,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             case true:
                 return <></>
             case false:
-                return <p className="error-message">Failed to load workouts</p>
+                return <></>
             default:
                 return (
                     <div className="loading-spinner">
@@ -384,10 +399,22 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                     )}
                     <div className="header">
                         {this.showLoading()}
-                        {!this.state.configLoaded && this.state.configLoaded !== null && (
-                            <button onClick={this.handleRefresh}>Retry</button>
-                        )}
                     </div>
+
+                    {this.state.configLoaded === false && (
+                        <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
+                            <h2>Failed to Load Workouts</h2>
+                            <p className="error-message">Unable to fetch workouts from server</p>
+                            <button onClick={this.handleRetry} disabled={this.state.isRefreshing}>
+                                {this.state.isRefreshing ? (
+                                    <>
+                                        <span className="button-spinner"></span>
+                                        Retrying...
+                                    </>
+                                ) : 'Retry'}
+                            </button>
+                        </div>
+                    )}
 
                     {this.state.configLoaded && this.state.workouts != null && filteredWorkouts.length === 0 && (
                         <div className="header">
@@ -530,7 +557,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                                         href={`/go-heavier/exercises/${workout.exercise_id}`}
                                                         onClick={(e) => {
                                                             e.preventDefault()
-                                                            window.location.href = `/go-heavier/exercises/${workout.exercise_id}`
+                                                            this.props.navigate(`/go-heavier/exercises/${workout.exercise_id}`)
                                                         }}
                                                         className="table-link"
                                                     >
@@ -542,7 +569,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                                         href={`/go-heavier/locations/${workout.location_id}`}
                                                         onClick={(e) => {
                                                             e.preventDefault()
-                                                            window.location.href = `/go-heavier/locations/${workout.location_id}`
+                                                            this.props.navigate(`/go-heavier/locations/${workout.location_id}`)
                                                         }}
                                                         className="table-link"
                                                     >
@@ -619,5 +646,6 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
 // Wrapper component to provide URL search params
 export default function WorkoutsWithParams() {
     const [searchParams, setSearchParams] = useSearchParams()
-    return <Workouts searchParams={searchParams} setSearchParams={setSearchParams} />
+    const navigate = useNavigate()
+    return <Workouts searchParams={searchParams} setSearchParams={setSearchParams} navigate={navigate} />
 }
