@@ -1,0 +1,218 @@
+/* Column chart. One series per chart, so the title carries the identity and
+   there is no legend. Marks stay thin, the grid stays recessive. */
+
+.chart {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chart-caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.chart-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.chart-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.8125rem;
+    color: #718096;
+}
+
+.chart-toggle {
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #718096;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.chart-toggle:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+/* Plot */
+.chart-plot {
+    display: flex;
+    gap: 12px;
+    height: 220px;
+}
+
+.chart-scale {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-shrink: 0;
+    /* Half a line box, so each tick sits on its gridline. */
+    margin: -0.5em 0;
+}
+
+.chart-tick {
+    font-size: 0.6875rem;
+    color: #a0aec0;
+    line-height: 1;
+}
+
+.chart-area {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.chart-gridline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #edf0f4;
+}
+
+.chart-bars {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    /* The surface gap that separates neighbouring columns. */
+    gap: 2px;
+}
+
+.chart-band {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.chart-bar {
+    position: relative;
+    width: 100%;
+    max-width: 24px;
+    min-height: 2px;
+    background: #667eea;
+    /* Rounded data-end, square where it meets the baseline. */
+    border-radius: 4px 4px 0 0;
+    transition: opacity 0.15s ease;
+}
+
+.chart-band:hover .chart-bar {
+    opacity: 0.75;
+}
+
+/* Only the tallest column is labelled; the axis and tooltip carry the rest. */
+.chart-peak-label {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, -4px);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #5a6c7d;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.chart-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, -20px);
+    background: #2c3e50;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    pointer-events: none;
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chart-tooltip-inside {
+    bottom: auto;
+    top: 6px;
+    transform: translate(-50%, 0);
+}
+
+.chart-axis {
+    display: flex;
+    gap: 2px;
+    margin-top: 8px;
+}
+
+.chart-axis-label {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-size: 0.6875rem;
+    color: #a0aec0;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Table view, so every value is reachable without hovering */
+.chart-table-wrapper {
+    overflow-x: auto;
+}
+
+.chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.chart-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.chart-table td {
+    padding: 8px 12px;
+    color: #5a6c7d;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.chart-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+@media (max-width: 767px) {
+    .chart {
+        padding: 16px;
+    }
+
+    .chart-plot {
+        height: 180px;
+    }
+}

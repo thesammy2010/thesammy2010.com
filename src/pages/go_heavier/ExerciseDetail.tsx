@@ -1,7 +1,8 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
+import { API_URL, formatNotes } from "../../configs"
+import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import "../../components/go_heavier/Stats.css"
 import "./ExerciseDetail.css"
 import "../go_heavier/Exercises.css"
@@ -25,15 +26,14 @@ const MAX_WORKOUT_PAGES = 500
 
 interface WorkoutSet {
     id: string
-    location_id: string
+    session_id: string
     exercise_id: string
-    workout_time: string
     index: number
     repetitions: number
     weight_kg: number
-    bar_weight_kg: number
-    supplementary_weight_kg: number
-    notes: string
+    bar_weight_kg: number | null
+    supplementary_weight_kg: number | null
+    notes: string | null
 }
 
 interface TopLocation {
@@ -69,7 +69,8 @@ interface State {
     exerciseSets: WorkoutSet[] | null
     setsLoading: boolean
     setsError: string | null
-    locationNames: Record<string, string>
+    sessions: SessionSummary[]
+    sessionsById: Record<string, SessionSummary>
     loading: boolean
     error: string | null
     isRefreshing: boolean
@@ -99,7 +100,8 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
             exerciseSets: null,
             setsLoading: true,
             setsError: null,
-            locationNames: {},
+            sessions: [],
+            sessionsById: {},
             loading: true,
             error: null,
             isRefreshing: false,
@@ -123,70 +125,51 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         this.fetchExercise()
         this.fetchStats()
         this.fetchExerciseSets()
-        this.fetchLocationNames()
     }
 
-    fetchLocationNames = async () => {
-        try {
-            const response = await fetch(`${API_URL}/go-heavier/locations`)
-            const locations = await response.json()
-            const locationNames: Record<string, string> = {}
-            locations.forEach((location: { id: string; name: string }) => {
-                locationNames[location.id] = location.name
-            })
-            this.setState({ locationNames })
-        } catch (error) {
-            console.error("Error fetching locations:", error)
-        }
-    }
-
-    // Every set of this exercise, needed for the latest session and the best set.
-    // The workouts endpoint's exercise_id filter currently returns a 500, so the
-    // whole list is matched here. Swap to ?exercise_id= once the API is fixed.
-    fetchExerciseSets = async (useCache: boolean = true) => {
+    // Sets for this exercise, plus the sessions they belong to — a set carries
+    // neither a time nor a location any more, the session does.
+    fetchExerciseSets = async () => {
         this.setState({ setsLoading: true, setsError: null })
         try {
-            // The workouts page caches every page it fetched, so arriving from there
-            // costs nothing. Refreshing always goes back to the API.
-            const cached = useCache ? localStorage.getItem(WORKOUTS_CACHE_KEY) : null
-            const workouts: WorkoutSet[] = cached ? JSON.parse(cached) : await this.fetchAllWorkouts()
+            const [exerciseSets, sessions] = await Promise.all([
+                this.fetchAllSets(),
+                fetchAllSessions(this.props.id)
+            ])
 
-            const exerciseSets = workouts.filter(workout => workout.exercise_id === this.props.id)
-            this.setState({ exerciseSets, setsLoading: false })
+            this.setState({
+                exerciseSets,
+                sessions,
+                sessionsById: indexSessions(sessions),
+                setsLoading: false
+            })
         } catch (error) {
             console.error("Error fetching workouts for this exercise:", error)
             this.setState({ setsError: (error as Error).message, setsLoading: false })
         }
     }
 
-    fetchAllWorkouts = async (): Promise<WorkoutSet[]> => {
-        const workouts: WorkoutSet[] = []
-        const batchSize = 4
-        let page = 1
-        let exhausted = false
+    fetchAllSets = async (): Promise<WorkoutSet[]> => {
+        const sets: WorkoutSet[] = []
 
-        while (!exhausted && page <= MAX_WORKOUT_PAGES) {
-            const firstPage = page
-            const pageNumbers = Array.from({ length: batchSize }, (_, offset) => firstPage + offset)
-            const responses = await Promise.all(
-                pageNumbers.map(pageNumber => fetch(`${API_URL}/go-heavier/workouts?page=${pageNumber}`))
-            )
-
-            for (const response of responses) {
-                if (!response.ok) {
-                    throw new Error("Failed to load workouts")
-                }
-                const pageWorkouts: WorkoutSet[] = await response.json()
-                if (pageWorkouts.length === 0) {
-                    exhausted = true
-                } else {
-                    workouts.push(...pageWorkouts)
-                }
+        for (let page = 1; page <= MAX_WORKOUT_PAGES; page++) {
+            const params = new URLSearchParams({
+                exercise_id: this.props.id,
+                page: String(page)
+            })
+            const response = await fetch(`${API_URL}/go-heavier/workouts?${params}`)
+            if (!response.ok) {
+                throw new Error("Failed to load workouts")
             }
-            page += batchSize
+
+            const pageSets: WorkoutSet[] = await response.json()
+            if (pageSets.length === 0) {
+                break
+            }
+            sets.push(...pageSets)
         }
 
-        return workouts
+        return sets
     }
 
 
@@ -235,7 +218,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
     handleRefresh = async () => {
         this.setState({ isRefreshing: true })
         this.fetchStats()
-        this.fetchExerciseSets(false)
+        this.fetchExerciseSets()
         try {
             const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
             if (!response.ok) {
@@ -379,22 +362,28 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         })
     }
 
-    // Every set from the most recent day this exercise was performed.
+    // The most recent session this exercise was performed in.
+    getLatestSession = (): SessionSummary | null => {
+        const sessions = this.state.sessions
+        if (sessions.length === 0) {
+            return null
+        }
+
+        return sessions.reduce((latest, session) =>
+            new Date(session.workout_time) > new Date(latest.workout_time) ? session : latest
+        )
+    }
+
+    // Every set of this exercise logged in that session.
     getLatestSets = (): WorkoutSet[] => {
-        const sets = this.state.exerciseSets ?? []
-        if (sets.length === 0) {
+        const latest = this.getLatestSession()
+        if (!latest) {
             return []
         }
 
-        const latest = new Date(Math.max(...sets.map(set => new Date(set.workout_time).getTime())))
-        const onLatestDay = (value: string) => {
-            const performed = new Date(value)
-            return performed.getFullYear() === latest.getFullYear()
-                && performed.getMonth() === latest.getMonth()
-                && performed.getDate() === latest.getDate()
-        }
-
-        return sets.filter(set => onLatestDay(set.workout_time)).sort((a, b) => a.index - b.index)
+        return (this.state.exerciseSets ?? [])
+            .filter(set => set.session_id === latest.id)
+            .sort((a, b) => a.index - b.index)
     }
 
     // Heaviest set, the same measure as the "Heaviest lift" stat. Ties go to the
@@ -412,12 +401,17 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
             if (set.repetitions !== best.repetitions) {
                 return set.repetitions > best.repetitions ? set : best
             }
-            return new Date(set.workout_time) > new Date(best.workout_time) ? set : best
+            const setTime = this.state.sessionsById[set.session_id]?.workout_time
+            const bestTime = this.state.sessionsById[best.session_id]?.workout_time
+            if (!setTime || !bestTime) {
+                return best
+            }
+            return new Date(setTime) > new Date(bestTime) ? set : best
         })
     }
 
-    formatSessionDate = (value: string): string =>
-        new Date(value).toLocaleDateString("en-US", {
+    formatSessionDate = (value?: string): string =>
+        !value ? "\u2014" : new Date(value).toLocaleDateString("en-US", {
             weekday: "long",
             year: "numeric",
             month: "long",
@@ -459,8 +453,10 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
     }
 
     render(): React.ReactNode {
+        const latestSession = this.getLatestSession()
         const latestSets = this.getLatestSets()
         const bestSet = this.getBestSet()
+        const bestSetSession = bestSet ? this.state.sessionsById[bestSet.session_id] : undefined
 
         if (this.state.showDeleteConfirm) {
             return (
@@ -635,7 +631,12 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                     <button className="edit-action-button" onClick={this.handleEdit}>
                                         ✏️ Edit Exercise
                                     </button>
-                                    <button className="delete-action-button" onClick={this.handleDelete}>
+                                    <button
+                                        className="delete-action-button"
+                                        onClick={this.handleDelete}
+                                        disabled
+                                        title="Deleting is restricted to admins"
+                                    >
                                         🗑️ Delete Exercise
                                     </button>
                                 </div>
@@ -738,19 +739,26 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                     ) : (
                                         <div className="detail-card">
                                             <div className="latest-workout-meta">
-                                                <span className="latest-workout-date">
-                                                    {this.formatSessionDate(latestSets[0].workout_time)}
-                                                </span>
-                                                {this.state.locationNames[latestSets[0].location_id] && (
+                                                <a
+                                                    className="latest-workout-date"
+                                                    href={`/go-heavier/sessions/${latestSets[0].session_id}`}
+                                                    onClick={(e) => {
+                                                        e.preventDefault()
+                                                        this.props.navigate(`/go-heavier/sessions/${latestSets[0].session_id}`)
+                                                    }}
+                                                >
+                                                    {this.formatSessionDate(latestSession?.workout_time)}
+                                                </a>
+                                                {latestSession && (
                                                     <a
                                                         className="latest-workout-location"
-                                                        href={`/go-heavier/locations/${latestSets[0].location_id}`}
+                                                        href={`/go-heavier/locations/${latestSession.location_id}`}
                                                         onClick={(e) => {
                                                             e.preventDefault()
-                                                            this.props.navigate(`/go-heavier/locations/${latestSets[0].location_id}`)
+                                                            this.props.navigate(`/go-heavier/locations/${latestSession.location_id}`)
                                                         }}
                                                     >
-                                                        📍 {this.state.locationNames[latestSets[0].location_id]}
+                                                        📍 {latestSession.location}
                                                     </a>
                                                 )}
                                                 <span className="latest-workout-count">
@@ -823,17 +831,26 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                                 <span className="best-set-reps">× {bestSet.repetitions} reps</span>
                                             </div>
                                             <div className="best-set-meta">
-                                                <span>{this.formatSessionDate(bestSet.workout_time)}</span>
-                                                {this.state.locationNames[bestSet.location_id] && (
+                                                <a
+                                                    className="latest-workout-location"
+                                                    href={`/go-heavier/sessions/${bestSet.session_id}`}
+                                                    onClick={(e) => {
+                                                        e.preventDefault()
+                                                        this.props.navigate(`/go-heavier/sessions/${bestSet.session_id}`)
+                                                    }}
+                                                >
+                                                    {this.formatSessionDate(bestSetSession?.workout_time)}
+                                                </a>
+                                                {bestSetSession && (
                                                     <a
                                                         className="latest-workout-location"
-                                                        href={`/go-heavier/locations/${bestSet.location_id}`}
+                                                        href={`/go-heavier/locations/${bestSetSession.location_id}`}
                                                         onClick={(e) => {
                                                             e.preventDefault()
-                                                            this.props.navigate(`/go-heavier/locations/${bestSet.location_id}`)
+                                                            this.props.navigate(`/go-heavier/locations/${bestSetSession.location_id}`)
                                                         }}
                                                     >
-                                                        📍 {this.state.locationNames[bestSet.location_id]}
+                                                        📍 {bestSetSession.location}
                                                     </a>
                                                 )}
                                                 <span>Set {bestSet.index}</span>

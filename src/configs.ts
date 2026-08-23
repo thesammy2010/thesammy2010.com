@@ -1,7 +1,9 @@
 export const API_URL = process.env.API_URL || "http://localhost:8000"
 
-// Every workout page the app has fetched, written by the workouts page.
-export const WORKOUTS_CACHE_KEY = "go-heavier-workouts"
+// Every workout page the app has fetched, written by the workouts page. The
+// suffix is bumped whenever the workout shape changes so a stale cache from an
+// older schema is ignored rather than rendered.
+export const WORKOUTS_CACHE_KEY = "go-heavier-workouts-v2"
 
 export function countryCodeToEmoji(countryCode: string): string {
     const codePoints = countryCode

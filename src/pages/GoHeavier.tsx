@@ -1,7 +1,8 @@
 import React from "react"
 import { Link } from "react-router-dom"
 
-import { API_URL, WORKOUTS_CACHE_KEY } from "../configs"
+import { API_URL } from "../configs"
+import { fetchAllSessions } from "../components/go_heavier/sessions"
 import GoHeavierNavBar from "../components/go_heavier/NavBar"
 import "./GoHeavier.css"
 
@@ -10,6 +11,7 @@ interface State {
     isRefreshing: boolean
     locationCount?: number
     exerciseCount?: number
+    sessionCount?: number
     workoutCount?: number
 }
 
@@ -21,6 +23,7 @@ export default class GoHeavier extends React.Component<{}, State> {
             isRefreshing: false,
             locationCount: undefined,
             exerciseCount: undefined,
+            sessionCount: undefined,
             workoutCount: undefined
         }
     }
@@ -33,11 +36,8 @@ export default class GoHeavier extends React.Component<{}, State> {
 
         this.setState({ isRefreshing: true })
         try {
-            // Workouts are paged, so the count comes from what the workouts page cached.
-            const cachedWorkouts = localStorage.getItem(WORKOUTS_CACHE_KEY)
-            const workoutCount = cachedWorkouts ? JSON.parse(cachedWorkouts).length : undefined
-
-            const [locationsRes, exercisesRes] = await Promise.all([
+            const [sessions, locationsRes, exercisesRes] = await Promise.all([
+                fetchAllSessions(),
                 fetch(`${API_URL}/go-heavier/locations`),
                 fetch(`${API_URL}/go-heavier/exercises`)
             ])
@@ -45,12 +45,16 @@ export default class GoHeavier extends React.Component<{}, State> {
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
 
+            // Every set belongs to a session, so the sessions carry the set total.
+            const workoutCount = sessions.reduce((total, session) => total + session.sets, 0)
+
             await waitOut()
             this.setState({
                 loaded: true,
                 isRefreshing: false,
                 locationCount: locations.length,
                 exerciseCount: exercises.length,
+                sessionCount: sessions.length,
                 workoutCount: workoutCount
             })
         } catch (error) {
@@ -135,6 +139,14 @@ export default class GoHeavier extends React.Component<{}, State> {
                                         <div className="stat-value">{this.state.exerciseCount ?? '...'}</div>
                                         <div className="stat-label">Exercises</div>
                                         <p className="stat-caption">Movements in your library</p>
+                                    </div>
+                                </Link>
+                                <Link to="/go-heavier/sessions" className="stat-card">
+                                    <div className="stat-icon">🗓️</div>
+                                    <div className="stat-content">
+                                        <div className="stat-value">{this.state.sessionCount ?? '...'}</div>
+                                        <div className="stat-label">Sessions</div>
+                                        <p className="stat-caption">Visits to the gym</p>
                                     </div>
                                 </Link>
                                 <Link to="/go-heavier/workouts" className="stat-card">

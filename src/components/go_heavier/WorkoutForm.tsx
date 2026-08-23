@@ -1,5 +1,6 @@
 import React from "react"
 import { API_URL } from "../../configs"
+import { SessionSummary, fetchAllSessions } from "./sessions"
 import "./ExerciseForm.css"
 
 interface Props {
@@ -9,10 +10,8 @@ interface Props {
 
 interface State {
     formData: {
-        location_id: string
+        session_id: string
         exercise_id: string
-        exercise_index: number
-        workout_time: string
         index: number
         repetitions: number
         weight_kg: number
@@ -22,29 +21,18 @@ interface State {
     }
     loading: boolean
     error: string | null
-    locations: any[]
+    sessions: SessionSummary[]
     exercises: any[]
 }
 
 export default class WorkoutForm extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
-        
-        // Get current date and time in local timezone
-        const now = new Date()
-        const year = now.getFullYear()
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`
-        
+
         this.state = {
             formData: {
-                location_id: "",
+                session_id: "",
                 exercise_id: "",
-                exercise_index: 0,
-                workout_time: localDateTime,
                 index: 1,
                 repetitions: 10,
                 weight_kg: 0,
@@ -54,38 +42,49 @@ export default class WorkoutForm extends React.Component<Props, State> {
             },
             loading: false,
             error: null,
-            locations: [],
+            sessions: [],
             exercises: []
         }
     }
 
     componentDidMount() {
-        this.fetchLocationsAndExercises()
+        this.fetchSessionsAndExercises()
     }
 
-    fetchLocationsAndExercises = async () => {
+    // Sessions are read only on the API, so a new set has to join an existing one.
+    fetchSessionsAndExercises = async () => {
         try {
-            const [locationsRes, exercisesRes] = await Promise.all([
-                fetch(`${API_URL}/go-heavier/locations`),
+            const [sessions, exercisesRes] = await Promise.all([
+                fetchAllSessions(),
                 fetch(`${API_URL}/go-heavier/exercises`)
             ])
-            
-            const locations = await locationsRes.json()
+
             const exercises = await exercisesRes.json()
-            
+
             this.setState({ 
-                locations, 
+                sessions, 
                 exercises,
                 formData: {
                     ...this.state.formData,
-                    location_id: locations.length > 0 ? locations[0].id : "",
+                    session_id: sessions.length > 0 ? sessions[0].id : "",
                     exercise_id: exercises.length > 0 ? exercises[0].id : ""
                 }
             })
         } catch (error) {
             console.error("Error fetching data:", error)
-            this.setState({ error: "Failed to load locations and exercises" })
+            this.setState({ error: "Failed to load sessions and exercises" })
         }
+    }
+
+    formatSessionOption = (session: SessionSummary): string => {
+        const when = new Date(session.workout_time).toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+        return `${when} — ${session.location}`
     }
 
     handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -100,34 +99,61 @@ export default class WorkoutForm extends React.Component<Props, State> {
     }
 
     validateForm = (): boolean => {
-        const { location_id, exercise_id, workout_time, index, repetitions, weight_kg } = this.state.formData
+        const {
+            session_id,
+            exercise_id,
+            index,
+            repetitions,
+            weight_kg,
+            bar_weight_kg,
+            supplementary_weight_kg
+        } = this.state.formData
 
-        if (!location_id || !exercise_id) {
-            this.setState({ error: "Location and Exercise are required" })
+        if (!session_id || !exercise_id) {
+            this.setState({ error: "Session and Exercise are required" })
             return false
         }
 
-        if (!workout_time) {
-            this.setState({ error: "Workout time is required" })
+        if (index < 1 || index > 99) {
+            this.setState({ error: "Set number must be between 1 and 99" })
             return false
         }
 
-        if (index < 1) {
-            this.setState({ error: "Set number must be at least 1" })
+        if (repetitions < 1 || repetitions > 99) {
+            this.setState({ error: "Repetitions must be between 1 and 99" })
             return false
         }
 
-        if (repetitions < 1) {
-            this.setState({ error: "Repetitions must be at least 1" })
+        // Negative weight is valid: an assisted machine takes weight off the lifter.
+        if (weight_kg <= -1000 || weight_kg >= 1000) {
+            this.setState({ error: "Weight must be between -999 and 999 kg" })
             return false
         }
 
-        if (weight_kg < 0) {
-            this.setState({ error: "Weight cannot be negative" })
+        if (bar_weight_kg < 0 || bar_weight_kg >= 100) {
+            this.setState({ error: "Bar weight must be between 0 and 99 kg" })
+            return false
+        }
+
+        if (supplementary_weight_kg <= -100 || supplementary_weight_kg >= 100) {
+            this.setState({ error: "Supplementary weight must be between -99 and 99 kg" })
             return false
         }
 
         return true
+    }
+
+    // The API takes null rather than zero for the optional weights, and rejects a
+    // bar weight of zero outright.
+    buildPayload = () => {
+        const { bar_weight_kg, supplementary_weight_kg, notes, ...rest } = this.state.formData
+
+        return {
+            ...rest,
+            bar_weight_kg: bar_weight_kg > 0 ? bar_weight_kg : null,
+            supplementary_weight_kg: supplementary_weight_kg !== 0 ? supplementary_weight_kg : null,
+            notes: notes.trim() ? notes.trim() : null
+        }
     }
 
     handleSubmit = async (e: React.FormEvent) => {
@@ -146,7 +172,7 @@ export default class WorkoutForm extends React.Component<Props, State> {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(this.state.formData)
+                body: JSON.stringify({ workouts: [this.buildPayload()] })
             })
 
             if (!response.ok) {
@@ -170,17 +196,17 @@ export default class WorkoutForm extends React.Component<Props, State> {
                     <h2>Add New Workout</h2>
                     <form onSubmit={this.handleSubmit}>
                         <label>
-                            Location: <span className="required">*</span>
+                            Session: <span className="required">*</span>
                             <select
-                                name="location_id"
-                                value={this.state.formData.location_id}
+                                name="session_id"
+                                value={this.state.formData.session_id}
                                 onChange={this.handleChange}
                                 required
                             >
-                                <option value="">Select location...</option>
-                                {this.state.locations.map(location => (
-                                    <option key={location.id} value={location.id}>
-                                        {location.name}
+                                <option value="">Select session...</option>
+                                {this.state.sessions.map(session => (
+                                    <option key={session.id} value={session.id}>
+                                        {this.formatSessionOption(session)}
                                     </option>
                                 ))}
                             </select>
@@ -201,17 +227,6 @@ export default class WorkoutForm extends React.Component<Props, State> {
                                     </option>
                                 ))}
                             </select>
-                        </label>
-
-                        <label>
-                            Workout Time: <span className="required">*</span>
-                            <input
-                                type="datetime-local"
-                                name="workout_time"
-                                value={this.state.formData.workout_time}
-                                onChange={this.handleChange}
-                                required
-                            />
                         </label>
 
                         <label>
@@ -271,17 +286,6 @@ export default class WorkoutForm extends React.Component<Props, State> {
                                 value={this.state.formData.supplementary_weight_kg}
                                 onChange={this.handleChange}
                                 step="0.1"
-                                min="0"
-                            />
-                        </label>
-
-                        <label>
-                            Exercise Index:
-                            <input
-                                type="number"
-                                name="exercise_index"
-                                value={this.state.formData.exercise_index}
-                                onChange={this.handleChange}
                                 min="0"
                             />
                         </label>
