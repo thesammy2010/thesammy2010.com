@@ -631,7 +631,12 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                     <button className="edit-action-button" onClick={this.handleEdit}>
                                         ✏️ Edit Exercise
                                     </button>
-                                    <button className="delete-action-button" onClick={this.handleDelete}>
+                                    <button
+                                        className="delete-action-button"
+                                        onClick={this.handleDelete}
+                                        disabled
+                                        title="Deleting is restricted to admins"
+                                    >
                                         🗑️ Delete Exercise
                                     </button>
                                 </div>

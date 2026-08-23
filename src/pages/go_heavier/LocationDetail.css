@@ -160,10 +160,20 @@
     color: white;
 }
 
-.delete-action-button:hover {
+.delete-action-button:hover:not(:disabled) {
     background: #dc2626;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Deleting is admin only, and admin is not defined yet */
+.edit-action-button:disabled,
+.delete-action-button:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Custom confirmation dialog */
