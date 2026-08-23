@@ -1,0 +1,135 @@
+/* About page. Every class is prefixed: stylesheets are bundled globally here,
+   so an unprefixed name would leak onto every other page. */
+
+.about-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+}
+
+.about-hero {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.about-hero h1 {
+    margin: 0 0 12px 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #2c3e50;
+}
+
+.about-lead {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: #5a6c7d;
+}
+
+.about-section {
+    margin-bottom: 40px;
+}
+
+.about-section h2 {
+    margin: 0 0 16px 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #a0aec0;
+}
+
+/* The one thing worth clicking through to */
+.about-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px;
+    background: white;
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.about-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+}
+
+.about-card-icon {
+    font-size: 1.75rem;
+    line-height: 1.2;
+}
+
+.about-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.about-card-title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.about-card:hover .about-card-title {
+    color: #667eea;
+}
+
+.about-card-text {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #5a6c7d;
+}
+
+.about-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.about-tags li {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #eef0fb;
+    color: #4c5bd4;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.about-note {
+    margin: 16px 0 0 0;
+    font-size: 0.9375rem;
+    color: #718096;
+}
+
+.about-note a {
+    color: #667eea;
+    font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .about-page {
+        padding: 32px 16px 48px;
+    }
+
+    .about-hero {
+        margin-bottom: 32px;
+    }
+
+    .about-hero h1 {
+        font-size: 1.75rem;
+    }
+
+    .about-card {
+        padding: 20px;
+    }
+}

@@ -1,0 +1,92 @@
+/* Site-wide navigation. Deliberately light: the Go Heavier section has its own
+   gradient bar underneath this one, and two loud bars would fight. */
+
+.site-navbar {
+    background: white;
+    border-bottom: 1px solid #e8eaed;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.site-navbar-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.site-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #2c3e50;
+}
+
+.site-brand img {
+    height: 30px;
+    width: auto;
+    display: block;
+}
+
+.site-brand-name {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
+
+.site-brand:hover .site-brand-name {
+    color: #667eea;
+}
+
+.site-navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.site-navbar-links a {
+    color: #5a6c7d;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.site-navbar-links a:hover {
+    color: #667eea;
+    background: #f4f5fb;
+}
+
+.site-navbar-links a.active {
+    color: #667eea;
+    background: #eef0fb;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .site-navbar-content {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+
+    .site-brand-name {
+        font-size: 1rem;
+    }
+
+    .site-navbar-links a {
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 380px) {
+    /* The mark alone still gets home; the name is the first thing to go. */
+    .site-brand-name {
+        display: none;
+    }
+}
