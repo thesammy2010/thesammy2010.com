@@ -1,0 +1,160 @@
+/* Log-a-workout popup: wider than the simple forms, since each set is a row */
+
+.log-workout-wizard {
+    max-width: 860px;
+    width: 100%;
+}
+
+.wizard-steps {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    margin: 0 0 20px 0;
+    padding: 0;
+}
+
+.wizard-steps li {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #f4f5f7;
+    color: #a0aec0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.wizard-steps li.current {
+    background: #eef0fb;
+    color: #4c5bd4;
+}
+
+.wizard-steps li.done {
+    background: #eef0fb;
+    color: #a0aec0;
+}
+
+.wizard-hint {
+    margin: 0 0 16px 0;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.wizard-session-label {
+    margin: 0 0 16px 0;
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.set-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.set-row {
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    padding: 14px;
+    background: #fdfdfe;
+}
+
+.set-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.set-row-number {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #718096;
+}
+
+.set-row-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.popup-form .set-row-actions button {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: white;
+    color: #5a6c7d;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    width: auto;
+}
+
+.popup-form .set-row-actions button:hover:not(:disabled) {
+    border-color: #667eea;
+    color: #667eea;
+    transform: none;
+}
+
+.set-row-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+
+.set-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+}
+
+.set-field > span {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #a0aec0;
+}
+
+.popup-form .set-field input {
+    margin: 0;
+}
+
+.set-field-exercise {
+    grid-column: span 2;
+    min-width: 180px;
+}
+
+.set-field-notes {
+    grid-column: span 2;
+    min-width: 180px;
+}
+
+.popup-form .add-set-button {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    background: white;
+    color: #667eea;
+    border: 1px dashed #c3c9f5;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.popup-form .add-set-button:hover {
+    background: #f4f5fb;
+    transform: none;
+}
+
+@media (max-width: 640px) {
+    .set-field-exercise,
+    .set-field-notes {
+        grid-column: 1 / -1;
+    }
+}

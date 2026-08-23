@@ -1,0 +1,64 @@
+/* Searchable exercise dropdown */
+
+.exercise-picker {
+    position: relative;
+    width: 100%;
+}
+
+.exercise-picker-input {
+    width: 100%;
+}
+
+.exercise-picker-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 20;
+}
+
+.exercise-picker-option {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 10px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.exercise-picker-option.highlighted {
+    background: #eef0fb;
+}
+
+.exercise-picker-name {
+    color: #2c3e50;
+    font-size: 0.9375rem;
+}
+
+.exercise-picker-muscle {
+    color: #a0aec0;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+    flex-shrink: 0;
+}
+
+.exercise-picker-empty {
+    padding: 10px;
+    color: #a0aec0;
+    font-size: 0.875rem;
+}
