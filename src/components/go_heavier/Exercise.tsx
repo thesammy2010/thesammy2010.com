@@ -18,7 +18,6 @@ interface Props {
 }
 
 interface State {
-    loaded: boolean
     deleted: boolean
 }
 
@@ -26,7 +25,6 @@ export class Exercise extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
         this.state = {
-            loaded: true,
             deleted: false
         }
     }
