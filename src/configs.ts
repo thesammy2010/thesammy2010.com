@@ -1,4 +1,8 @@
-export const API_URL = process.env.API_URL || "http://localhost:8000"
+// Create React App only exposes variables prefixed with REACT_APP_, so reading
+// process.env.API_URL silently yielded undefined and every build fell back to
+// localhost — including the production one, which has the real host in
+// .env.production.
+export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000"
 
 // Every workout page the app has fetched, written by the workouts page. The
 // suffix is bumped whenever the workout shape changes so a stale cache from an
