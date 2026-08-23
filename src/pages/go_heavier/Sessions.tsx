@@ -2,7 +2,16 @@ import React from "react"
 import { useNavigate } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { SESSIONS_CACHE_KEY, SessionSummary, fetchAllSessions } from "../../components/go_heavier/sessions"
+import SessionForm from "../../components/go_heavier/SessionForm"
+import {
+    SESSIONS_CACHE_KEY,
+    SessionHighlight,
+    SessionStats,
+    SessionSummary,
+    WeekdayStats,
+    fetchAllSessions,
+    fetchSessionStats
+} from "../../components/go_heavier/sessions"
 import "../GoHeavier.css"
 import "../../components/go_heavier/Stats.css"
 import "./Sessions.css"
@@ -15,6 +24,10 @@ interface State {
     loaded: boolean | null
     sessions?: SessionSummary[]
     isRefreshing: boolean
+    stats: SessionStats | null
+    statsLoading: boolean
+    statsError: string | null
+    showForm: boolean
 }
 
 export class Sessions extends React.Component<Props, State> {
@@ -27,7 +40,11 @@ export class Sessions extends React.Component<Props, State> {
         this.state = {
             loaded: cachedSessions ? true : null,
             sessions: cachedSessions,
-            isRefreshing: false
+            isRefreshing: false,
+            stats: null,
+            statsLoading: true,
+            statsError: null,
+            showForm: false
         }
     }
 
@@ -36,6 +53,18 @@ export class Sessions extends React.Component<Props, State> {
         // thing that goes back to the API.
         if (!this.state.sessions) {
             this.fetchSessions()
+        }
+        this.fetchStats()
+    }
+
+    fetchStats = async () => {
+        this.setState({ statsLoading: true, statsError: null })
+        try {
+            const stats = await fetchSessionStats()
+            this.setState({ stats, statsLoading: false })
+        } catch (error) {
+            console.error("Error fetching session stats:", error)
+            this.setState({ statsError: (error as Error).message, statsLoading: false })
         }
     }
 
@@ -61,16 +90,63 @@ export class Sessions extends React.Component<Props, State> {
 
     handleRefresh = () => {
         this.fetchSessions()
+        this.fetchStats()
     }
 
     handleRetry = () => {
         // Keep the loading state on screen long enough to be visible
         this.fetchSessions(1000)
+        this.fetchStats()
     }
+
+    formatDays = (value: number | null): string =>
+        value === null || value === undefined ? "\u2014" : `${value.toFixed(1)} days`
+
+    // The bar length encodes sessions, the same measure the row is labelled with.
+    renderWeekdays = (weekdays: WeekdayStats[]): React.ReactNode => {
+        const busiest = Math.max(...weekdays.map(day => day.sessions), 1)
+
+        return weekdays.map((day) => (
+            <li key={day.weekday} className="top-list-item">
+                <div className="top-list-head">
+                    <span className="top-list-name">{day.weekday}</span>
+                    <span className="top-list-metric">
+                        {this.formatCount(day.sessions)} {day.sessions === 1 ? "session" : "sessions"}
+                    </span>
+                </div>
+                <div className="top-list-bar-track">
+                    <div
+                        className="top-list-bar"
+                        style={{ width: `${(day.sessions / busiest) * 100}%` }}
+                    />
+                </div>
+                <div className="top-list-meta">
+                    {this.formatCount(day.sets)} sets · {this.formatWeight(day.volume_kg)}
+                </div>
+            </li>
+        ))
+    }
+
+    renderHighlight = (title: string, highlight: SessionHighlight) => (
+        <div className="detail-card">
+            <h4 className="top-list-title">{title}</h4>
+            <button
+                className="session-exercise-name"
+                onClick={() => this.props.navigate(`/go-heavier/sessions/${highlight.id}`)}
+            >
+                {this.formatSessionDate(highlight.workout_time)}
+            </button>
+            <div className="top-list-meta">
+                📍 {highlight.location} · {this.formatCount(highlight.sets)} sets ·{" "}
+                {this.formatWeight(highlight.volume_kg)}
+            </div>
+        </div>
+    )
 
     formatCount = (value: number): string => value.toLocaleString()
 
-    formatWeight = (value: number): string => `${Math.round(value).toLocaleString()} kg`
+    formatWeight = (value: number | null): string =>
+        value === null || value === undefined ? "\u2014" : `${Math.round(value).toLocaleString()} kg`
 
     formatSessionDate = (value: string): string =>
         new Date(value).toLocaleDateString("en-US", {
@@ -88,8 +164,7 @@ export class Sessions extends React.Component<Props, State> {
 
     render(): React.ReactNode {
         const sessions = this.state.sessions ?? []
-        const totalSets = sessions.reduce((sum, session) => sum + session.sets, 0)
-        const totalVolume = sessions.reduce((sum, session) => sum + session.volume_kg, 0)
+        const stats = this.state.stats
 
         return (
             <div className="center-container-grid">
@@ -126,6 +201,28 @@ export class Sessions extends React.Component<Props, State> {
                         </div>
                     )}
 
+                    {this.state.loaded && (
+                        <button
+                            className="add-location-button"
+                            onClick={() => this.setState({ showForm: true })}
+                        >
+                            <span className="button-icon">➕</span>
+                            Add New Session
+                        </button>
+                    )}
+
+                    {this.state.showForm && (
+                        <SessionForm
+                            onClose={() => this.setState({ showForm: false })}
+                            onSuccess={(session) => {
+                                this.setState({ showForm: false })
+                                // The new session is empty, so open it ready for sets.
+                                sessionStorage.removeItem(SESSIONS_CACHE_KEY)
+                                this.props.navigate(`/go-heavier/sessions/${session.id}`)
+                            }}
+                        />
+                    )}
+
                     {this.state.loaded && sessions.length === 0 && (
                         <div className="header">
                             <p>No sessions found.</p>
@@ -134,20 +231,61 @@ export class Sessions extends React.Component<Props, State> {
 
                     {this.state.loaded && sessions.length > 0 && (
                         <div className={`sessions-page ${this.state.isRefreshing ? 'refreshing' : ''}`}>
-                            <div className="stats-grid">
-                                <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatCount(sessions.length)}</div>
-                                    <div className="stat-tile-label">Sessions</div>
+                            {this.state.statsLoading && !this.state.stats && (
+                                <div className="detail-card">
+                                    <p>Loading stats...</p>
                                 </div>
-                                <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatCount(totalSets)}</div>
-                                    <div className="stat-tile-label">Sets</div>
+                            )}
+
+                            {this.state.statsError && (
+                                <div className="detail-card">
+                                    <p className="error-message">{this.state.statsError}</p>
                                 </div>
-                                <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatWeight(totalVolume)}</div>
-                                    <div className="stat-tile-label">Total volume</div>
-                                </div>
-                            </div>
+                            )}
+
+                            {!this.state.statsError && stats && (
+                                <>
+                                    <div className="stats-grid">
+                                        <div className="stat-tile">
+                                            <div className="stat-tile-value">{this.formatCount(stats.sessions)}</div>
+                                            <div className="stat-tile-label">Sessions</div>
+                                        </div>
+                                        <div className="stat-tile">
+                                            <div className="stat-tile-value">{stats.average_sets_per_session.toFixed(1)}</div>
+                                            <div className="stat-tile-label">Sets / session</div>
+                                        </div>
+                                        <div className="stat-tile">
+                                            <div className="stat-tile-value">{stats.average_exercises_per_session.toFixed(1)}</div>
+                                            <div className="stat-tile-label">Exercises / session</div>
+                                        </div>
+                                        <div className="stat-tile">
+                                            <div className="stat-tile-value">{this.formatWeight(stats.average_volume_kg_per_session)}</div>
+                                            <div className="stat-tile-label">Volume / session</div>
+                                        </div>
+                                        <div className="stat-tile">
+                                            <div className="stat-tile-value">{this.formatDays(stats.average_days_between_sessions)}</div>
+                                            <div className="stat-tile-label">Typical gap</div>
+                                        </div>
+                                        <div className="stat-tile">
+                                            <div className="stat-tile-value">{this.formatDays(stats.longest_gap_days)}</div>
+                                            <div className="stat-tile-label">Longest gap</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="stats-detail sessions-stats-detail">
+                                        {stats.busiest_session && this.renderHighlight("Busiest session", stats.busiest_session)}
+                                        {stats.heaviest_session && this.renderHighlight("Heaviest session", stats.heaviest_session)}
+                                        {(stats.by_weekday ?? []).length > 0 && (
+                                            <div className="detail-card sessions-weekdays">
+                                                <h4 className="top-list-title">By day of the week</h4>
+                                                <ol className="top-list">
+                                                    {this.renderWeekdays(stats.by_weekday ?? [])}
+                                                </ol>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
 
                             <div className="sessions-list">
                                 {sessions.map((session) => (

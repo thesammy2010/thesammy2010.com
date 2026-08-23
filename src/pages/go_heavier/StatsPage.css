@@ -1,0 +1,32 @@
+/* Training stats page */
+
+.stats-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.stats-page.refreshing {
+    opacity: 0.5;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+@media (min-width: 900px) {
+    .charts-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .stats-page {
+        padding: 16px;
+    }
+}

@@ -99,29 +99,61 @@ export default class WorkoutForm extends React.Component<Props, State> {
     }
 
     validateForm = (): boolean => {
-        const { session_id, exercise_id, index, repetitions, weight_kg } = this.state.formData
+        const {
+            session_id,
+            exercise_id,
+            index,
+            repetitions,
+            weight_kg,
+            bar_weight_kg,
+            supplementary_weight_kg
+        } = this.state.formData
 
         if (!session_id || !exercise_id) {
             this.setState({ error: "Session and Exercise are required" })
             return false
         }
 
-        if (index < 1) {
-            this.setState({ error: "Set number must be at least 1" })
+        if (index < 1 || index > 99) {
+            this.setState({ error: "Set number must be between 1 and 99" })
             return false
         }
 
-        if (repetitions < 1) {
-            this.setState({ error: "Repetitions must be at least 1" })
+        if (repetitions < 1 || repetitions > 99) {
+            this.setState({ error: "Repetitions must be between 1 and 99" })
             return false
         }
 
-        if (weight_kg < 0) {
-            this.setState({ error: "Weight cannot be negative" })
+        // Negative weight is valid: an assisted machine takes weight off the lifter.
+        if (weight_kg <= -1000 || weight_kg >= 1000) {
+            this.setState({ error: "Weight must be between -999 and 999 kg" })
+            return false
+        }
+
+        if (bar_weight_kg < 0 || bar_weight_kg >= 100) {
+            this.setState({ error: "Bar weight must be between 0 and 99 kg" })
+            return false
+        }
+
+        if (supplementary_weight_kg <= -100 || supplementary_weight_kg >= 100) {
+            this.setState({ error: "Supplementary weight must be between -99 and 99 kg" })
             return false
         }
 
         return true
+    }
+
+    // The API takes null rather than zero for the optional weights, and rejects a
+    // bar weight of zero outright.
+    buildPayload = () => {
+        const { bar_weight_kg, supplementary_weight_kg, notes, ...rest } = this.state.formData
+
+        return {
+            ...rest,
+            bar_weight_kg: bar_weight_kg > 0 ? bar_weight_kg : null,
+            supplementary_weight_kg: supplementary_weight_kg !== 0 ? supplementary_weight_kg : null,
+            notes: notes.trim() ? notes.trim() : null
+        }
     }
 
     handleSubmit = async (e: React.FormEvent) => {
@@ -140,7 +172,7 @@ export default class WorkoutForm extends React.Component<Props, State> {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ workouts: [this.state.formData] })
+                body: JSON.stringify({ workouts: [this.buildPayload()] })
             })
 
             if (!response.ok) {

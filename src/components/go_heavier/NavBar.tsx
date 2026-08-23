@@ -34,6 +34,12 @@ export default function GoHeavierNavBar() {
                         🗓️ Sessions
                     </Link>
                     <Link 
+                        to="/go-heavier/stats" 
+                        className={location.pathname === "/go-heavier/stats" ? "active" : ""}
+                    >
+                        📈 Stats
+                    </Link>
+                    <Link 
                         to="/go-heavier/workouts" 
                         className={location.pathname === "/go-heavier/workouts" ? "active" : ""}
                     >

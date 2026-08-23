@@ -13,6 +13,7 @@ import LocationDetail from "./pages/go_heavier/LocationDetail"
 import Exercises from "./pages/go_heavier/Exercises"
 import ExerciseDetail from "./pages/go_heavier/ExerciseDetail"
 import Sessions from "./pages/go_heavier/Sessions"
+import Stats from "./pages/go_heavier/Stats"
 import SessionDetail from "./pages/go_heavier/SessionDetail"
 import Workouts from "./pages/go_heavier/Workouts"
 
@@ -46,6 +47,7 @@ const App: React.FC = () => {
                         <Route path="/go-heavier/exercises" element={<Exercises />} />
                         <Route path="/go-heavier/exercises/:id" element={<ExerciseDetail />} />
                         <Route path="/go-heavier/sessions" element={<Sessions />} />
+                        <Route path="/go-heavier/stats" element={<Stats />} />
                         <Route path="/go-heavier/sessions/:id" element={<SessionDetail />} />
                         <Route path="/go-heavier/workouts" element={<Workouts />} />
                         {/* <Route path="/go-heavier/exercises/:locationId" element={<Exercises />} /> */}

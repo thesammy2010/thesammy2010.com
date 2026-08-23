@@ -11,10 +11,48 @@ export interface SessionSummary {
     exercises: number
     repetitions: number
     volume_kg: number
-    heaviest_weight_kg: number
+    heaviest_weight_kg: number | null
+}
+
+export interface SessionHighlight {
+    id: string
+    workout_time: string
+    location: string
+    sets: number
+    volume_kg: number
+}
+
+export interface WeekdayStats {
+    weekday: string
+    sessions: number
+    sets: number
+    volume_kg: number
+}
+
+export interface SessionStats {
+    sessions: number
+    first_session: string | null
+    last_session: string | null
+    average_sets_per_session: number
+    average_exercises_per_session: number
+    average_repetitions_per_session: number
+    average_volume_kg_per_session: number
+    average_days_between_sessions: number | null
+    longest_gap_days: number | null
+    busiest_session: SessionHighlight | null
+    heaviest_session: SessionHighlight | null
+    by_weekday?: WeekdayStats[]
 }
 
 export const SESSIONS_CACHE_KEY = "go-heavier-sessions"
+
+export async function fetchSessionStats(): Promise<SessionStats> {
+    const response = await fetch(`${API_URL}/go-heavier/sessions/stats`)
+    if (!response.ok) {
+        throw new Error("Failed to load session stats")
+    }
+    return response.json()
+}
 
 // Guard on the page walk so a misbehaving endpoint can't loop forever.
 const MAX_SESSION_PAGES = 500

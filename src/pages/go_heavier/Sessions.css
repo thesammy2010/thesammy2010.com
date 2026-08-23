@@ -167,3 +167,52 @@
     font-size: 0.875rem;
     color: #718096;
 }
+
+/* Session stats */
+.sessions-stats-detail {
+    margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+    .sessions-stats-detail {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .sessions-weekdays {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Add session button, matching the one on the locations page */
+.add-location-button {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.add-location-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+}
+
+.add-location-button:active {
+    transform: translateY(-1px);
+}
+
+.add-location-button .button-icon {
+    font-size: 1.3rem;
+}
