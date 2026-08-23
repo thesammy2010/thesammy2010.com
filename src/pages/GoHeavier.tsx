@@ -1,13 +1,19 @@
 import React from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 import { API_URL } from "../configs"
 import { fetchAllSessions } from "../components/go_heavier/sessions"
 import { formatCount, formatTonnes } from "../components/go_heavier/format"
 import GoHeavierNavBar from "../components/go_heavier/NavBar"
+import LogWorkoutWizard from "../components/go_heavier/LogWorkoutWizard"
 import "./GoHeavier.css"
 
+interface Props {
+    navigate: (path: string) => void
+}
+
 interface State {
+    showWizard: boolean
     loaded: boolean | null
     isRefreshing: boolean
     locationCount?: number
@@ -17,10 +23,11 @@ interface State {
     totalVolumeKg?: number
 }
 
-export default class GoHeavier extends React.Component<{}, State> {
-    constructor(props: {}) {
+export class GoHeavier extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props)
         this.state = {
+            showWizard: false,
             loaded: null,
             isRefreshing: false,
             locationCount: undefined,
@@ -129,6 +136,14 @@ export default class GoHeavier extends React.Component<{}, State> {
                                 </p>
                             </div>
 
+                            <button
+                                className="log-workout-button"
+                                onClick={() => this.setState({ showWizard: true })}
+                            >
+                                <span className="button-icon">🏋️</span>
+                                Log a workout
+                            </button>
+
                             <div className="stats-overview">
                                 <Link to="/go-heavier/locations" className="stat-card">
                                     <div className="stat-icon">📍</div>
@@ -172,6 +187,16 @@ export default class GoHeavier extends React.Component<{}, State> {
                                 </Link>
                             </div>
 
+                            {this.state.showWizard && (
+                                <LogWorkoutWizard
+                                    onClose={() => this.setState({ showWizard: false })}
+                                    onSaved={(sessionId) => {
+                                        this.setState({ showWizard: false })
+                                        this.props.navigate(`/go-heavier/sessions/${sessionId}`)
+                                    }}
+                                />
+                            )}
+
                             <div className="dashboard-footer">
                                 <p>Last refreshed: {new Date().toLocaleString()}</p>
                             </div>
@@ -181,4 +206,10 @@ export default class GoHeavier extends React.Component<{}, State> {
             </div>
         )
     }
+}
+
+// Wrapper component to use React Router hooks
+export default function GoHeavierWithNavigate() {
+    const navigate = useNavigate()
+    return <GoHeavier navigate={navigate} />
 }
