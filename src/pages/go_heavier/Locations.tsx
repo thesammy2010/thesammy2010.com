@@ -11,10 +11,6 @@ interface State {
     locations?: any[]
     showForm?: boolean
     isRefreshing?: boolean
-    toast?: {
-        message: string
-        type: 'success' | 'error' | 'info'
-    } | null
     hasFetchedOnce?: boolean
 }
 
@@ -31,33 +27,7 @@ export default class Locations extends React.Component<{}, State> {
             locations: cachedLocations,
             showForm: false,
             isRefreshing: false,
-            toast: null,
             hasFetchedOnce: !!cachedLocations
-        }
-    }
-
-    showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-        this.setState({ toast: { message, type } })
-        setTimeout(() => {
-            this.setState({ toast: null })
-        }, 3000)
-    }
-
-    handleLocationDeleted = (locationName: string) => {
-        this.showToast(`Location "${locationName}" deleted successfully`, 'success')
-        // Clear cache so next refresh gets fresh data
-        sessionStorage.removeItem('go-heavier-locations')
-    }
-
-    fetchConfig = async () => {
-        this.setState({ configLoaded: null })
-        try {
-            const response = await fetch(`${API_URL}/go-heavier/locations`)
-            const result = await response.json()
-            this.setState({ locations: result, configLoaded: true })
-        } catch (error) {
-            console.error("Error fetching locations:", error)
-            this.setState({ configLoaded: false })
         }
     }
 
@@ -137,7 +107,7 @@ export default class Locations extends React.Component<{}, State> {
                 {this.state.configLoaded && this.state.locations != null && this.state.locations.length > 0 && (
                     <div className={`locations-grid ${this.state.isRefreshing ? 'refreshing' : ''}`}>
                         {this.state.locations.map((location) => (
-                            <Location key={location.id} {...location} onDeleted={this.handleLocationDeleted} />
+                            <Location key={location.id} {...location} />
                         ))}
                     </div>
                 )}
@@ -159,15 +129,11 @@ export default class Locations extends React.Component<{}, State> {
                                 this.setState({ showForm: false })
                             }}
                             onSuccess={(newLocation) => {
-                                this.state.locations?.push(newLocation)
-                                // this.setState({ locations: this.state.locations?.push(newLocation) })
+                                this.setState((prevState) => ({
+                                    locations: [...(prevState.locations ?? []), newLocation]
+                                }))
                             }}
                         />
-                    </div>
-                )}
-                {this.state.toast && (
-                    <div className={`toast toast-${this.state.toast.type}`}>
-                        {this.state.toast.message}
                     </div>
                 )}
                 </div>

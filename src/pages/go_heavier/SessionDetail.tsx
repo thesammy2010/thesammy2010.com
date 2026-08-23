@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import { API_URL, formatNotes } from "../../configs"
+import { formatCount, formatFullDateTime, formatWeight } from "../../components/go_heavier/format"
 import "../GoHeavier.css"
 import "../../components/go_heavier/Stats.css"
 import "./Sessions.css"
@@ -117,22 +118,6 @@ class SessionDetailClass extends React.Component<Props, State> {
         this.props.navigate("/go-heavier/sessions")
     }
 
-    formatCount = (value: number): string => value.toLocaleString()
-
-    formatWeight = (value: number | null): string =>
-        value === null || value === undefined ? "—" : `${Math.round(value).toLocaleString()} kg`
-
-    formatSessionDate = (value: string): string =>
-        new Date(value).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-        })
-
-    // The sets come back in exercise order; group them so each exercise reads as a block.
     groupSetsByExercise = (): Array<{ exercise: SessionExerciseStats; sets: WorkoutSet[] }> => {
         const byExercise = this.state.session?.by_exercise ?? []
         const sets = this.state.sets ?? []
@@ -185,7 +170,7 @@ class SessionDetailClass extends React.Component<Props, State> {
                     {session && (
                         <div className={`location-detail-container ${this.state.isRefreshing ? 'refreshing' : ''}`}>
                             <div className="location-detail-header">
-                                <h1>{this.formatSessionDate(session.workout_time)}</h1>
+                                <h1>{formatFullDateTime(session.workout_time)}</h1>
                                 <p className="location-detail-description">
                                     <button
                                         className="session-location-link"
@@ -208,15 +193,15 @@ class SessionDetailClass extends React.Component<Props, State> {
                                         <div className="stat-tile-label">Sets</div>
                                     </div>
                                     <div className="stat-tile">
-                                        <div className="stat-tile-value">{this.formatCount(session.repetitions)}</div>
+                                        <div className="stat-tile-value">{formatCount(session.repetitions)}</div>
                                         <div className="stat-tile-label">Reps</div>
                                     </div>
                                     <div className="stat-tile">
-                                        <div className="stat-tile-value">{this.formatWeight(session.volume_kg)}</div>
+                                        <div className="stat-tile-value">{formatWeight(session.volume_kg)}</div>
                                         <div className="stat-tile-label">Volume</div>
                                     </div>
                                     <div className="stat-tile">
-                                        <div className="stat-tile-value">{this.formatWeight(session.heaviest_weight_kg)}</div>
+                                        <div className="stat-tile-value">{formatWeight(session.heaviest_weight_kg)}</div>
                                         <div className="stat-tile-label">Heaviest</div>
                                     </div>
                                 </div>
@@ -253,8 +238,8 @@ class SessionDetailClass extends React.Component<Props, State> {
                                                 {exercise.name}
                                             </button>
                                             <span className="session-exercise-summary">
-                                                {exercise.sets} sets · {this.formatCount(exercise.repetitions)} reps ·{" "}
-                                                {this.formatWeight(exercise.volume_kg)} · top {this.formatWeight(exercise.heaviest_weight_kg)}
+                                                {exercise.sets} sets · {formatCount(exercise.repetitions)} reps ·{" "}
+                                                {formatWeight(exercise.volume_kg)} · top {formatWeight(exercise.heaviest_weight_kg)}
                                             </span>
                                         </div>
 

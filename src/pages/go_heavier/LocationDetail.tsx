@@ -2,6 +2,7 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import { API_URL, countryCodeToEmoji } from "../../configs"
+import { formatCount, formatLongDate, formatWeight } from "../../components/go_heavier/format"
 import "../../components/go_heavier/Stats.css"
 import "./LocationDetail.css"
 import "../go_heavier/Locations.css"
@@ -305,23 +306,6 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         }
     }
 
-    formatCount = (value: number): string => value.toLocaleString()
-
-    formatWeight = (value: number | null): string =>
-        value === null || value === undefined ? "\u2014" : `${Math.round(value).toLocaleString()} kg`
-
-    formatVisitDate = (value: string | null): string => {
-        if (!value) {
-            return "\u2014"
-        }
-        return new Date(value).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric"
-        })
-    }
-
-    // The bar length encodes visits, the same measure the list is ordered by.
     renderTopExercises = (topExercises: TopExercise[]): React.ReactNode => {
         const mostVisits = Math.max(...topExercises.map(exercise => exercise.visits), 1)
 
@@ -339,7 +323,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                         {exercise.name}
                     </a>
                     <span className="top-list-metric">
-                        {this.formatCount(exercise.visits)} visits
+                        {formatCount(exercise.visits)} visits
                     </span>
                 </div>
                 <div className="top-list-bar-track">
@@ -349,7 +333,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                     />
                 </div>
                 <div className="top-list-meta">
-                    {this.formatCount(exercise.sets)} sets · {this.formatCount(exercise.repetitions)} reps · {this.formatWeight(exercise.volume_kg)}
+                    {formatCount(exercise.sets)} sets · {formatCount(exercise.repetitions)} reps · {formatWeight(exercise.volume_kg)}
                 </div>
             </li>
         ))
@@ -573,27 +557,27 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                                         <>
                                             <div className="stats-grid">
                                                 <div className="stat-tile">
-                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.visits)}</div>
+                                                    <div className="stat-tile-value">{formatCount(this.state.stats.visits)}</div>
                                                     <div className="stat-tile-label">Visits</div>
                                                 </div>
                                                 <div className="stat-tile">
-                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.total_sets)}</div>
+                                                    <div className="stat-tile-value">{formatCount(this.state.stats.total_sets)}</div>
                                                     <div className="stat-tile-label">Sets</div>
                                                 </div>
                                                 <div className="stat-tile">
-                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.total_repetitions)}</div>
+                                                    <div className="stat-tile-value">{formatCount(this.state.stats.total_repetitions)}</div>
                                                     <div className="stat-tile-label">Reps</div>
                                                 </div>
                                                 <div className="stat-tile">
-                                                    <div className="stat-tile-value">{this.formatWeight(this.state.stats.total_volume_kg)}</div>
+                                                    <div className="stat-tile-value">{formatWeight(this.state.stats.total_volume_kg)}</div>
                                                     <div className="stat-tile-label">Total volume</div>
                                                 </div>
                                                 <div className="stat-tile">
-                                                    <div className="stat-tile-value">{this.formatWeight(this.state.stats.heaviest_weight_kg)}</div>
+                                                    <div className="stat-tile-value">{formatWeight(this.state.stats.heaviest_weight_kg)}</div>
                                                     <div className="stat-tile-label">Heaviest lift</div>
                                                 </div>
                                                 <div className="stat-tile">
-                                                    <div className="stat-tile-value">{this.formatCount(this.state.stats.distinct_exercises)}</div>
+                                                    <div className="stat-tile-value">{formatCount(this.state.stats.distinct_exercises)}</div>
                                                     <div className="stat-tile-label">Exercises</div>
                                                 </div>
                                             </div>
@@ -602,11 +586,11 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                                                 <div className="detail-card">
                                                     <div className="info-row">
                                                         <span className="info-label">First visit:</span>
-                                                        <span className="info-value">{this.formatVisitDate(this.state.stats.first_visit)}</span>
+                                                        <span className="info-value">{formatLongDate(this.state.stats.first_visit)}</span>
                                                     </div>
                                                     <div className="info-row">
                                                         <span className="info-label">Last visit:</span>
-                                                        <span className="info-value">{this.formatVisitDate(this.state.stats.last_visit)}</span>
+                                                        <span className="info-value">{formatLongDate(this.state.stats.last_visit)}</span>
                                                     </div>
                                                     <div className="info-row">
                                                         <span className="info-label">Sets per visit:</span>

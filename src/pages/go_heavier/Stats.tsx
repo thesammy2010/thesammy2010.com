@@ -5,11 +5,20 @@ import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import BarChart, { BarChartPoint } from "../../components/go_heavier/BarChart"
 import { API_URL } from "../../configs"
 import {
+    MonthlyTotals,
     SessionStats,
     SessionSummary,
+    buildMonthlyTotals,
     fetchAllSessions,
     fetchSessionStats
 } from "../../components/go_heavier/sessions"
+import {
+    formatCount,
+    formatDays,
+    formatMonthYear,
+    formatTonnes,
+    formatWeight
+} from "../../components/go_heavier/format"
 import "../GoHeavier.css"
 import "../../components/go_heavier/Stats.css"
 import "./Sessions.css"
@@ -32,14 +41,6 @@ interface WorkoutTotals {
     distinct_locations: number
     top_exercises?: RankedItem[]
     top_locations?: RankedItem[]
-}
-
-interface MonthPoint {
-    label: string
-    visits: number
-    sets: number
-    repetitions: number
-    volume_kg: number
 }
 
 interface Props {
@@ -107,57 +108,7 @@ export class Stats extends React.Component<Props, State> {
         this.fetchEverything(1000)
     }
 
-    formatCount = (value: number): string => Math.round(value).toLocaleString()
-
-    formatWeight = (value: number | null): string =>
-        value === null || value === undefined ? "—" : `${Math.round(value).toLocaleString()} kg`
-
-    // Tonnes keep the volume axis readable; kilogram totals run to six figures.
-    formatTonnes = (value: number): string => `${(value / 1000).toFixed(1)}t`
-
-    formatDays = (value: number | null): string =>
-        value === null || value === undefined ? "—" : `${value.toFixed(1)} days`
-
-    // Every month between the first and last session, including the empty ones —
-    // dropping a quiet month would flatter the trend.
-    getMonths = (): MonthPoint[] => {
-        const sessions = this.state.sessions ?? []
-        if (sessions.length === 0) {
-            return []
-        }
-
-        const times = sessions.map(session => new Date(session.workout_time))
-        const first = new Date(Math.min(...times.map(time => time.getTime())))
-        const last = new Date(Math.max(...times.map(time => time.getTime())))
-
-        const months: MonthPoint[] = []
-        const cursor = new Date(first.getFullYear(), first.getMonth(), 1)
-        const end = new Date(last.getFullYear(), last.getMonth(), 1)
-
-        while (cursor <= end) {
-            const year = cursor.getFullYear()
-            const month = cursor.getMonth()
-
-            const inMonth = sessions.filter(session => {
-                const when = new Date(session.workout_time)
-                return when.getFullYear() === year && when.getMonth() === month
-            })
-
-            months.push({
-                label: cursor.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-                visits: inMonth.length,
-                sets: inMonth.reduce((total, session) => total + session.sets, 0),
-                repetitions: inMonth.reduce((total, session) => total + session.repetitions, 0),
-                volume_kg: inMonth.reduce((total, session) => total + session.volume_kg, 0)
-            })
-
-            cursor.setMonth(cursor.getMonth() + 1)
-        }
-
-        return months
-    }
-
-    toPoints = (months: MonthPoint[], key: keyof Omit<MonthPoint, "label">): BarChartPoint[] =>
+    toPoints = (months: MonthlyTotals[], key: keyof Omit<MonthlyTotals, "label">): BarChartPoint[] =>
         months.map(month => ({ label: month.label, value: month[key] }))
 
     renderRanked = (title: string, items: RankedItem[]) => {
@@ -172,7 +123,7 @@ export class Stats extends React.Component<Props, State> {
                             <div className="top-list-head">
                                 <span className="top-list-name">{item.name}</span>
                                 <span className="top-list-metric">
-                                    {this.formatCount(item.sessions)} sessions
+                                    {formatCount(item.sessions)} sessions
                                 </span>
                             </div>
                             <div className="top-list-bar-track">
@@ -182,8 +133,8 @@ export class Stats extends React.Component<Props, State> {
                                 />
                             </div>
                             <div className="top-list-meta">
-                                {this.formatCount(item.sets)} sets · {this.formatCount(item.repetitions)} reps ·{" "}
-                                {this.formatWeight(item.volume_kg)}
+                                {formatCount(item.sets)} sets · {formatCount(item.repetitions)} reps ·{" "}
+                                {formatWeight(item.volume_kg)}
                             </div>
                         </li>
                     ))}
@@ -194,7 +145,7 @@ export class Stats extends React.Component<Props, State> {
 
     render(): React.ReactNode {
         const { stats, totals } = this.state
-        const months = this.getMonths()
+        const months = buildMonthlyTotals(this.state.sessions ?? [])
         // 13 months of labels collide on a narrow screen; thin them out.
         const labelEvery = months.length > 12 ? 2 : 1
         const weekdays = stats?.by_weekday ?? []
@@ -239,34 +190,34 @@ export class Stats extends React.Component<Props, State> {
                             <div className="dashboard-hero">
                                 <h1>📈 Training Stats</h1>
                                 <p className="dashboard-tagline">
-                                    Every session logged, from {this.formatMonth(stats.first_session)} to{" "}
-                                    {this.formatMonth(stats.last_session)}.
+                                    Every session logged, from {formatMonthYear(stats.first_session)} to{" "}
+                                    {formatMonthYear(stats.last_session)}.
                                 </p>
                             </div>
 
                             <div className="stats-grid">
                                 <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatCount(stats.sessions)}</div>
+                                    <div className="stat-tile-value">{formatCount(stats.sessions)}</div>
                                     <div className="stat-tile-label">Sessions</div>
                                 </div>
                                 <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatCount(totals?.total_sets ?? 0)}</div>
+                                    <div className="stat-tile-value">{formatCount(totals?.total_sets ?? 0)}</div>
                                     <div className="stat-tile-label">Sets</div>
                                 </div>
                                 <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatCount(totals?.total_repetitions ?? 0)}</div>
+                                    <div className="stat-tile-value">{formatCount(totals?.total_repetitions ?? 0)}</div>
                                     <div className="stat-tile-label">Reps</div>
                                 </div>
                                 <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatTonnes(totals?.total_volume_kg ?? 0)}</div>
+                                    <div className="stat-tile-value">{formatTonnes(totals?.total_volume_kg ?? 0)}</div>
                                     <div className="stat-tile-label">Total volume</div>
                                 </div>
                                 <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatWeight(totals?.heaviest_weight_kg ?? null)}</div>
+                                    <div className="stat-tile-value">{formatWeight(totals?.heaviest_weight_kg ?? null)}</div>
                                     <div className="stat-tile-label">Heaviest lift</div>
                                 </div>
                                 <div className="stat-tile">
-                                    <div className="stat-tile-value">{this.formatDays(stats.average_days_between_sessions)}</div>
+                                    <div className="stat-tile-value">{formatDays(stats.average_days_between_sessions)}</div>
                                     <div className="stat-tile-label">Typical gap</div>
                                 </div>
                             </div>
@@ -276,21 +227,21 @@ export class Stats extends React.Component<Props, State> {
                                     title="Visits per month"
                                     subtitle="Sessions logged in each month"
                                     data={this.toPoints(months, "visits")}
-                                    formatValue={this.formatCount}
+                                    formatValue={formatCount}
                                     labelEvery={labelEvery}
                                 />
                                 <BarChart
                                     title="Sets per month"
                                     subtitle="Every set logged in each month"
                                     data={this.toPoints(months, "sets")}
-                                    formatValue={this.formatCount}
+                                    formatValue={formatCount}
                                     labelEvery={labelEvery}
                                 />
                                 <BarChart
                                     title="Volume per month"
                                     subtitle="Weight moved, reps multiplied by weight"
                                     data={this.toPoints(months, "volume_kg")}
-                                    formatValue={this.formatTonnes}
+                                    formatValue={formatTonnes}
                                     labelEvery={labelEvery}
                                 />
                                 {weekdays.length > 0 && (
@@ -301,7 +252,7 @@ export class Stats extends React.Component<Props, State> {
                                             label: day.weekday.slice(0, 3),
                                             value: day.sessions
                                         }))}
-                                        formatValue={this.formatCount}
+                                        formatValue={formatCount}
                                     />
                                 )}
                             </div>
@@ -318,9 +269,6 @@ export class Stats extends React.Component<Props, State> {
             </div>
         )
     }
-
-    formatMonth = (value: string | null): string =>
-        !value ? "—" : new Date(value).toLocaleDateString("en-US", { month: "long", year: "numeric" })
 }
 
 // Wrapper component to use React Router hooks
