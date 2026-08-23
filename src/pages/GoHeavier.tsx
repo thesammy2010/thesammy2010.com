@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 
 import { API_URL } from "../configs"
 import { fetchAllSessions } from "../components/go_heavier/sessions"
+import { formatCount, formatTonnes } from "../components/go_heavier/format"
 import GoHeavierNavBar from "../components/go_heavier/NavBar"
 import "./GoHeavier.css"
 
@@ -13,6 +14,7 @@ interface State {
     exerciseCount?: number
     sessionCount?: number
     workoutCount?: number
+    totalVolumeKg?: number
 }
 
 export default class GoHeavier extends React.Component<{}, State> {
@@ -24,7 +26,8 @@ export default class GoHeavier extends React.Component<{}, State> {
             locationCount: undefined,
             exerciseCount: undefined,
             sessionCount: undefined,
-            workoutCount: undefined
+            workoutCount: undefined,
+            totalVolumeKg: undefined
         }
     }
 
@@ -45,8 +48,9 @@ export default class GoHeavier extends React.Component<{}, State> {
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
 
-            // Every set belongs to a session, so the sessions carry the set total.
+            // Every set belongs to a session, so the sessions carry the totals.
             const workoutCount = sessions.reduce((total, session) => total + session.sets, 0)
+            const totalVolumeKg = sessions.reduce((total, session) => total + session.volume_kg, 0)
 
             await waitOut()
             this.setState({
@@ -55,7 +59,8 @@ export default class GoHeavier extends React.Component<{}, State> {
                 locationCount: locations.length,
                 exerciseCount: exercises.length,
                 sessionCount: sessions.length,
-                workoutCount: workoutCount
+                workoutCount: workoutCount,
+                totalVolumeKg: totalVolumeKg
             })
         } catch (error) {
             console.error("Error fetching dashboard counts:", error)
@@ -128,7 +133,7 @@ export default class GoHeavier extends React.Component<{}, State> {
                                 <Link to="/go-heavier/locations" className="stat-card">
                                     <div className="stat-icon">📍</div>
                                     <div className="stat-content">
-                                        <div className="stat-value">{this.state.locationCount ?? '...'}</div>
+                                        <div className="stat-value">{formatCount(this.state.locationCount)}</div>
                                         <div className="stat-label">Locations</div>
                                         <p className="stat-caption">The gyms you train at</p>
                                     </div>
@@ -136,7 +141,7 @@ export default class GoHeavier extends React.Component<{}, State> {
                                 <Link to="/go-heavier/exercises" className="stat-card">
                                     <div className="stat-icon">🏋️</div>
                                     <div className="stat-content">
-                                        <div className="stat-value">{this.state.exerciseCount ?? '...'}</div>
+                                        <div className="stat-value">{formatCount(this.state.exerciseCount)}</div>
                                         <div className="stat-label">Exercises</div>
                                         <p className="stat-caption">Movements in your library</p>
                                     </div>
@@ -144,7 +149,7 @@ export default class GoHeavier extends React.Component<{}, State> {
                                 <Link to="/go-heavier/sessions" className="stat-card">
                                     <div className="stat-icon">🗓️</div>
                                     <div className="stat-content">
-                                        <div className="stat-value">{this.state.sessionCount ?? '...'}</div>
+                                        <div className="stat-value">{formatCount(this.state.sessionCount)}</div>
                                         <div className="stat-label">Sessions</div>
                                         <p className="stat-caption">Visits to the gym</p>
                                     </div>
@@ -152,9 +157,17 @@ export default class GoHeavier extends React.Component<{}, State> {
                                 <Link to="/go-heavier/workouts" className="stat-card">
                                     <div className="stat-icon">📊</div>
                                     <div className="stat-content">
-                                        <div className="stat-value">{this.state.workoutCount ?? '...'}</div>
+                                        <div className="stat-value">{formatCount(this.state.workoutCount)}</div>
                                         <div className="stat-label">Workouts</div>
                                         <p className="stat-caption">Sets you have logged</p>
+                                    </div>
+                                </Link>
+                                <Link to="/go-heavier/stats" className="stat-card">
+                                    <div className="stat-icon">📈</div>
+                                    <div className="stat-content">
+                                        <div className="stat-value">{formatTonnes(this.state.totalVolumeKg)}</div>
+                                        <div className="stat-label">Stats</div>
+                                        <p className="stat-caption">Total weight moved, charted over time</p>
                                     </div>
                                 </Link>
                             </div>
