@@ -4,6 +4,7 @@ import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
 import { API_URL, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
+import { formatTableDateTime } from "../../components/go_heavier/format"
 import "../GoHeavier.css"
 import "./Workouts.css"
 
@@ -215,21 +216,6 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         return exercise ? exercise.name : 'Unknown Exercise'
     }
 
-    formatDateTime = (dateString: string | null): string => {
-        if (!dateString) {
-            return "\u2014"
-        }
-        const date = new Date(dateString)
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-        })
-    }
-
     handleDateFilterChange = (field: 'startDate' | 'endDate', value: string) => {
         const newFilter = {
             ...this.state.dateFilter,
@@ -241,21 +227,6 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         })
         
         // Update URL
-        this.updateURLParams(newFilter, this.state.filters)
-    }
-
-    clearDateFilter = () => {
-        const newFilter = {
-            startDate: '',
-            endDate: ''
-        }
-        
-        this.setState({
-            dateFilter: newFilter,
-            showDateFilter: false
-        })
-        
-        // Update URL but preserve other filters
         this.updateURLParams(newFilter, this.state.filters)
     }
 
@@ -580,7 +551,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                                         }}
                                                         className="table-link"
                                                     >
-                                                        {this.formatDateTime(workout.workout_time)}
+                                                        {formatTableDateTime(workout.workout_time)}
                                                     </a>
                                                 </td>
                                                 <td className="workout-exercise">

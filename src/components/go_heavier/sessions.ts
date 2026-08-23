@@ -108,3 +108,49 @@ export function indexSessions(sessions: SessionSummary[]): Record<string, Sessio
     })
     return byId
 }
+
+export interface MonthlyTotals {
+    label: string
+    visits: number
+    sets: number
+    repetitions: number
+    volume_kg: number
+}
+
+// One entry per month between the first and last session, including months with
+// nothing in them — dropping a quiet month would flatter the trend.
+export function buildMonthlyTotals(sessions: SessionSummary[]): MonthlyTotals[] {
+    if (sessions.length === 0) {
+        return []
+    }
+
+    const times = sessions.map(session => new Date(session.workout_time).getTime())
+    const first = new Date(Math.min(...times))
+    const last = new Date(Math.max(...times))
+
+    const months: MonthlyTotals[] = []
+    const cursor = new Date(first.getFullYear(), first.getMonth(), 1)
+    const end = new Date(last.getFullYear(), last.getMonth(), 1)
+
+    while (cursor <= end) {
+        const year = cursor.getFullYear()
+        const month = cursor.getMonth()
+
+        const inMonth = sessions.filter(session => {
+            const when = new Date(session.workout_time)
+            return when.getFullYear() === year && when.getMonth() === month
+        })
+
+        months.push({
+            label: cursor.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+            visits: inMonth.length,
+            sets: inMonth.reduce((total, session) => total + session.sets, 0),
+            repetitions: inMonth.reduce((total, session) => total + session.repetitions, 0),
+            volume_kg: inMonth.reduce((total, session) => total + session.volume_kg, 0)
+        })
+
+        cursor.setMonth(cursor.getMonth() + 1)
+    }
+
+    return months
+}

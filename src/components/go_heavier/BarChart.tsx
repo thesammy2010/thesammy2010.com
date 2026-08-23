@@ -1,5 +1,6 @@
 import React from "react"
 
+import { axisTicks, niceMax, peakIndex } from "./chart"
 import "./BarChart.css"
 
 export interface BarChartPoint {
@@ -32,28 +33,11 @@ export default class BarChart extends React.Component<Props, State> {
         }
     }
 
-    // A round number at or above the tallest bar, so the ticks read cleanly.
-    niceMax = (max: number): number => {
-        if (max <= 0) {
-            return 1
-        }
-
-        const magnitude = Math.pow(10, Math.floor(Math.log10(max)))
-        const steps = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]
-        const step = steps.find(candidate => max <= candidate * magnitude) ?? 10
-
-        return step * magnitude
-    }
-
     render(): React.ReactNode {
         const { title, subtitle, data, formatValue, labelEvery = 1 } = this.props
-        const max = this.niceMax(Math.max(...data.map(point => point.value), 0))
-        const peak = data.reduce(
-            (best, point, index) => (point.value > data[best].value ? index : best),
-            0
-        )
-
-        const ticks = Array.from({ length: TICK_COUNT + 1 }, (_, i) => (max / TICK_COUNT) * i)
+        const max = niceMax(Math.max(...data.map(point => point.value), 0), TICK_COUNT)
+        const peak = peakIndex(data.map(point => point.value))
+        const ticks = axisTicks(max, TICK_COUNT)
 
         return (
             <figure className="chart">

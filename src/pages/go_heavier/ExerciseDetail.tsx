@@ -2,6 +2,7 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import { API_URL, formatNotes } from "../../configs"
+import { formatCount, formatFullDate, formatLongDate, formatWeight } from "../../components/go_heavier/format"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import "../../components/go_heavier/Stats.css"
 import "./ExerciseDetail.css"
@@ -346,23 +347,6 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         }
     }
 
-    formatCount = (value: number): string => value.toLocaleString()
-
-    formatWeight = (value: number | null): string =>
-        value === null || value === undefined ? "\u2014" : `${Math.round(value).toLocaleString()} kg`
-
-    formatPerformedDate = (value: string | null): string => {
-        if (!value) {
-            return "\u2014"
-        }
-        return new Date(value).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric"
-        })
-    }
-
-    // The most recent session this exercise was performed in.
     getLatestSession = (): SessionSummary | null => {
         const sessions = this.state.sessions
         if (sessions.length === 0) {
@@ -410,15 +394,6 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         })
     }
 
-    formatSessionDate = (value?: string): string =>
-        !value ? "\u2014" : new Date(value).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric"
-        })
-
-    // The bar length encodes sessions, the same measure the list is ordered by.
     renderTopLocations = (topLocations: TopLocation[]): React.ReactNode => {
         const mostSessions = Math.max(...topLocations.map(location => location.sessions), 1)
 
@@ -436,7 +411,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                         {location.name}
                     </a>
                     <span className="top-list-metric">
-                        {this.formatCount(location.sessions)} sessions
+                        {formatCount(location.sessions)} sessions
                     </span>
                 </div>
                 <div className="top-list-bar-track">
@@ -446,7 +421,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                     />
                 </div>
                 <div className="top-list-meta">
-                    {this.formatCount(location.sets)} sets · {this.formatCount(location.repetitions)} reps · {this.formatWeight(location.volume_kg)}
+                    {formatCount(location.sets)} sets · {formatCount(location.repetitions)} reps · {formatWeight(location.volume_kg)}
                 </div>
             </li>
         ))
@@ -747,7 +722,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                                         this.props.navigate(`/go-heavier/sessions/${latestSets[0].session_id}`)
                                                     }}
                                                 >
-                                                    {this.formatSessionDate(latestSession?.workout_time)}
+                                                    {formatFullDate(latestSession?.workout_time)}
                                                 </a>
                                                 {latestSession && (
                                                     <a
@@ -839,7 +814,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                                         this.props.navigate(`/go-heavier/sessions/${bestSet.session_id}`)
                                                     }}
                                                 >
-                                                    {this.formatSessionDate(bestSetSession?.workout_time)}
+                                                    {formatFullDate(bestSetSession?.workout_time)}
                                                 </a>
                                                 {bestSetSession && (
                                                     <a
@@ -882,27 +857,27 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                     <>
                                         <div className="stats-grid">
                                             <div className="stat-tile">
-                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.sessions)}</div>
+                                                <div className="stat-tile-value">{formatCount(this.state.stats.sessions)}</div>
                                                 <div className="stat-tile-label">Sessions</div>
                                             </div>
                                             <div className="stat-tile">
-                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.total_sets)}</div>
+                                                <div className="stat-tile-value">{formatCount(this.state.stats.total_sets)}</div>
                                                 <div className="stat-tile-label">Sets</div>
                                             </div>
                                             <div className="stat-tile">
-                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.total_repetitions)}</div>
+                                                <div className="stat-tile-value">{formatCount(this.state.stats.total_repetitions)}</div>
                                                 <div className="stat-tile-label">Reps</div>
                                             </div>
                                             <div className="stat-tile">
-                                                <div className="stat-tile-value">{this.formatWeight(this.state.stats.total_volume_kg)}</div>
+                                                <div className="stat-tile-value">{formatWeight(this.state.stats.total_volume_kg)}</div>
                                                 <div className="stat-tile-label">Total volume</div>
                                             </div>
                                             <div className="stat-tile">
-                                                <div className="stat-tile-value">{this.formatWeight(this.state.stats.heaviest_weight_kg)}</div>
+                                                <div className="stat-tile-value">{formatWeight(this.state.stats.heaviest_weight_kg)}</div>
                                                 <div className="stat-tile-label">Heaviest lift</div>
                                             </div>
                                             <div className="stat-tile">
-                                                <div className="stat-tile-value">{this.formatCount(this.state.stats.distinct_locations)}</div>
+                                                <div className="stat-tile-value">{formatCount(this.state.stats.distinct_locations)}</div>
                                                 <div className="stat-tile-label">Locations</div>
                                             </div>
                                         </div>
@@ -911,11 +886,11 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                             <div className="detail-card">
                                                 <div className="info-row">
                                                     <span className="info-label">First performed:</span>
-                                                    <span className="info-value">{this.formatPerformedDate(this.state.stats.first_performed)}</span>
+                                                    <span className="info-value">{formatLongDate(this.state.stats.first_performed)}</span>
                                                 </div>
                                                 <div className="info-row">
                                                     <span className="info-label">Last performed:</span>
-                                                    <span className="info-value">{this.formatPerformedDate(this.state.stats.last_performed)}</span>
+                                                    <span className="info-value">{formatLongDate(this.state.stats.last_performed)}</span>
                                                 </div>
                                                 <div className="info-row">
                                                     <span className="info-label">Sets per session:</span>
