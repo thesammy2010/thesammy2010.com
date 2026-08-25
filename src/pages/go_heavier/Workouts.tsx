@@ -2,7 +2,9 @@ import React from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
-import { API_URL, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
+import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
+import { apiFetch } from "../../auth"
+import { canAccess, subscribeAccess, subscribeAccessReady } from "../../roles"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import { formatTableDateTime } from "../../components/go_heavier/format"
 import "../GoHeavier.css"
@@ -43,6 +45,7 @@ const dedupeById = (workouts: WorkoutData[]): WorkoutData[] => mergeById([], wor
 
 interface State {
     configLoaded: boolean | null
+    loadError: string | null
     workouts?: WorkoutData[]
     sessionsById: Record<string, SessionSummary>
     locations?: any[]
@@ -75,12 +78,20 @@ interface WorkoutsProps {
 
 export class Workouts extends React.Component<WorkoutsProps, State> {
     private tableContainerRef: React.RefObject<HTMLDivElement>
+    unsubscribeAccess?: () => void
+    unsubscribeReady?: () => void
 
     constructor(props: WorkoutsProps) {
         super(props)
         
+        // Guards against a cache written before an error response (e.g. a
+        // 403 body) was excluded from what gets cached - an old entry like
+        // that would otherwise be trusted as the workout list forever,
+        // since it's truthy and never re-fetched (and dedupeById would
+        // throw immediately on a non-array).
         const cachedData = localStorage.getItem(WORKOUTS_CACHE_KEY)
-        const cachedWorkouts = cachedData ? dedupeById(JSON.parse(cachedData)) : undefined
+        const parsedWorkouts = cachedData ? JSON.parse(cachedData) : undefined
+        const cachedWorkouts = Array.isArray(parsedWorkouts) ? dedupeById(parsedWorkouts) : undefined
         
         // Read filters from URL
         const startDate = props.searchParams.get('startDate') || ''
@@ -92,6 +103,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         
         this.state = {
             configLoaded: cachedWorkouts ? true : null,
+            loadError: null,
             workouts: cachedWorkouts,
             sessionsById: {},
             locations: [],
@@ -126,7 +138,10 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         const all: WorkoutData[] = []
 
         for (let page = 1; page <= MAX_WORKOUT_PAGES; page++) {
-            const response = await fetch(`${API_URL}/go-heavier/workouts?page=${page}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/workouts?page=${page}`)
+            if (!response.ok) {
+                throw new ApiError(response.status, "Failed to load workouts")
+            }
             const pageWorkouts: WorkoutData[] = await response.json()
 
             if (pageWorkouts.length === 0) {
@@ -149,29 +164,37 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             const [workouts, sessions, locationsRes, exercisesRes] = await Promise.all([
                 this.fetchAllWorkouts(),
                 fetchAllSessions(),
-                fetch(`${API_URL}/go-heavier/locations`),
-                fetch(`${API_URL}/go-heavier/exercises`)
+                apiFetch(`${API_URL}/go-heavier/locations`),
+                apiFetch(`${API_URL}/go-heavier/exercises`)
             ])
-            
+
+            if (!locationsRes.ok) {
+                throw new ApiError(locationsRes.status, "Failed to load locations")
+            }
+            if (!exercisesRes.ok) {
+                throw new ApiError(exercisesRes.status, "Failed to load exercises")
+            }
+
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
-            
+
             localStorage.setItem(WORKOUTS_CACHE_KEY, JSON.stringify(workouts))
-            
+
             await waitOut()
-            this.setState({ 
-                workouts, 
+            this.setState({
+                workouts,
                 sessionsById: indexSessions(sessions),
                 locations,
                 exercises,
-                configLoaded: true, 
+                configLoaded: true,
+                loadError: null,
                 isRefreshing: false,
                 hasFetchedOnce: true
             })
         } catch (error) {
             console.error("Error fetching workouts:", error)
             await waitOut()
-            this.setState({ configLoaded: false, isRefreshing: false })
+            this.setState({ configLoaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
@@ -184,7 +207,27 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         this.fetchWorkouts(1000)
     }
 
-    componentDidMount() {
+    // Only skips the very first, automatic load - the refresh/retry buttons
+    // call handleRefresh directly and always hit the API, since clicking one
+    // is an explicit request that's worth trying even if we think it'll
+    // fail. All four underlying requests are needed for this page, so it's
+    // an all-or-nothing check.
+    autoFetch = () => {
+        // Checked before the cache: an empty (but validly cached) list looks
+        // exactly like "already loaded, nothing to show" and would otherwise
+        // keep being trusted after a role change revoked access, silently
+        // masking the permission problem behind "No workouts found."
+        const canAccessAll =
+            canAccess("GET", "/go-heavier/workouts") &&
+            canAccess("GET", "/go-heavier/sessions") &&
+            canAccess("GET", "/go-heavier/locations") &&
+            canAccess("GET", "/go-heavier/exercises")
+
+        if (!canAccessAll) {
+            this.setState({ configLoaded: false, loadError: PERMISSION_DENIED_MESSAGE })
+            return
+        }
+
         if (!this.state.hasFetchedOnce) {
             this.handleRefresh()
         } else {
@@ -194,17 +237,34 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         }
     }
 
+    componentDidMount() {
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+        this.unsubscribeReady = subscribeAccessReady(this.autoFetch)
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
+        this.unsubscribeReady?.()
+    }
+
     fetchSupportingData = async () => {
         try {
             const [sessions, locationsRes, exercisesRes] = await Promise.all([
                 fetchAllSessions(),
-                fetch(`${API_URL}/go-heavier/locations`),
-                fetch(`${API_URL}/go-heavier/exercises`)
+                apiFetch(`${API_URL}/go-heavier/locations`),
+                apiFetch(`${API_URL}/go-heavier/exercises`)
             ])
-            
+
+            if (!locationsRes.ok) {
+                throw new ApiError(locationsRes.status, "Failed to load locations")
+            }
+            if (!exercisesRes.ok) {
+                throw new ApiError(exercisesRes.status, "Failed to load exercises")
+            }
+
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
-            
+
             this.setState({ sessionsById: indexSessions(sessions), locations, exercises })
         } catch (error) {
             console.error("Error fetching sessions/locations/exercises:", error)
@@ -397,7 +457,9 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                     {this.state.configLoaded === false && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Workouts</h2>
-                            <p className="error-message">Unable to fetch workouts from server</p>
+                            <p className="error-message">
+                                {this.state.loadError ?? "Unable to fetch workouts from server"}
+                            </p>
                             <button onClick={this.handleRetry} disabled={this.state.isRefreshing}>
                                 {this.state.isRefreshing ? (
                                     <>
@@ -608,8 +670,8 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                             </table>
                         </div>
                     )}
-                    {this.state.configLoaded && (
-                        <button 
+                    {this.state.configLoaded && canAccess("POST", "/go-heavier/workouts") && (
+                        <button
                             className="add-location-button"
                             onClick={() => {
                                 this.setState({ showForm: true })

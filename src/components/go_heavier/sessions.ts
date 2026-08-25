@@ -1,4 +1,5 @@
-import { API_URL } from "../../configs"
+import { API_URL, ApiError } from "../../configs"
+import { apiFetch } from "../../auth"
 
 // A session is one visit to a gym. Sets belong to a session, and the session
 // carries the location and the time — a set no longer carries either itself.
@@ -47,9 +48,9 @@ export interface SessionStats {
 export const SESSIONS_CACHE_KEY = "go-heavier-sessions"
 
 export async function fetchSessionStats(): Promise<SessionStats> {
-    const response = await fetch(`${API_URL}/go-heavier/sessions/stats`)
+    const response = await apiFetch(`${API_URL}/go-heavier/sessions/stats`)
     if (!response.ok) {
-        throw new Error("Failed to load session stats")
+        throw new ApiError(response.status, "Failed to load session stats")
     }
     return response.json()
 }
@@ -86,9 +87,9 @@ async function walkSessions(exerciseId?: string): Promise<SessionSummary[]> {
             params.set("exercise_id", exerciseId)
         }
 
-        const response = await fetch(`${API_URL}/go-heavier/sessions?${params}`)
+        const response = await apiFetch(`${API_URL}/go-heavier/sessions?${params}`)
         if (!response.ok) {
-            throw new Error("Failed to load sessions")
+            throw new ApiError(response.status, "Failed to load sessions")
         }
 
         const pageSessions: SessionSummary[] = await response.json()

@@ -1,7 +1,9 @@
 import React from "react"
 import { Link, useNavigate } from "react-router-dom"
 
-import { API_URL } from "../configs"
+import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../configs"
+import { apiFetch } from "../auth"
+import { canAccess, subscribeAccess, subscribeAccessReady } from "../roles"
 import { fetchAllSessions } from "../components/go_heavier/sessions"
 import { formatCount, formatTonnes } from "../components/go_heavier/format"
 import GoHeavierNavBar from "../components/go_heavier/NavBar"
@@ -15,6 +17,7 @@ interface Props {
 interface State {
     showWizard: boolean
     loaded: boolean | null
+    loadError: string | null
     isRefreshing: boolean
     locationCount?: number
     exerciseCount?: number
@@ -24,11 +27,15 @@ interface State {
 }
 
 export class GoHeavier extends React.Component<Props, State> {
+    unsubscribeAccess?: () => void
+    unsubscribeReady?: () => void
+
     constructor(props: Props) {
         super(props)
         this.state = {
             showWizard: false,
             loaded: null,
+            loadError: null,
             isRefreshing: false,
             locationCount: undefined,
             exerciseCount: undefined,
@@ -48,9 +55,16 @@ export class GoHeavier extends React.Component<Props, State> {
         try {
             const [sessions, locationsRes, exercisesRes] = await Promise.all([
                 fetchAllSessions(),
-                fetch(`${API_URL}/go-heavier/locations`),
-                fetch(`${API_URL}/go-heavier/exercises`)
+                apiFetch(`${API_URL}/go-heavier/locations`),
+                apiFetch(`${API_URL}/go-heavier/exercises`)
             ])
+
+            if (!locationsRes.ok) {
+                throw new ApiError(locationsRes.status, "Failed to load locations")
+            }
+            if (!exercisesRes.ok) {
+                throw new ApiError(exercisesRes.status, "Failed to load exercises")
+            }
 
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
@@ -62,6 +76,7 @@ export class GoHeavier extends React.Component<Props, State> {
             await waitOut()
             this.setState({
                 loaded: true,
+                loadError: null,
                 isRefreshing: false,
                 locationCount: locations.length,
                 exerciseCount: exercises.length,
@@ -72,12 +87,35 @@ export class GoHeavier extends React.Component<Props, State> {
         } catch (error) {
             console.error("Error fetching dashboard counts:", error)
             await waitOut()
-            this.setState({ loaded: false, isRefreshing: false })
+            this.setState({ loaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
-    componentDidMount() {
+    // Only skips the very first, automatic load - the refresh/retry buttons
+    // call fetchCounts directly and always hit the API, since clicking one
+    // is an explicit request that's worth trying even if we think it'll
+    // fail. All three underlying requests are needed for this page, so it's
+    // an all-or-nothing check.
+    autoFetch = () => {
+        const canAccessAll =
+            canAccess("GET", "/go-heavier/sessions") &&
+            canAccess("GET", "/go-heavier/locations") &&
+            canAccess("GET", "/go-heavier/exercises")
+        if (!canAccessAll) {
+            this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
+            return
+        }
         this.fetchCounts()
+    }
+
+    componentDidMount() {
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+        this.unsubscribeReady = subscribeAccessReady(this.autoFetch)
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
+        this.unsubscribeReady?.()
     }
 
     handleRefresh = () => {
@@ -113,7 +151,9 @@ export class GoHeavier extends React.Component<Props, State> {
                     {this.state.loaded === false && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Dashboard</h2>
-                            <p className="error-message">Unable to fetch data from server</p>
+                            <p className="error-message">
+                                {this.state.loadError ?? "Unable to fetch data from server"}
+                            </p>
                             <button onClick={this.handleRetry} disabled={this.state.isRefreshing}>
                                 {this.state.isRefreshing ? (
                                     <>
@@ -136,13 +176,15 @@ export class GoHeavier extends React.Component<Props, State> {
                                 </p>
                             </div>
 
-                            <button
-                                className="log-workout-button"
-                                onClick={() => this.setState({ showWizard: true })}
-                            >
-                                <span className="button-icon">🏋️</span>
-                                Log a workout
-                            </button>
+                            {canAccess("POST", "/go-heavier/sessions") && canAccess("POST", "/go-heavier/workouts") && (
+                                <button
+                                    className="log-workout-button"
+                                    onClick={() => this.setState({ showWizard: true })}
+                                >
+                                    <span className="button-icon">🏋️</span>
+                                    Log a workout
+                                </button>
+                            )}
 
                             <div className="stats-overview">
                                 <Link to="/go-heavier/locations" className="stat-card">

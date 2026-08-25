@@ -1,6 +1,7 @@
 import React from "react"
 import "./ExerciseForm.css"
-import { API_URL } from "../../configs"
+import { API_URL, ApiError } from "../../configs"
+import { apiFetch } from "../../auth"
 
 interface ExerciseFormProps {
     onClose: () => void
@@ -59,7 +60,7 @@ export default class ExerciseForm extends React.Component<ExerciseFormProps, Exe
         this.setState({ loading: true, error: null })
 
         try {
-            const response = await fetch(`${API_URL}/go-heavier/exercises`, {
+            const response = await apiFetch(`${API_URL}/go-heavier/exercises`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -68,7 +69,7 @@ export default class ExerciseForm extends React.Component<ExerciseFormProps, Exe
             })
 
             if (!response.ok) {
-                throw new Error("Failed to create exercise")
+                throw new ApiError(response.status, "Failed to create exercise")
             }
 
             const newExercise = await response.json()

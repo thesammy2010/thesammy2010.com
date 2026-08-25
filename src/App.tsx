@@ -1,4 +1,5 @@
 import React from "react"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import "./App.css"
 
 import Footer from "./components/Footer"
@@ -17,10 +18,12 @@ import Sessions from "./pages/go_heavier/Sessions"
 import Stats from "./pages/go_heavier/Stats"
 import SessionDetail from "./pages/go_heavier/SessionDetail"
 import Workouts from "./pages/go_heavier/Workouts"
+import Admin from "./pages/Admin"
+import { GOOGLE_CLIENT_ID } from "./configs"
 
 const App: React.FC = () => {
     return (
-        <div>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <div>
                 <BrowserRouter>
                     <NavBar />
@@ -36,6 +39,7 @@ const App: React.FC = () => {
                         <Route path="/go-heavier/sessions/:id" element={<SessionDetail />} />
                         <Route path="/go-heavier/workouts" element={<Workouts />} />
                         <Route path="/about" element={<About />} />
+                        <Route path="/admin" element={<Admin />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </BrowserRouter>
@@ -43,7 +47,7 @@ const App: React.FC = () => {
             <div>
                 <Footer />
             </div>
-        </div>
+        </GoogleOAuthProvider>
     )
 }
 

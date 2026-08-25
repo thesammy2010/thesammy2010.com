@@ -1,6 +1,7 @@
 import React from "react"
 import { Link, useLocation } from "react-router-dom"
 
+import { useIsAdmin } from "../roles"
 import "./NavBar.css"
 
 const LINKS = [
@@ -10,9 +11,12 @@ const LINKS = [
 
 export default function NavBar() {
     const location = useLocation()
+    const isAdmin = useIsAdmin()
 
     const isActive = (to: string) =>
         location.pathname === to || location.pathname.startsWith(`${to}/`)
+
+    const links = isAdmin ? [...LINKS, { to: "/admin", label: "🔧 Admin" }] : LINKS
 
     return (
         <nav className="site-navbar">
@@ -26,7 +30,7 @@ export default function NavBar() {
                 </Link>
 
                 <div className="site-navbar-links">
-                    {LINKS.map(link => (
+                    {links.map(link => (
                         <Link
                             key={link.to}
                             to={link.to}

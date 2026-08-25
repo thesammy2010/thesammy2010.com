@@ -1,6 +1,7 @@
 import React from "react"
 
-import { API_URL } from "../../configs"
+import { API_URL, ApiError } from "../../configs"
+import { apiFetch } from "../../auth"
 import { SessionSummary } from "./sessions"
 import "./LocationForm.css"
 
@@ -46,9 +47,9 @@ export default class SessionForm extends React.Component<Props, State> {
 
     fetchLocations = async () => {
         try {
-            const response = await fetch(`${API_URL}/go-heavier/locations`)
+            const response = await apiFetch(`${API_URL}/go-heavier/locations`)
             if (!response.ok) {
-                throw new Error("Failed to load locations")
+                throw new ApiError(response.status, "Failed to load locations")
             }
             const locations = await response.json()
             this.setState({
@@ -90,7 +91,7 @@ export default class SessionForm extends React.Component<Props, State> {
         this.setState({ loading: true })
 
         try {
-            const response = await fetch(`${API_URL}/go-heavier/sessions`, {
+            const response = await apiFetch(`${API_URL}/go-heavier/sessions`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -103,7 +104,7 @@ export default class SessionForm extends React.Component<Props, State> {
             })
 
             if (!response.ok) {
-                throw new Error("Failed to create session")
+                throw new ApiError(response.status, "Failed to create session")
             }
 
             const session = await response.json()

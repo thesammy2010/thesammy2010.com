@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import BarChart, { BarChartPoint } from "../../components/go_heavier/BarChart"
-import { API_URL } from "../../configs"
+import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
+import { canAccess, subscribeAccessReady } from "../../roles"
+import { apiFetch } from "../../auth"
 import {
     MonthlyTotals,
     SessionStats,
@@ -52,10 +54,13 @@ interface State {
     stats: SessionStats | null
     totals: WorkoutTotals | null
     loaded: boolean | null
+    loadError: string | null
     isRefreshing: boolean
 }
 
 export class Stats extends React.Component<Props, State> {
+    unsubscribeReady?: () => void
+
     constructor(props: Props) {
         super(props)
         this.state = {
@@ -63,12 +68,34 @@ export class Stats extends React.Component<Props, State> {
             stats: null,
             totals: null,
             loaded: null,
+            loadError: null,
             isRefreshing: false
         }
     }
 
-    componentDidMount() {
+    // Only skips the very first, automatic load - the refresh/retry buttons
+    // call fetchEverything directly and always hit the API, since clicking
+    // one is an explicit request that's worth trying even if we think it'll
+    // fail. All three underlying requests are needed for this page, so it's
+    // an all-or-nothing check.
+    autoFetch = () => {
+        const canAccessAll =
+            canAccess("GET", "/go-heavier/sessions") &&
+            canAccess("GET", "/go-heavier/sessions/stats") &&
+            canAccess("GET", "/go-heavier/workouts/stats")
+        if (!canAccessAll) {
+            this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
+            return
+        }
         this.fetchEverything()
+    }
+
+    componentDidMount() {
+        this.unsubscribeReady = subscribeAccessReady(this.autoFetch)
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeReady?.()
     }
 
     fetchEverything = async (minDuration: number = 300) => {
@@ -82,20 +109,20 @@ export class Stats extends React.Component<Props, State> {
             const [sessions, stats, totalsRes] = await Promise.all([
                 fetchAllSessions(),
                 fetchSessionStats(),
-                fetch(`${API_URL}/go-heavier/workouts/stats`)
+                apiFetch(`${API_URL}/go-heavier/workouts/stats`)
             ])
 
             if (!totalsRes.ok) {
-                throw new Error("Failed to load totals")
+                throw new ApiError(totalsRes.status, "Failed to load totals")
             }
             const totals = await totalsRes.json()
 
             await waitOut()
-            this.setState({ sessions, stats, totals, loaded: true, isRefreshing: false })
+            this.setState({ sessions, stats, totals, loaded: true, loadError: null, isRefreshing: false })
         } catch (error) {
             console.error("Error fetching stats:", error)
             await waitOut()
-            this.setState({ loaded: false, isRefreshing: false })
+            this.setState({ loaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
@@ -173,7 +200,9 @@ export class Stats extends React.Component<Props, State> {
                     {this.state.loaded === false && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Stats</h2>
-                            <p className="error-message">Unable to fetch stats from server</p>
+                            <p className="error-message">
+                                {this.state.loadError ?? "Unable to fetch stats from server"}
+                            </p>
                             <button onClick={this.handleRetry} disabled={this.state.isRefreshing}>
                                 {this.state.isRefreshing ? (
                                     <>

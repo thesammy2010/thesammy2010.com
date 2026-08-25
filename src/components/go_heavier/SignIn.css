@@ -1,0 +1,33 @@
+.go-heavier-signin {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: white;
+}
+
+.go-heavier-signin-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.go-heavier-signin-profile img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+.go-heavier-signin-name {
+    font-size: 0.85rem;
+    color: inherit;
+}
+
+.go-heavier-signin-out {
+    background: none;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: inherit;
+}

@@ -1,5 +1,6 @@
 import React from "react"
-import { API_URL } from "../../configs"
+import { API_URL, ApiError } from "../../configs"
+import { apiFetch } from "../../auth"
 import { SessionSummary, fetchAllSessions } from "./sessions"
 import "./ExerciseForm.css"
 
@@ -56,7 +57,7 @@ export default class WorkoutForm extends React.Component<Props, State> {
         try {
             const [sessions, exercisesRes] = await Promise.all([
                 fetchAllSessions(),
-                fetch(`${API_URL}/go-heavier/exercises`)
+                apiFetch(`${API_URL}/go-heavier/exercises`)
             ])
 
             const exercises = await exercisesRes.json()
@@ -167,7 +168,7 @@ export default class WorkoutForm extends React.Component<Props, State> {
         this.setState({ loading: true })
 
         try {
-            const response = await fetch(`${API_URL}/go-heavier/workouts`, {
+            const response = await apiFetch(`${API_URL}/go-heavier/workouts`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -176,7 +177,7 @@ export default class WorkoutForm extends React.Component<Props, State> {
             })
 
             if (!response.ok) {
-                throw new Error("Failed to create workout")
+                throw new ApiError(response.status, "Failed to create workout")
             }
 
             const result = await response.json()
