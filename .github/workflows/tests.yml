@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: "20.5.0"
+        cache: "npm"
+        cache-dependency-path: package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Type-check
+      run: npx tsc --noEmit
+
+    - name: Run tests
+      run: CI=true npm test 2>&1 | tee test.log
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        tail -n 20 test.log >> $GITHUB_STEP_SUMMARY || true
