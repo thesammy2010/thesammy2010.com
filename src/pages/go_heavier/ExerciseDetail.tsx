@@ -1,7 +1,9 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, formatNotes } from "../../configs"
+import { API_URL, ApiError, formatNotes } from "../../configs"
+import { apiFetch } from "../../auth"
+import { canAccess, subscribeAccess } from "../../roles"
 import { formatCount, formatFullDate, formatLongDate, formatWeight } from "../../components/go_heavier/format"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import "../../components/go_heavier/Stats.css"
@@ -91,6 +93,8 @@ interface State {
 }
 
 class ExerciseDetailClass extends React.Component<{ id: string; navigate: any }, State> {
+    unsubscribeAccess?: () => void
+
     constructor(props: { id: string; navigate: any }) {
         super(props)
         this.state = {
@@ -126,6 +130,11 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         this.fetchExercise()
         this.fetchStats()
         this.fetchExerciseSets()
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
     }
 
     // Sets for this exercise, plus the sessions they belong to — a set carries
@@ -158,9 +167,9 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                 exercise_id: this.props.id,
                 page: String(page)
             })
-            const response = await fetch(`${API_URL}/go-heavier/workouts?${params}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/workouts?${params}`)
             if (!response.ok) {
-                throw new Error("Failed to load workouts")
+                throw new ApiError(response.status, "Failed to load workouts")
             }
 
             const pageSets: WorkoutSet[] = await response.json()
@@ -177,9 +186,9 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
     fetchStats = async () => {
         this.setState({ statsLoading: true, statsError: null })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}/stats`)
+            const response = await apiFetch(`${API_URL}/go-heavier/exercises/${this.props.id}/stats`)
             if (!response.ok) {
-                throw new Error("Failed to load stats")
+                throw new ApiError(response.status, "Failed to load stats")
             }
             const stats = await response.json()
             this.setState({ stats, statsLoading: false })
@@ -192,9 +201,9 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
     fetchExercise = async () => {
         this.setState({ loading: true, error: null })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
             if (!response.ok) {
-                throw new Error("Exercise not found")
+                throw new ApiError(response.status, "Exercise not found")
             }
             const result = await response.json()
             this.setState({ 
@@ -221,9 +230,9 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         this.fetchStats()
         this.fetchExerciseSets()
         try {
-            const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/exercises/${this.props.id}`)
             if (!response.ok) {
-                throw new Error("Exercise not found")
+                throw new ApiError(response.status, "Exercise not found")
             }
             const result = await response.json()
             setTimeout(() => {
@@ -251,7 +260,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         if (!this.state.exercise) return
 
         try {
-            await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`, {
+            await apiFetch(`${API_URL}/go-heavier/exercises/${this.props.id}`, {
                 method: "DELETE"
             })
             sessionStorage.removeItem('go-heavier-exercises')
@@ -322,7 +331,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         this.setState({ formLoading: true })
 
         try {
-            const response = await fetch(`${API_URL}/go-heavier/exercises/${this.props.id}`, {
+            const response = await apiFetch(`${API_URL}/go-heavier/exercises/${this.props.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -331,7 +340,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
             })
 
             if (!response.ok) {
-                throw new Error("Failed to update exercise")
+                throw new ApiError(response.status, "Failed to update exercise")
             }
 
             const result = await response.json()
@@ -603,17 +612,16 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
                                     <p className="exercise-detail-description">{this.state.exercise.description}</p>
                                 )}
                                 <div className="action-buttons">
-                                    <button className="edit-action-button" onClick={this.handleEdit}>
-                                        ✏️ Edit Exercise
-                                    </button>
-                                    <button
-                                        className="delete-action-button"
-                                        onClick={this.handleDelete}
-                                        disabled
-                                        title="Deleting is restricted to admins"
-                                    >
-                                        🗑️ Delete Exercise
-                                    </button>
+                                    {canAccess("PUT", `/go-heavier/exercises/${this.props.id}`) && (
+                                        <button className="edit-action-button" onClick={this.handleEdit}>
+                                            ✏️ Edit Exercise
+                                        </button>
+                                    )}
+                                    {canAccess("DELETE", `/go-heavier/exercises/${this.props.id}`) && (
+                                        <button className="delete-action-button" onClick={this.handleDelete}>
+                                            🗑️ Delete Exercise
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

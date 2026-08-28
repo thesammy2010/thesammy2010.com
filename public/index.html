@@ -13,6 +13,28 @@
     <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="%PUBLIC_URL%/icons/apple-touch-icon.png" />
     <link rel="manifest" type="application/json" href="%PUBLIC_URL%/manifest.json" />
     <title>TheSammy2010</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      //
+      // Undoes the redirect 404.html made: reads the real path back out of
+      // the query string it was packed into and replaces the URL with it
+      // via history.replaceState, before React Router mounts - so a deep
+      // link like /go-heavier ends up back on /go-heavier instead of
+      // staying on the "?/go-heavier" redirect target.
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search.slice(1).split("&").map(function (s) {
+            return s.replace(/~and~/g, "&");
+          }).join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this website.</noscript>

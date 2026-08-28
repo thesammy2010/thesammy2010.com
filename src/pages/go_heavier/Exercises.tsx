@@ -2,11 +2,15 @@ import React from "react"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import Exercise from "../../components/go_heavier/Exercise"
 import ExerciseForm from "../../components/go_heavier/ExerciseForm"
-import { API_URL } from "../../configs"
+import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
+import { apiFetch } from "../../auth"
+import { canAccess, subscribeAccess, subscribeAccessReady } from "../../roles"
+import "../GoHeavier.css"
 import "./Exercises.css"
 
 interface State {
     configLoaded: boolean | null
+    loadError: string | null
     exercises?: any[]
     showForm?: boolean
     isRefreshing?: boolean
@@ -25,14 +29,23 @@ interface State {
 }
 
 export default class Exercises extends React.Component<{}, State> {
+    unsubscribeAccess?: () => void
+    unsubscribeReady?: () => void
+
     constructor(props: {}) {
         super(props)
         
+        // Guards against a cache written before an error response (e.g. a
+        // 403 body) was excluded from what gets cached - an old entry like
+        // that would otherwise be trusted as the exercise list forever,
+        // since it's truthy and never re-fetched.
         const cachedData = sessionStorage.getItem('go-heavier-exercises')
-        const cachedExercises = cachedData ? JSON.parse(cachedData) : undefined
+        const parsedExercises = cachedData ? JSON.parse(cachedData) : undefined
+        const cachedExercises = Array.isArray(parsedExercises) ? parsedExercises : undefined
         
         this.state = {
             configLoaded: cachedExercises ? true : null,
+            loadError: null,
             exercises: cachedExercises,
             showForm: false,
             isRefreshing: false,
@@ -58,29 +71,55 @@ export default class Exercises extends React.Component<{}, State> {
     handleRefresh = async () => {
         this.setState({ isRefreshing: true })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/exercises`)
+            const response = await apiFetch(`${API_URL}/go-heavier/exercises`)
+            if (!response.ok) {
+                throw new ApiError(response.status, "Failed to load exercises")
+            }
             const result = await response.json()
-            
+
             sessionStorage.setItem('go-heavier-exercises', JSON.stringify(result))
-            
+
             setTimeout(() => {
-                this.setState({ 
-                    exercises: result, 
-                    configLoaded: true, 
+                this.setState({
+                    exercises: result,
+                    configLoaded: true,
+                    loadError: null,
                     isRefreshing: false,
-                    hasFetchedOnce: true 
+                    hasFetchedOnce: true
                 })
             }, 300)
         } catch (error) {
             console.error("Error fetching exercises:", error)
-            this.setState({ configLoaded: false, isRefreshing: false })
+            this.setState({ configLoaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
-    componentDidMount() {
-        if (!this.state.hasFetchedOnce) {
-            this.handleRefresh()
+    // Only skips the very first, automatic load - the refresh/retry buttons
+    // call handleRefresh directly and always hit the API, since clicking one
+    // is an explicit request that's worth trying even if we think it'll fail.
+    autoFetch = () => {
+        // Checked before the cache: an empty (but validly cached) list looks
+        // exactly like "already loaded, nothing to show" and would otherwise
+        // keep being trusted after a role change revoked access, silently
+        // masking the permission problem behind "No exercises found."
+        if (!canAccess("GET", "/go-heavier/exercises")) {
+            this.setState({ configLoaded: false, loadError: PERMISSION_DENIED_MESSAGE })
+            return
         }
+        if (this.state.hasFetchedOnce) {
+            return
+        }
+        this.handleRefresh()
+    }
+
+    componentDidMount() {
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+        this.unsubscribeReady = subscribeAccessReady(this.autoFetch)
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
+        this.unsubscribeReady?.()
     }
 
     toggleFilter = (filterType: 'muscleGroups' | 'specificMuscles' | 'types' | 'equipments', value: string) => {
@@ -168,21 +207,6 @@ export default class Exercises extends React.Component<{}, State> {
         })
     }
 
-    showLoading() {
-        switch (this.state.configLoaded) {
-            case true:
-                return <></>
-            case false:
-                return <p className="error-message">Failed to load exercises</p>
-            default:
-                return (
-                    <div className="loading-spinner">
-                        <div className="spinner"></div>
-                    </div>
-                )
-        }
-    }
-
     render(): React.ReactNode {
         const filteredExercises = this.getFilteredExercises()
         const hasActiveFilters = this.state.filters.muscleGroups.length > 0 || 
@@ -204,12 +228,27 @@ export default class Exercises extends React.Component<{}, State> {
                             ↻
                         </button>
                     )}
-                    <div className="header">
-                        {this.showLoading()}
-                        {!this.state.configLoaded && this.state.configLoaded !== null && (
-                            <button onClick={this.handleRefresh}>Retry</button>
-                        )}
-                    </div>
+                    {this.state.configLoaded === null && (
+                        <div className="loading-spinner">
+                            <div className="spinner"></div>
+                        </div>
+                    )}
+                    {this.state.configLoaded === false && (
+                        <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
+                            <h2>Failed to Load Exercises</h2>
+                            <p className="error-message">
+                                {this.state.loadError ?? "Failed to load exercises"}
+                            </p>
+                            <button onClick={this.handleRefresh} disabled={this.state.isRefreshing}>
+                                {this.state.isRefreshing ? (
+                                    <>
+                                        <span className="button-spinner"></span>
+                                        Retrying...
+                                    </>
+                                ) : 'Retry'}
+                            </button>
+                        </div>
+                    )}
 
                     {this.state.configLoaded && this.state.exercises != null && (
                         <div className="filters-container">
@@ -342,8 +381,8 @@ export default class Exercises extends React.Component<{}, State> {
                             ))}
                         </div>
                     )}
-                    {this.state.configLoaded && (
-                        <button 
+                    {this.state.configLoaded && canAccess("POST", "/go-heavier/exercises") && (
+                        <button
                             className="add-location-button"
                             onClick={() => {
                                 this.setState({ showForm: true })

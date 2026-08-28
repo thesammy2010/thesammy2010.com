@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
+import SignIn from "./SignIn"
 import "./NavBar.css"
 
 export default function GoHeavierNavBar() {
@@ -39,13 +40,14 @@ export default function GoHeavierNavBar() {
                     >
                         📈 Stats
                     </Link>
-                    <Link 
-                        to="/go-heavier/workouts" 
+                    <Link
+                        to="/go-heavier/workouts"
                         className={location.pathname === "/go-heavier/workouts" ? "active" : ""}
                     >
                         📋 Workouts
                     </Link>
                 </nav>
+                <SignIn />
             </div>
         </div>
     )

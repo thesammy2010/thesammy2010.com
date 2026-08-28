@@ -1,6 +1,7 @@
 import React from "react"
 
-import { API_URL } from "../../configs"
+import { API_URL, ApiError } from "../../configs"
+import { apiFetch } from "../../auth"
 import ExercisePicker, { PickableExercise } from "./ExercisePicker"
 import {
     MAX_WORKOUTS_PER_REQUEST,
@@ -75,9 +76,9 @@ export default class LogWorkoutWizard extends React.Component<Props, State> {
     // left off rather than starting a second "set 1" for the same exercise.
     fetchExistingSets = async (sessionId: string) => {
         try {
-            const response = await fetch(`${API_URL}/go-heavier/workouts?session_id=${sessionId}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/workouts?session_id=${sessionId}`)
             if (!response.ok) {
-                throw new Error("Failed to load the session's sets")
+                throw new ApiError(response.status, "Failed to load the session's sets")
             }
             const sets = await response.json()
             this.setState({ alreadyLogged: countByExercise(sets) })
@@ -95,12 +96,15 @@ export default class LogWorkoutWizard extends React.Component<Props, State> {
     fetchOptions = async () => {
         try {
             const [locationsRes, exercisesRes] = await Promise.all([
-                fetch(`${API_URL}/go-heavier/locations`),
-                fetch(`${API_URL}/go-heavier/exercises`)
+                apiFetch(`${API_URL}/go-heavier/locations`),
+                apiFetch(`${API_URL}/go-heavier/exercises`)
             ])
 
-            if (!locationsRes.ok || !exercisesRes.ok) {
-                throw new Error("Failed to load locations and exercises")
+            if (!locationsRes.ok) {
+                throw new ApiError(locationsRes.status, "Failed to load locations and exercises")
+            }
+            if (!exercisesRes.ok) {
+                throw new ApiError(exercisesRes.status, "Failed to load locations and exercises")
             }
 
             const locations = await locationsRes.json()
@@ -134,7 +138,7 @@ export default class LogWorkoutWizard extends React.Component<Props, State> {
 
         this.setState({ loading: true })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/sessions`, {
+            const response = await apiFetch(`${API_URL}/go-heavier/sessions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -144,7 +148,7 @@ export default class LogWorkoutWizard extends React.Component<Props, State> {
             })
 
             if (!response.ok) {
-                throw new Error("Failed to create the session")
+                throw new ApiError(response.status, "Failed to create the session")
             }
 
             const session = await response.json()
@@ -218,14 +222,14 @@ export default class LogWorkoutWizard extends React.Component<Props, State> {
             // The endpoint takes ten sets at a time, so a long session goes up in
             // batches rather than one oversized request.
             for (const batch of chunk(payloads, MAX_WORKOUTS_PER_REQUEST)) {
-                const response = await fetch(`${API_URL}/go-heavier/workouts`, {
+                const response = await apiFetch(`${API_URL}/go-heavier/workouts`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ workouts: batch })
                 })
 
                 if (!response.ok) {
-                    throw new Error("Failed to save the sets")
+                    throw new ApiError(response.status, "Failed to save the sets")
                 }
             }
 

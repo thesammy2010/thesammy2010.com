@@ -2,7 +2,9 @@ import React from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, formatNotes } from "../../configs"
+import { API_URL, ApiError, formatNotes } from "../../configs"
+import { apiFetch } from "../../auth"
+import { canAccess, subscribeAccess } from "../../roles"
 import { formatCount, formatFullDateTime, formatWeight } from "../../components/go_heavier/format"
 import { SetRow, emptyRow, validateRow } from "../../components/go_heavier/logWorkout"
 import LogWorkoutWizard from "../../components/go_heavier/LogWorkoutWizard"
@@ -72,6 +74,8 @@ interface State {
 }
 
 class SessionDetailClass extends React.Component<Props, State> {
+    unsubscribeAccess?: () => void
+
     constructor(props: Props) {
         super(props)
         this.state = {
@@ -96,14 +100,19 @@ class SessionDetailClass extends React.Component<Props, State> {
     componentDidMount() {
         this.fetchSession()
         this.fetchSets()
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
     }
 
     fetchSession = async () => {
         this.setState({ loading: true, error: null })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/sessions/${this.props.id}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/sessions/${this.props.id}`)
             if (!response.ok) {
-                throw new Error("Session not found")
+                throw new ApiError(response.status, "Session not found")
             }
             const session = await response.json()
             this.setState({ session, loading: false })
@@ -116,9 +125,9 @@ class SessionDetailClass extends React.Component<Props, State> {
     fetchSets = async () => {
         this.setState({ setsLoading: true, setsError: null })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/workouts?session_id=${this.props.id}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/workouts?session_id=${this.props.id}`)
             if (!response.ok) {
-                throw new Error("Failed to load the sets in this session")
+                throw new ApiError(response.status, "Failed to load the sets in this session")
             }
             const sets: WorkoutSet[] = await response.json()
             this.setState({ sets, setsLoading: false })
@@ -178,12 +187,12 @@ class SessionDetailClass extends React.Component<Props, State> {
         this.setState({ deletingAll: true })
         try {
             for (const set of queued.sets) {
-                const response = await fetch(`${API_URL}/go-heavier/workouts/${set.id}`, {
+                const response = await apiFetch(`${API_URL}/go-heavier/workouts/${set.id}`, {
                     method: "DELETE"
                 })
 
                 if (!response.ok) {
-                    throw new Error("Failed to delete the sets")
+                    throw new ApiError(response.status, "Failed to delete the sets")
                 }
             }
 
@@ -239,18 +248,18 @@ class SessionDetailClass extends React.Component<Props, State> {
         this.setState({ savingEdit: true })
         try {
             for (const set of doomed) {
-                const response = await fetch(`${API_URL}/go-heavier/workouts/${set.id}`, {
+                const response = await apiFetch(`${API_URL}/go-heavier/workouts/${set.id}`, {
                     method: "DELETE"
                 })
 
                 if (!response.ok) {
-                    throw new Error("Failed to delete the set")
+                    throw new ApiError(response.status, "Failed to delete the set")
                 }
             }
 
             for (const set of kept) {
                 const draft = this.state.drafts[set.id]
-                const response = await fetch(`${API_URL}/go-heavier/workouts/${set.id}`, {
+                const response = await apiFetch(`${API_URL}/go-heavier/workouts/${set.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -268,7 +277,7 @@ class SessionDetailClass extends React.Component<Props, State> {
                 })
 
                 if (!response.ok) {
-                    throw new Error("Failed to save the changes")
+                    throw new ApiError(response.status, "Failed to save the changes")
                 }
             }
 
@@ -372,13 +381,15 @@ class SessionDetailClass extends React.Component<Props, State> {
                             <div className="detail-section stats-section">
                                 <div className="section-head">
                                     <h3>🏋️ Exercises</h3>
-                                    <button
-                                        type="button"
-                                        className="edit-set-button primary"
-                                        onClick={() => this.setState({ showAddSets: true })}
-                                    >
-                                        ➕ Add sets
-                                    </button>
+                                    {canAccess("POST", "/go-heavier/workouts") && (
+                                        <button
+                                            type="button"
+                                            className="edit-set-button primary"
+                                            onClick={() => this.setState({ showAddSets: true })}
+                                        >
+                                            ➕ Add sets
+                                        </button>
+                                    )}
                                 </div>
 
                                 {this.state.setsLoading && (
@@ -486,24 +497,28 @@ class SessionDetailClass extends React.Component<Props, State> {
                                                 </span>
                                             ) : (
                                                 <span className="session-exercise-edit">
-                                                    <button
-                                                        type="button"
-                                                        className="edit-set-button"
-                                                        onClick={() => this.startEdit(exercise.exercise_id, sets)}
-                                                        disabled={this.state.editingExerciseId !== null}
-                                                        title={`Edit the ${exercise.name} sets`}
-                                                    >
-                                                        ✏️ Edit
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="edit-set-button danger"
-                                                        onClick={() => this.askDeleteExercise(exercise.exercise_id, exercise.name, sets)}
-                                                        disabled={this.state.editingExerciseId !== null}
-                                                        title={`Delete every ${exercise.name} set in this session`}
-                                                    >
-                                                        🗑️ Delete all
-                                                    </button>
+                                                    {canAccess("PUT", `/go-heavier/workouts/${exercise.exercise_id}`) && (
+                                                        <button
+                                                            type="button"
+                                                            className="edit-set-button"
+                                                            onClick={() => this.startEdit(exercise.exercise_id, sets)}
+                                                            disabled={this.state.editingExerciseId !== null}
+                                                            title={`Edit the ${exercise.name} sets`}
+                                                        >
+                                                            ✏️ Edit
+                                                        </button>
+                                                    )}
+                                                    {canAccess("DELETE", `/go-heavier/workouts/${exercise.exercise_id}`) && (
+                                                        <button
+                                                            type="button"
+                                                            className="edit-set-button danger"
+                                                            onClick={() => this.askDeleteExercise(exercise.exercise_id, exercise.name, sets)}
+                                                            disabled={this.state.editingExerciseId !== null}
+                                                            title={`Delete every ${exercise.name} set in this session`}
+                                                        >
+                                                            🗑️ Delete all
+                                                        </button>
+                                                    )}
                                                 </span>
                                             )}
                                         </div>

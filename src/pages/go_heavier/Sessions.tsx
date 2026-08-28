@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import SessionForm from "../../components/go_heavier/SessionForm"
+import { canAccess, subscribeAccess, subscribeAccessReady } from "../../roles"
+import { PERMISSION_DENIED_MESSAGE } from "../../configs"
 import {
     formatCount,
     formatDays,
@@ -29,6 +31,7 @@ interface Props {
 
 interface State {
     loaded: boolean | null
+    loadError: string | null
     sessions?: SessionSummary[]
     isRefreshing: boolean
     stats: SessionStats | null
@@ -38,14 +41,23 @@ interface State {
 }
 
 export class Sessions extends React.Component<Props, State> {
+    unsubscribeAccess?: () => void
+    unsubscribeReady?: () => void
+
     constructor(props: Props) {
         super(props)
 
+        // Guards against a cache written before an error response (e.g. a
+        // 403 body) was excluded from what gets cached - an old entry like
+        // that would otherwise be trusted as the session list forever,
+        // since it's truthy and never re-fetched.
         const cachedData = sessionStorage.getItem(SESSIONS_CACHE_KEY)
-        const cachedSessions = cachedData ? JSON.parse(cachedData) : undefined
+        const parsedSessions = cachedData ? JSON.parse(cachedData) : undefined
+        const cachedSessions = Array.isArray(parsedSessions) ? parsedSessions : undefined
 
         this.state = {
             loaded: cachedSessions ? true : null,
+            loadError: null,
             sessions: cachedSessions,
             isRefreshing: false,
             stats: null,
@@ -55,13 +67,47 @@ export class Sessions extends React.Component<Props, State> {
         }
     }
 
-    componentDidMount() {
-        // Cached sessions render straight away; the refresh button is the only
-        // thing that goes back to the API.
-        if (!this.state.sessions) {
-            this.fetchSessions()
+    // Only skip the very first, automatic load - the refresh/retry buttons
+    // call fetchSessions/fetchStats directly and always hit the API, since
+    // clicking one is an explicit request that's worth trying even if we
+    // think it'll fail. Gated independently since they're separate calls
+    // with separate error states.
+    autoFetchSessions = () => {
+        // Checked before the cache: an empty (but validly cached) list looks
+        // exactly like "already loaded, nothing to show" and would otherwise
+        // keep being trusted after a role change revoked access, silently
+        // masking the permission problem behind "No sessions found."
+        if (!canAccess("GET", "/go-heavier/sessions")) {
+            this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
+            return
+        }
+        // Cached sessions render straight away; the refresh button is the
+        // only thing that goes back to the API.
+        if (this.state.sessions) {
+            return
+        }
+        this.fetchSessions()
+    }
+
+    autoFetchStats = () => {
+        if (!canAccess("GET", "/go-heavier/sessions/stats")) {
+            this.setState({ statsLoading: false, statsError: PERMISSION_DENIED_MESSAGE })
+            return
         }
         this.fetchStats()
+    }
+
+    componentDidMount() {
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+        this.unsubscribeReady = subscribeAccessReady(() => {
+            this.autoFetchSessions()
+            this.autoFetchStats()
+        })
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
+        this.unsubscribeReady?.()
     }
 
     fetchStats = async () => {
@@ -87,11 +133,11 @@ export class Sessions extends React.Component<Props, State> {
             sessionStorage.setItem(SESSIONS_CACHE_KEY, JSON.stringify(sessions))
 
             await waitOut()
-            this.setState({ sessions, loaded: true, isRefreshing: false })
+            this.setState({ sessions, loaded: true, loadError: null, isRefreshing: false })
         } catch (error) {
             console.error("Error fetching sessions:", error)
             await waitOut()
-            this.setState({ loaded: false, isRefreshing: false })
+            this.setState({ loaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
@@ -173,7 +219,9 @@ export class Sessions extends React.Component<Props, State> {
                     {this.state.loaded === false && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Sessions</h2>
-                            <p className="error-message">Unable to fetch sessions from server</p>
+                            <p className="error-message">
+                                {this.state.loadError ?? "Unable to fetch sessions from server"}
+                            </p>
                             <button onClick={this.handleRetry} disabled={this.state.isRefreshing}>
                                 {this.state.isRefreshing ? (
                                     <>
@@ -185,7 +233,7 @@ export class Sessions extends React.Component<Props, State> {
                         </div>
                     )}
 
-                    {this.state.loaded && (
+                    {this.state.loaded && canAccess("POST", "/go-heavier/sessions") && (
                         <button
                             className="add-location-button"
                             onClick={() => this.setState({ showForm: true })}

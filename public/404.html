@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TheSammy2010</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      //
+      // GitHub Pages only serves static files, so a deep link like
+      // /go-heavier has no matching file and lands here instead of
+      // index.html. This rewrites the path into a query string and
+      // redirects to the real index.html, which index.html's own script
+      // then decodes back into the original URL via history.replaceState
+      // before React Router mounts - so the app never sees the redirect.
+      //
+      // Served from the domain root (custom domain, no repo-name path
+      // prefix to preserve), so pathSegmentsToKeep stays 0.
+      var pathSegmentsToKeep = 0;
+
+      var l = window.location;
+      l.replace(
+        l.protocol + "//" + l.hostname + (l.port ? ":" + l.port : "") +
+        l.pathname.split("/").slice(0, 1 + pathSegmentsToKeep).join("/") + "/?/" +
+        l.pathname.slice(1).split("/").slice(pathSegmentsToKeep).join("/").replace(/&/g, "~and~") +
+        (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

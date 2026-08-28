@@ -1,7 +1,9 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, countryCodeToEmoji } from "../../configs"
+import { API_URL, ApiError, countryCodeToEmoji } from "../../configs"
+import { apiFetch } from "../../auth"
+import { canAccess, subscribeAccess } from "../../roles"
 import { formatCount, formatLongDate, formatWeight } from "../../components/go_heavier/format"
 import "../../components/go_heavier/Stats.css"
 import "./LocationDetail.css"
@@ -72,6 +74,8 @@ interface State {
 }
 
 class LocationDetailClass extends React.Component<{ id: string; navigate: any }, State> {
+    unsubscribeAccess?: () => void
+
     constructor(props: { id: string; navigate: any }) {
         super(props)
         this.state = {
@@ -102,14 +106,19 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
     componentDidMount() {
         this.fetchLocation()
         this.fetchStats()
+        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeAccess?.()
     }
 
     fetchStats = async () => {
         this.setState({ statsLoading: true, statsError: null })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/locations/${this.props.id}/stats`)
+            const response = await apiFetch(`${API_URL}/go-heavier/locations/${this.props.id}/stats`)
             if (!response.ok) {
-                throw new Error("Failed to load stats")
+                throw new ApiError(response.status, "Failed to load stats")
             }
             const stats = await response.json()
             this.setState({ stats, statsLoading: false })
@@ -122,9 +131,9 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
     fetchLocation = async () => {
         this.setState({ loading: true, error: null })
         try {
-            const response = await fetch(`${API_URL}/go-heavier/locations/${this.props.id}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/locations/${this.props.id}`)
             if (!response.ok) {
-                throw new Error("Location not found")
+                throw new ApiError(response.status, "Location not found")
             }
             const result = await response.json()
             this.setState({ 
@@ -151,9 +160,9 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         this.setState({ isRefreshing: true })
         this.fetchStats()
         try {
-            const response = await fetch(`${API_URL}/go-heavier/locations/${this.props.id}`)
+            const response = await apiFetch(`${API_URL}/go-heavier/locations/${this.props.id}`)
             if (!response.ok) {
-                throw new Error("Location not found")
+                throw new ApiError(response.status, "Location not found")
             }
             const result = await response.json()
             setTimeout(() => {
@@ -181,7 +190,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         if (!this.state.location) return
 
         try {
-            await fetch(`${API_URL}/go-heavier/locations/${this.props.id}`, {
+            await apiFetch(`${API_URL}/go-heavier/locations/${this.props.id}`, {
                 method: "DELETE"
             })
             // Clear cache and navigate back
@@ -280,7 +289,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
         this.setState({ formLoading: true })
 
         try {
-            const response = await fetch(`${API_URL}/go-heavier/locations/${this.props.id}`, {
+            const response = await apiFetch(`${API_URL}/go-heavier/locations/${this.props.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -289,7 +298,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
             })
 
             if (!response.ok) {
-                throw new Error("Failed to update location")
+                throw new ApiError(response.status, "Failed to update location")
             }
 
             const result = await response.json()
@@ -523,17 +532,16 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                                 <h1>{this.state.location.name} {countryCodeToEmoji(this.state.location.address_country_iso3.substring(0, 2))}</h1>
                                 <p className="location-detail-description">{this.state.location.description}</p>
                                 <div className="action-buttons">
-                                    <button className="edit-action-button" onClick={this.handleEdit}>
-                                        ✏️ Edit Location
-                                    </button>
-                                    <button
-                                        className="delete-action-button"
-                                        onClick={this.handleDelete}
-                                        disabled
-                                        title="Deleting is restricted to admins"
-                                    >
-                                        🗑️ Delete Location
-                                    </button>
+                                    {canAccess("PUT", `/go-heavier/locations/${this.props.id}`) && (
+                                        <button className="edit-action-button" onClick={this.handleEdit}>
+                                            ✏️ Edit Location
+                                        </button>
+                                    )}
+                                    {canAccess("DELETE", `/go-heavier/locations/${this.props.id}`) && (
+                                        <button className="delete-action-button" onClick={this.handleDelete}>
+                                            🗑️ Delete Location
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
