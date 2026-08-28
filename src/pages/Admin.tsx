@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 
-import { canAccess, useIsAdmin } from "../roles"
+import { useCanAccess, useIsAdmin } from "../roles"
 import AdminNavBar from "../components/admin/NavBar"
 import "./admin/AdminForms.css"
 import "./Admin.css"
@@ -9,6 +9,10 @@ import "./Admin.css"
 // across the whole site, not just the go-heavier resources.
 export default function Admin() {
     const isAdmin = useIsAdmin()
+    const canProvision = useCanAccess("POST", "/admin/users")
+    const canListUsers = useCanAccess("GET", "/admin/users")
+    const canChangeRole = useCanAccess("PATCH", "/users/x/role")
+    const canDelete = useCanAccess("DELETE", "/users/x")
 
     return (
         <div className="center-container-grid">
@@ -21,7 +25,7 @@ export default function Admin() {
                             <p>Manage who can use the site, and what they can do.</p>
                         </div>
                         <div className="admin-cards">
-                            {canAccess("POST", "/admin/users") && (
+                            {canProvision && (
                                 <Link to="/admin/provision" className="admin-card">
                                     <div className="admin-card-icon">➕</div>
                                     <div className="admin-card-content">
@@ -30,9 +34,7 @@ export default function Admin() {
                                     </div>
                                 </Link>
                             )}
-                            {(canAccess("GET", "/admin/users") ||
-                                canAccess("PATCH", "/users/x/role") ||
-                                canAccess("DELETE", "/users/x")) && (
+                            {(canListUsers || canChangeRole || canDelete) && (
                                 <Link to="/admin/users" className="admin-card">
                                     <div className="admin-card-icon">👥</div>
                                     <div className="admin-card-content">

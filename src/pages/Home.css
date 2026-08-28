@@ -5,9 +5,16 @@
   margin-right: auto;
 }
 
+/* Removing the old page heading took the clearance between the nav bar and
+   the logo with it - without this, the logo sits flush against the nav and
+   can overlap its links, blocking clicks on Go Heavier/About/Admin. */
+#image {
+  padding-top: 40px;
+}
+
 .wrapper-logo {
-  width: clamp(220px, 40vw, 440px);
-  height: auto;
+  width: 40%;
+  height: 40%;
   display: block;
   margin-top: auto;
   margin-bottom: auto;
@@ -19,7 +26,8 @@
 }
 
 .wrapper-logo:hover {
-  width: clamp(230px, 42vw, 460px);
+  width: 45%;
+  height: 45%;
   transition: 300ms ease-in-out;
 }
 

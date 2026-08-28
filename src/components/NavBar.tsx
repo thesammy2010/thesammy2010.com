@@ -2,7 +2,7 @@ import React from "react"
 import { Link, useLocation } from "react-router-dom"
 
 import { useIsAdmin } from "../roles"
-import SignIn from "./SignIn"
+import SignIn, { ONE_TAP_ANCHOR_ID } from "./SignIn"
 import "./NavBar.css"
 
 const LINKS = [
@@ -44,6 +44,7 @@ export default function NavBar() {
 
                 <SignIn />
             </div>
+            <div id={ONE_TAP_ANCHOR_ID} className="one-tap-anchor" />
         </nav>
     )
 }

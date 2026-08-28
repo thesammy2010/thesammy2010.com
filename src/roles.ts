@@ -23,6 +23,7 @@ const ROLE_RANK: Record<UserRole, number> = {
 type EndpointRoles = Record<string, Record<string, UserRole | null>>
 
 let role: UserRole | null = null
+let ownUserId: string | null = null
 let endpointRoles: EndpointRoles | null = null
 const changeListeners = new Set<() => void>()
 
@@ -50,6 +51,11 @@ function setRole(next: UserRole | null): void {
     notify()
 }
 
+function setOwnUserId(next: string | null): void {
+    ownUserId = next
+    notify()
+}
+
 function setEndpointRoles(next: EndpointRoles | null): void {
     endpointRoles = next
     notify()
@@ -60,10 +66,12 @@ async function fetchRole(): Promise<void> {
         const response = await apiFetch(`${API_URL}/users`)
         if (!response.ok) {
             setRole(null)
+            setOwnUserId(null)
             return
         }
         const data = await response.json()
         setRole(data.role ?? null)
+        setOwnUserId(data.id ?? null)
     } catch (error) {
         console.error("Failed to fetch user role", error)
         setRole(null)
@@ -89,6 +97,7 @@ subscribeToken(token => {
         Promise.all([fetchRole(), fetchEndpointRoles()]).finally(markAccessReady)
     } else {
         setRole(null)
+        setOwnUserId(null)
         setEndpointRoles(null)
         markAccessReady()
     }
@@ -154,6 +163,10 @@ export function getUserRole(): UserRole | null {
     return role
 }
 
+export function getOwnUserId(): string | null {
+    return ownUserId
+}
+
 // Whether canAccess has enough information to give a real answer yet. A
 // caller that wants to skip fetching something it might not have access to
 // should wait for this before trusting a `false` from canAccess - before
@@ -192,6 +205,12 @@ export function useCanAccess(method: string, path: string): boolean {
 export function useUserRole(): UserRole | null {
     const [current, setCurrent] = useState(role)
     useEffect(() => subscribeAccess(() => setCurrent(role)), [])
+    return current
+}
+
+export function useOwnUserId(): string | null {
+    const [current, setCurrent] = useState(ownUserId)
+    useEffect(() => subscribeAccess(() => setCurrent(ownUserId)), [])
     return current
 }
 

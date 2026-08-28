@@ -1,5 +1,5 @@
 .admin-users-page {
-    max-width: 640px;
+    max-width: 960px;
 }
 
 .admin-users-loading {
@@ -7,57 +7,131 @@
     color: #5a6c7d;
 }
 
-.admin-users-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.admin-users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
 }
 
-.admin-user-row {
+.admin-user-card {
+    position: relative;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     gap: 12px;
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 16px;
 }
 
-.admin-user-id {
-    flex: 1 1 160px;
+.admin-user-card-row {
+    display: flex;
+    justify-content: center;
+}
+
+.admin-user-card-id-row {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    gap: 8px;
+}
+
+.admin-user-card-self {
+    border-color: #667eea;
+    box-shadow: 0 0 0 1px #667eea;
+}
+
+.admin-user-you-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    flex-shrink: 0;
+    background: #667eea;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+.admin-user-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     min-width: 0;
+    max-width: 100%;
+}
+
+.admin-user-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #2c3e50;
+}
+
+.admin-user-email {
+    font-size: 0.8rem;
+    color: #5a6c7d;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.8rem;
-    color: #5a6c7d;
+}
+
+.admin-user-id {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.7rem;
+    color: #9ca3af;
     background: #f3f4f6;
-    padding: 4px 8px;
+    padding: 3px 7px;
     border-radius: 4px;
 }
 
-.admin-user-row .role-select {
-    flex: 0 0 auto;
+.admin-user-card .role-pill {
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: 0.78rem;
+}
+
+.admin-user-card-activity-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.admin-user-card-actions-row {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
 }
 
 .admin-user-delete-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid #ef4444;
+    border-radius: 999px;
+    font-size: 0.85rem;
     font-weight: 600;
+    text-transform: capitalize;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .admin-user-confirm {
-    flex: 1 1 100%;
+    width: 100%;
     margin: 0;
 }
 
 @media (max-width: 640px) {
-    .admin-user-row {
-        flex-direction: column;
-        align-items: stretch;
+    .admin-users-grid {
+        grid-template-columns: 1fr;
     }
 
     .admin-user-id {
