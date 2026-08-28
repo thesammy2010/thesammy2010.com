@@ -11,7 +11,6 @@ import "./Users.css"
 interface UserRow {
     id: string
     role: UserRole
-    deleted_at: string | null
 }
 
 export default function Users() {
@@ -34,7 +33,7 @@ export default function Users() {
                 throw new ApiError(response.status, "Failed to load users")
             }
             const data: UserRow[] = await response.json()
-            setUsers(data.filter((user) => !user.deleted_at))
+            setUsers(data)
         } catch (err) {
             setLoadError((err as Error).message)
         }
