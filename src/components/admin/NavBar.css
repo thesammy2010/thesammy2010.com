@@ -1,0 +1,84 @@
+/* Admin sub-nav. Every class is prefixed: stylesheets are bundled globally
+   here, so an unprefixed name would leak onto every other page. */
+
+.admin-navbar {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+    padding: 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.admin-navbar-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.admin-navbar-brand {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+.admin-navbar-links {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.admin-navbar-links a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.admin-navbar-links a:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-navbar-links a.active {
+    background: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .admin-navbar-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .admin-navbar-links {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .admin-navbar-links a {
+        width: 100%;
+        text-align: center;
+    }
+
+    .admin-navbar-brand {
+        font-size: 1.25rem;
+    }
+}

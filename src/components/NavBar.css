@@ -7,6 +7,14 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
+/* One Tap renders itself into this element (see prompt_parent_id in
+   SignIn.tsx) instead of Google's default fixed top-right overlay, which
+   floated on top of these nav links. position: relative makes it the
+   containing block so the prompt anchors just under the bar. */
+.one-tap-anchor {
+    position: relative;
+}
+
 .site-navbar-content {
     max-width: 1400px;
     margin: 0 auto;

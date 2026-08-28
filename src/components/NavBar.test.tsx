@@ -1,13 +1,16 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import NavBar from "./NavBar"
 
 function renderAt(path: string) {
     render(
-        <MemoryRouter initialEntries={[path]}>
-            <NavBar />
-        </MemoryRouter>
+        <GoogleOAuthProvider clientId="test-client-id">
+            <MemoryRouter initialEntries={[path]}>
+                <NavBar />
+            </MemoryRouter>
+        </GoogleOAuthProvider>
     )
 }
 

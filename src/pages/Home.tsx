@@ -22,9 +22,6 @@ export default class Home extends React.Component<Props, State> {
     render(): React.ReactNode {
         return (
             <div>
-                <div className="header">
-                    <h1>TheSammy2010</h1>
-                </div>
                 <div id="image">
                     <img
                         src={process.env.PUBLIC_URL + "/icons/logo.svg"}

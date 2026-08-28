@@ -1,0 +1,48 @@
+.role-select {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.role-pill {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 12px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 999px;
+    background: #fff;
+    color: #5a6c7d;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.role-pill:hover {
+    border-color: #9ca3af;
+}
+
+.role-pill-guest.selected {
+    background: #6b7280;
+    border-color: #6b7280;
+    color: #fff;
+}
+
+.role-pill-viewer.selected {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+.role-pill-editor.selected {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #fff;
+}
+
+.role-pill-admin.selected {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+}
