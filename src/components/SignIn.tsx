@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
 
-import { API_URL } from "../../configs"
-import { apiFetch, decodeProfile, GoogleProfile, setToken, signOut, useAuthToken } from "../../auth"
+import { API_URL } from "../configs"
+import { apiFetch, decodeProfile, GoogleProfile, setToken, signOut, useAuthToken } from "../auth"
 import "./SignIn.css"
 
 // A signed-in caller defaults to the "guest" role in the API until an admin
@@ -26,12 +26,12 @@ export default function SignIn() {
 
     if (token && profile) {
         return (
-            <div className="go-heavier-signin">
-                <div className="go-heavier-signin-profile">
+            <div className="site-signin">
+                <div className="site-signin-profile">
                     <img src={profile.picture} alt={profile.name} referrerPolicy="no-referrer" />
-                    <span className="go-heavier-signin-name">{profile.name}</span>
+                    <span className="site-signin-name">{profile.name}</span>
                 </div>
-                <button className="go-heavier-signin-out" onClick={signOut}>
+                <button className="site-signin-out" onClick={signOut}>
                     Sign out
                 </button>
             </div>
@@ -39,7 +39,7 @@ export default function SignIn() {
     }
 
     return (
-        <div className="go-heavier-signin">
+        <div className="site-signin">
             <GoogleLogin
                 onSuccess={(response: CredentialResponse) => {
                     if (!response.credential) {

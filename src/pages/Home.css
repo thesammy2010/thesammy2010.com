@@ -6,8 +6,8 @@
 }
 
 .wrapper-logo {
-  width: 40%;
-  height: 40%;
+  width: clamp(220px, 40vw, 440px);
+  height: auto;
   display: block;
   margin-top: auto;
   margin-bottom: auto;
@@ -19,8 +19,7 @@
 }
 
 .wrapper-logo:hover {
-  width: 45%;
-  height: 45%;
+  width: clamp(230px, 42vw, 460px);
   transition: 300ms ease-in-out;
 }
 

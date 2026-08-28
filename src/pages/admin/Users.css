@@ -1,0 +1,67 @@
+.admin-users-page {
+    max-width: 640px;
+}
+
+.admin-users-loading {
+    text-align: center;
+    color: #5a6c7d;
+}
+
+.admin-users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-user-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.admin-user-id {
+    flex: 1 1 160px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: #5a6c7d;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.admin-user-row .role-select {
+    flex: 0 0 auto;
+}
+
+.admin-user-delete-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-user-confirm {
+    flex: 1 1 100%;
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .admin-user-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-user-id {
+        white-space: normal;
+        word-break: break-all;
+    }
+}

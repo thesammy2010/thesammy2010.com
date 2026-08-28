@@ -1,188 +1,79 @@
-/* Admin page. Every class is prefixed: stylesheets are bundled globally here,
-   so an unprefixed name would leak onto every other page. */
+/* Admin dashboard. Every class is prefixed: stylesheets are bundled
+   globally here, so an unprefixed name would leak onto every other page. */
 
-.admin-page {
-    max-width: 720px;
+.admin-dashboard {
+    max-width: 900px;
     margin: 0 auto;
     padding: 48px 24px 64px;
 }
 
-.admin-hero {
+.admin-dashboard-hero {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 
-.admin-hero h1 {
-    margin: 0;
+.admin-dashboard-hero h1 {
+    margin: 0 0 8px;
     font-size: 2.25rem;
     font-weight: 700;
     letter-spacing: -0.5px;
     color: #2c3e50;
 }
 
-.admin-restricted {
+.admin-dashboard-hero p {
     margin: 0;
     font-size: 1.0625rem;
-    line-height: 1.6;
-    color: #c0392b;
-    text-align: center;
-}
-
-.admin-tools {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.admin-section {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 24px;
-}
-
-.admin-section h2 {
-    margin: 0 0 4px;
-    font-size: 1.25rem;
-    color: #2c3e50;
-}
-
-.admin-section-hint {
-    margin: 0 0 16px;
-    font-size: 0.875rem;
     color: #5a6c7d;
 }
 
-.admin-section-hint code {
-    background: #f3f4f6;
-    padding: 1px 5px;
-    border-radius: 4px;
+.admin-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
 }
 
-.admin-form {
+.admin-card {
     display: flex;
-    flex-direction: column;
+    align-items: flex-start;
     gap: 16px;
-}
-
-.admin-form label {
-    display: flex;
-    flex-direction: column;
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #2c3e50;
-    gap: 6px;
-}
-
-.admin-form input,
-.admin-form select {
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    font-family: inherit;
-    box-sizing: border-box;
-}
-
-.admin-form input:focus,
-.admin-form select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.admin-form button {
-    align-self: flex-start;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    background: #667eea;
-    color: #fff;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
     transition: all 0.2s ease;
 }
 
-.admin-form button:hover:not(:disabled) {
-    background: #5568d3;
+.admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border-color: #667eea;
 }
 
-.admin-form button:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
+.admin-card-icon {
+    font-size: 1.75rem;
+    line-height: 1;
 }
 
-.admin-danger-button {
-    background: #ef4444 !important;
-}
-
-.admin-danger-button:hover:not(:disabled) {
-    background: #dc2626 !important;
-}
-
-.admin-error {
-    margin: 0;
-    color: #ef4444;
-    font-size: 0.85rem;
-    padding: 8px;
-    background: #fee;
-    border-radius: 4px;
-}
-
-.admin-success {
-    margin: 0;
-    color: #15803d;
-    font-size: 0.85rem;
-    padding: 8px;
-    background: #ecfdf3;
-    border-radius: 4px;
-}
-
-.admin-success code,
-.admin-error code {
-    background: rgba(0, 0, 0, 0.06);
-    padding: 1px 5px;
-    border-radius: 4px;
-}
-
-.admin-confirm {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-}
-
-.admin-warning {
-    margin: 0;
-    color: #991b1b;
-    font-size: 0.9rem;
-}
-
-.admin-confirm-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.admin-confirm-actions button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
+.admin-card-title {
     font-weight: 600;
-    cursor: pointer;
-    background: #e5e7eb;
-    color: #374151;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.admin-card-caption {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #5a6c7d;
 }
 
 @media (max-width: 640px) {
-    .admin-page {
+    .admin-dashboard {
         padding: 32px 16px 48px;
     }
 
-    .admin-hero h1 {
+    .admin-dashboard-hero h1 {
         font-size: 1.75rem;
     }
 }

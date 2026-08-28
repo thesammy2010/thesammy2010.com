@@ -1,0 +1,47 @@
+.site-signin {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #2c3e50;
+}
+
+.site-signin-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.site-signin-profile img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+.site-signin-name {
+    font-size: 0.85rem;
+    color: inherit;
+}
+
+.site-signin-out {
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: #5a6c7d;
+    transition: all 0.2s ease;
+}
+
+.site-signin-out:hover {
+    color: #667eea;
+    border-color: #667eea;
+    background: #f4f5fb;
+}
+
+@media (max-width: 640px) {
+    .site-signin-name {
+        display: none;
+    }
+}

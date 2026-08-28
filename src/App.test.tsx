@@ -6,7 +6,7 @@ describe("App", () => {
     it("renders the home page at the root", () => {
         render(<App />)
 
-        expect(screen.getByRole("heading", { name: /thesammy2010/i })).toBeInTheDocument()
+        expect(screen.getAllByRole("img", { name: /thesammy2010 logo/i }).length).toBeGreaterThan(0)
     })
 
     it("offers the top level navigation", () => {

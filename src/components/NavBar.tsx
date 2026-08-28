@@ -2,6 +2,7 @@ import React from "react"
 import { Link, useLocation } from "react-router-dom"
 
 import { useIsAdmin } from "../roles"
+import SignIn from "./SignIn"
 import "./NavBar.css"
 
 const LINKS = [
@@ -40,6 +41,8 @@ export default function NavBar() {
                         </Link>
                     ))}
                 </div>
+
+                <SignIn />
             </div>
         </nav>
     )

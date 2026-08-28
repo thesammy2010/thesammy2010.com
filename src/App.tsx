@@ -19,6 +19,8 @@ import Stats from "./pages/go_heavier/Stats"
 import SessionDetail from "./pages/go_heavier/SessionDetail"
 import Workouts from "./pages/go_heavier/Workouts"
 import Admin from "./pages/Admin"
+import ProvisionUser from "./pages/admin/ProvisionUser"
+import Users from "./pages/admin/Users"
 import { GOOGLE_CLIENT_ID } from "./configs"
 
 const App: React.FC = () => {
@@ -40,6 +42,8 @@ const App: React.FC = () => {
                         <Route path="/go-heavier/workouts" element={<Workouts />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/admin" element={<Admin />} />
+                        <Route path="/admin/provision" element={<ProvisionUser />} />
+                        <Route path="/admin/users" element={<Users />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </BrowserRouter>
