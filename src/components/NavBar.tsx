@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 
 import { useIsAdmin } from "../roles"
-import SignIn, { ONE_TAP_ANCHOR_ID } from "./SignIn"
+import SignIn from "./SignIn"
 import "./NavBar.css"
 
 const LINKS = [
@@ -59,9 +59,7 @@ export default function NavBar() {
                     ))}
                 </div>
 
-                <div id={ONE_TAP_ANCHOR_ID} className="one-tap-anchor">
-                    <SignIn />
-                </div>
+                <SignIn />
             </div>
         </nav>
     )

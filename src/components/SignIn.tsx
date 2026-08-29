@@ -5,10 +5,6 @@ import { API_URL } from "../configs"
 import { apiFetch, decodeProfile, GoogleProfile, setToken, signOut, useAuthToken } from "../auth"
 import "./SignIn.css"
 
-// Anchors the One Tap prompt here instead of Google's default fixed
-// top-right overlay, which floated on top of the nav bar's own links.
-export const ONE_TAP_ANCHOR_ID = "google-one-tap-anchor"
-
 // A signed-in caller defaults to the "guest" role in the API until an admin
 // promotes them, so a fresh sign-in can still see 401/403s from protected
 // routes - that's expected, not a bug in this component.
@@ -29,11 +25,11 @@ export default function SignIn() {
     useEffect(() => {
         setProfile(token ? decodeProfile(token) : null)
 
-        // Google injects the One Tap picker directly into the DOM outside
-        // React's control (see prompt_parent_id), so unmounting <GoogleLogin>
-        // here doesn't remove it - a prompt that was already showing before
-        // sign-in completed (e.g. a silent re-auth in another tab) would
-        // otherwise linger on screen indefinitely.
+        // Google injects the One Tap picker directly into the page outside
+        // React's control, so unmounting <GoogleLogin> here doesn't remove
+        // it - a prompt that was already showing before sign-in completed
+        // (e.g. a silent re-auth in another tab) would otherwise linger on
+        // screen indefinitely.
         if (token) {
             (window as any).google?.accounts?.id?.cancel?.()
         }
@@ -95,7 +91,6 @@ export default function SignIn() {
                 }}
                 onError={() => console.error("Google sign-in failed")}
                 useOneTap
-                prompt_parent_id={ONE_TAP_ANCHOR_ID}
             />
         </div>
     )

@@ -7,16 +7,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* One Tap renders itself into this element (see prompt_parent_id in
-   SignIn.tsx) instead of Google's default fixed top-right overlay, which
-   floated on top of these nav links. Wrapping SignIn itself, rather than a
-   separate full-width sibling, keeps the prompt anchored where the sign-in
-   control actually is instead of left-aligning under the brand logo -
-   position: relative makes it the containing block for Google's popup. */
-.one-tap-anchor {
-    position: relative;
-}
-
 .site-navbar-content {
     max-width: 1400px;
     margin: 0 auto;
