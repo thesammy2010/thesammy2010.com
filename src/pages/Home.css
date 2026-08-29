@@ -6,8 +6,7 @@
 }
 
 /* Removing the old page heading took the clearance between the nav bar and
-   the logo with it - without this, the logo sits flush against the nav and
-   can overlap its links, blocking clicks on Go Heavier/About/Admin. */
+   the logo with it - without this, the logo sits flush against the nav. */
 #image {
   padding-top: 40px;
 }
@@ -20,6 +19,15 @@
   margin-bottom: auto;
   margin-left: auto;
   margin-right: auto;
+  /* The logo's own box is square-ish but not exactly square, so rotating it
+     sweeps its axis-aligned bounding box - and therefore its clickable area
+     - out past its normal footprint at the 45/135/225/315deg points in the
+     spin, wide enough to reach up into the nav bar above and swallow clicks
+     meant for its links. Clipping to a circle keeps the visible logo (it's
+     a ring, already circular) identical while making the spin's hit area
+     exactly its resting diameter at every angle, so it can never grow into
+     the nav no matter how much padding sits between them.  */
+  clip-path: circle(50%);
   animation: rotate 2s infinite linear;
   animation-delay: calc(var(--delay) * -1s);
   transition: 300ms ease-in-out;
