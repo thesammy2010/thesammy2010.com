@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import BarChart, { BarChartPoint } from "../../components/go_heavier/BarChart"
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
-import { canAccess, subscribeAccessReady } from "../../roles"
+import { canAccess, isSignedIn, subscribeAccessReady } from "../../roles"
+import SignInPrompt from "../../components/SignInPrompt"
 import { apiFetch } from "../../auth"
 import {
     MonthlyTotals,
@@ -197,7 +198,10 @@ export class Stats extends React.Component<Props, State> {
                         </div>
                     )}
 
-                    {this.state.loaded === false && (
+                    {this.state.loaded === false && !isSignedIn() && (
+                        <SignInPrompt message="Sign in to view stats." />
+                    )}
+                    {this.state.loaded === false && isSignedIn() && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Stats</h2>
                             <p className="error-message">

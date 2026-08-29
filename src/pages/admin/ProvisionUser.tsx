@@ -2,9 +2,10 @@ import React, { useState } from "react"
 
 import { API_URL, ApiError } from "../../configs"
 import { apiFetch } from "../../auth"
-import { useCanAccess, useIsAdmin, UserRole } from "../../roles"
+import { isSignedIn, useCanAccess, useIsAdmin, UserRole } from "../../roles"
 import AdminNavBar from "../../components/admin/NavBar"
 import RoleSelect from "../../components/admin/RoleSelect"
+import SignInPrompt from "../../components/SignInPrompt"
 import "./AdminForms.css"
 
 interface UserResult {
@@ -64,7 +65,9 @@ export default function ProvisionUser() {
             <AdminNavBar />
             <div className="page-container">
                 <div className="admin-form-page">
-                    {!isAdmin ? (
+                    {!isSignedIn() ? (
+                        <SignInPrompt message="Sign in to provision a user." />
+                    ) : !isAdmin ? (
                         <p className="admin-restricted">This page is restricted to admins.</p>
                     ) : !canProvision ? null : (
                         <>

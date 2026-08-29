@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import SessionForm from "../../components/go_heavier/SessionForm"
-import { canAccess, subscribeAccess, subscribeAccessReady } from "../../roles"
+import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
+import SignInPrompt from "../../components/SignInPrompt"
 import { PERMISSION_DENIED_MESSAGE } from "../../configs"
 import {
     formatCount,
@@ -216,7 +217,10 @@ export class Sessions extends React.Component<Props, State> {
                         </div>
                     )}
 
-                    {this.state.loaded === false && (
+                    {this.state.loaded === false && !isSignedIn() && (
+                        <SignInPrompt message="Sign in to view sessions." />
+                    )}
+                    {this.state.loaded === false && isSignedIn() && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Sessions</h2>
                             <p className="error-message">

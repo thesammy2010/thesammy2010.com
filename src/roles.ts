@@ -167,6 +167,14 @@ export function getOwnUserId(): string | null {
     return ownUserId
 }
 
+// Distinguishes "not signed in at all" from "signed in but lacking a role" -
+// a real account always has at least guest, so canAccess() reading false
+// can't tell those apart on its own, and a permission-denied message is the
+// wrong thing to show someone who hasn't signed in yet.
+export function isSignedIn(): boolean {
+    return getToken() !== null
+}
+
 // Whether canAccess has enough information to give a real answer yet. A
 // caller that wants to skip fetching something it might not have access to
 // should wait for this before trusting a `false` from canAccess - before
