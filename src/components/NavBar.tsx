@@ -59,9 +59,10 @@ export default function NavBar() {
                     ))}
                 </div>
 
-                <SignIn />
+                <div id={ONE_TAP_ANCHOR_ID} className="one-tap-anchor">
+                    <SignIn />
+                </div>
             </div>
-            <div id={ONE_TAP_ANCHOR_ID} className="one-tap-anchor" />
         </nav>
     )
 }

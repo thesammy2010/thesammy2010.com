@@ -28,6 +28,15 @@ export default function SignIn() {
 
     useEffect(() => {
         setProfile(token ? decodeProfile(token) : null)
+
+        // Google injects the One Tap picker directly into the DOM outside
+        // React's control (see prompt_parent_id), so unmounting <GoogleLogin>
+        // here doesn't remove it - a prompt that was already showing before
+        // sign-in completed (e.g. a silent re-auth in another tab) would
+        // otherwise linger on screen indefinitely.
+        if (token) {
+            (window as any).google?.accounts?.id?.cancel?.()
+        }
     }, [token])
 
     const handleDeleteAccount = async () => {
