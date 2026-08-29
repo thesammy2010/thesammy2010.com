@@ -59,23 +59,49 @@
     font-weight: 600;
 }
 
+.admin-navbar-menu-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.admin-navbar-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
 @media (max-width: 640px) {
     .admin-navbar-content {
-        flex-direction: column;
+        position: relative;
         text-align: center;
         gap: 12px;
         padding: 16px;
     }
 
+    .admin-navbar-menu-toggle {
+        display: block;
+    }
+
     .admin-navbar-links {
+        display: none;
         flex-direction: column;
         width: 100%;
         gap: 8px;
     }
 
+    .admin-navbar-links.open {
+        display: flex;
+    }
+
     .admin-navbar-links a {
         width: 100%;
         text-align: center;
+        box-sizing: border-box;
     }
 
     .admin-navbar-brand {
