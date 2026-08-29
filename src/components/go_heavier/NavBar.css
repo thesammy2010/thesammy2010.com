@@ -61,24 +61,50 @@
     display: none;
 }
 
+.navbar-menu-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.navbar-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
 /* Responsive design */
 @media (max-width: 640px) {
     .navbar-content {
-        flex-direction: column;
+        position: relative;
         text-align: center;
         gap: 12px;
         padding: 16px;
     }
 
+    .navbar-menu-toggle {
+        display: block;
+    }
+
     .navbar-links {
+        display: none;
         flex-direction: column;
         width: 100%;
         gap: 8px;
     }
 
+    .navbar-links.open {
+        display: flex;
+    }
+
     .navbar-links a {
         width: 100%;
         text-align: center;
+        box-sizing: border-box;
     }
 
     .navbar-brand {
