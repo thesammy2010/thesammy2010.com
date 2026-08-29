@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom"
 
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../configs"
 import { apiFetch } from "../auth"
-import { canAccess, subscribeAccess, subscribeAccessReady } from "../roles"
+import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../roles"
 import { fetchAllSessions } from "../components/go_heavier/sessions"
 import { formatCount, formatTonnes } from "../components/go_heavier/format"
 import GoHeavierNavBar from "../components/go_heavier/NavBar"
 import LogWorkoutWizard from "../components/go_heavier/LogWorkoutWizard"
+import SignInPrompt from "../components/SignInPrompt"
 import "./GoHeavier.css"
 
 interface Props {
@@ -148,7 +149,11 @@ export class GoHeavier extends React.Component<Props, State> {
                         </div>
                     )}
 
-                    {this.state.loaded === false && (
+                    {this.state.loaded === false && !isSignedIn() && (
+                        <SignInPrompt message="Sign in to view your Go Heavier dashboard." />
+                    )}
+
+                    {this.state.loaded === false && isSignedIn() && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Dashboard</h2>
                             <p className="error-message">

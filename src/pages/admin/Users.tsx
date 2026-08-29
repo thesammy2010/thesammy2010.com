@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react"
 
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
 import { apiFetch } from "../../auth"
-import { useCanAccess, useIsAdmin, useOwnUserId, UserRole } from "../../roles"
+import { isSignedIn, useCanAccess, useIsAdmin, useOwnUserId, UserRole } from "../../roles"
 import AdminNavBar from "../../components/admin/NavBar"
 import RoleSelect from "../../components/admin/RoleSelect"
+import SignInPrompt from "../../components/SignInPrompt"
 import "./AdminForms.css"
 import "./Users.css"
 
@@ -102,7 +103,9 @@ export default function Users() {
             <AdminNavBar />
             <div className="page-container">
                 <div className="admin-form-page admin-users-page">
-                    {!isAdmin ? (
+                    {!isSignedIn() ? (
+                        <SignInPrompt message="Sign in to manage users." />
+                    ) : !isAdmin ? (
                         <p className="admin-restricted">This page is restricted to admins.</p>
                     ) : (
                         <>

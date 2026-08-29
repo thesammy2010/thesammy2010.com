@@ -2,10 +2,11 @@ import React from "react"
 
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
 import { apiFetch } from "../../auth"
-import { canAccess, subscribeAccess, subscribeAccessReady } from "../../roles"
+import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import Location from "../../components/go_heavier/Location"
 import LocationForm from "../../components/go_heavier/LocationForm"
+import SignInPrompt from "../../components/SignInPrompt"
 import "../GoHeavier.css"
 import "./Locations.css"
 
@@ -121,7 +122,10 @@ export default class Locations extends React.Component<{}, State> {
                         <div className="spinner"></div>
                     </div>
                 )}
-                {this.state.configLoaded === false && (
+                {this.state.configLoaded === false && !isSignedIn() && (
+                    <SignInPrompt message="Sign in to view locations." />
+                )}
+                {this.state.configLoaded === false && isSignedIn() && (
                     <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                         <h2>Failed to Load Locations</h2>
                         <p className="error-message">

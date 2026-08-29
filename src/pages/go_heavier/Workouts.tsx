@@ -4,7 +4,8 @@ import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
 import { apiFetch } from "../../auth"
-import { canAccess, subscribeAccess, subscribeAccessReady } from "../../roles"
+import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
+import SignInPrompt from "../../components/SignInPrompt"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import { formatTableDateTime } from "../../components/go_heavier/format"
 import "../GoHeavier.css"
@@ -454,7 +455,10 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                         {this.showLoading()}
                     </div>
 
-                    {this.state.configLoaded === false && (
+                    {this.state.configLoaded === false && !isSignedIn() && (
+                        <SignInPrompt message="Sign in to view workouts." />
+                    )}
+                    {this.state.configLoaded === false && isSignedIn() && (
                         <div className={`error-container ${this.state.isRefreshing ? 'retrying' : ''}`}>
                             <h2>Failed to Load Workouts</h2>
                             <p className="error-message">

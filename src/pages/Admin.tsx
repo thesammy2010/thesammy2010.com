@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom"
 
-import { useCanAccess, useIsAdmin } from "../roles"
+import { isSignedIn, useCanAccess, useIsAdmin } from "../roles"
 import AdminNavBar from "../components/admin/NavBar"
+import SignInPrompt from "../components/SignInPrompt"
 import "./admin/AdminForms.css"
 import "./Admin.css"
 
@@ -45,6 +46,8 @@ export default function Admin() {
                             )}
                         </div>
                     </div>
+                ) : !isSignedIn() ? (
+                    <SignInPrompt message="Sign in to view admin tools." />
                 ) : (
                     <p className="admin-restricted">This page is restricted to admins.</p>
                 )}

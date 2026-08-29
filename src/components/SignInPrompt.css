@@ -1,0 +1,25 @@
+.signin-prompt {
+    text-align: center;
+    padding: 60px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.signin-prompt h2 {
+    color: #2c3e50;
+    margin-bottom: 12px;
+}
+
+.signin-prompt p {
+    color: #718096;
+    margin-bottom: 24px;
+}
+
+.signin-prompt-action {
+    display: flex;
+    justify-content: center;
+}
+
+.signin-prompt-action .site-signin {
+    color: #2c3e50;
+}
