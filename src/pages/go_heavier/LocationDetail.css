@@ -1,5 +1,11 @@
 /* Page fade-in animation */
+/* position: relative so .refresh-arrow-button (position: absolute)
+   anchors to where content actually starts, below the sticky nav
+   bars, instead of a fixed viewport offset that assumes a specific
+   combined bar height and ends up overlapping the bars' own
+   contents (brand text, hamburger toggle) when that height varies. */
 .page-container {
+    position: relative;
     animation: pageTransition 0.25s ease-out;
 }
 
@@ -363,10 +369,14 @@
 }
 
 /* Refresh arrow button */
+/* Absolute within .page-container (position: relative), not fixed to the
+   viewport - a fixed top offset assumed a specific combined height for the
+   sticky nav bars above, and ended up overlapping their own contents
+   (brand text, hamburger toggle) whenever that height actually varied. */
 .refresh-arrow-button {
-    position: fixed;
-    top: 90px;
-    right: 24px;
+    position: absolute;
+    top: 16px;
+    right: 16px;
     background: #4a90e2;
     color: white;
     border: none;

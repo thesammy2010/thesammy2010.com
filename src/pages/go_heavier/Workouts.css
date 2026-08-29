@@ -1,5 +1,11 @@
 /* Page fade-in animation */
+/* position: relative so .refresh-arrow-button (position: absolute)
+   anchors to where content actually starts, below the sticky nav
+   bars, instead of a fixed viewport offset that assumes a specific
+   combined bar height and ends up overlapping the bars' own
+   contents (brand text, hamburger toggle) when that height varies. */
 .page-container {
+    position: relative;
     animation: pageTransition 0.25s ease-out;
 }
 
