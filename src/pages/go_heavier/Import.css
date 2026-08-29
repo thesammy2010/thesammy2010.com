@@ -1,0 +1,135 @@
+.import-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+
+.import-hero {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.import-hero h1 {
+    margin: 0 0 8px;
+    font-size: 1.75rem;
+    color: #2c3e50;
+}
+
+.import-hero p {
+    margin: 0;
+    color: #5a6c7d;
+}
+
+.import-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.import-tables,
+.import-workout-range {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.import-tables legend,
+.import-workout-range legend {
+    padding: 0 6px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.import-table-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: #2c3e50;
+}
+
+.import-dry-run {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #5a6c7d;
+}
+
+.import-workout-range label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #5a6c7d;
+}
+
+.import-workout-range input {
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.import-form > button {
+    align-self: flex-start;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    transition: all 0.2s ease;
+}
+
+.import-form > button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.import-form > button:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.import-results {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+}
+
+.import-results h3 {
+    margin: 0 0 12px;
+    color: #2c3e50;
+}
+
+.import-results table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.import-results th,
+.import-results td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.9rem;
+}
+
+.import-results th {
+    color: #5a6c7d;
+    font-weight: 600;
+}
+
+.import-results td {
+    color: #2c3e50;
+    text-transform: capitalize;
+}
