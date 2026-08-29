@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
+import { useCanAccess } from "../../roles"
 import "./NavBar.css"
 
 const LINKS = [
@@ -14,6 +15,7 @@ const LINKS = [
 export default function GoHeavierNavBar() {
     const location = useLocation()
     const [menuOpen, setMenuOpen] = useState(false)
+    const canImport = useCanAccess("POST", "/go-heavier/migrations")
 
     // A link tap should close the mobile menu rather than leave it open over
     // the page it just navigated to.
@@ -23,6 +25,10 @@ export default function GoHeavierNavBar() {
 
     const isActive = (to: string, exact: boolean) =>
         exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(`${to}/`)
+
+    const links = canImport
+        ? [...LINKS, { to: "/go-heavier/import", label: "📥 Import", exact: true }]
+        : LINKS
 
     return (
         <div className="go-heavier-navbar">
@@ -38,7 +44,7 @@ export default function GoHeavierNavBar() {
                     {menuOpen ? "✕" : "☰"}
                 </button>
                 <nav className={`navbar-links ${menuOpen ? "open" : ""}`}>
-                    {LINKS.map((link) => (
+                    {links.map((link) => (
                         <Link key={link.to} to={link.to} className={isActive(link.to, link.exact) ? "active" : ""}>
                             {link.label}
                         </Link>

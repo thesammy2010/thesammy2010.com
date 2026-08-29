@@ -18,6 +18,7 @@ import Sessions from "./pages/go_heavier/Sessions"
 import Stats from "./pages/go_heavier/Stats"
 import SessionDetail from "./pages/go_heavier/SessionDetail"
 import Workouts from "./pages/go_heavier/Workouts"
+import Import from "./pages/go_heavier/Import"
 import Admin from "./pages/Admin"
 import ProvisionUser from "./pages/admin/ProvisionUser"
 import Users from "./pages/admin/Users"
@@ -40,6 +41,7 @@ const App: React.FC = () => {
                         <Route path="/go-heavier/stats" element={<Stats />} />
                         <Route path="/go-heavier/sessions/:id" element={<SessionDetail />} />
                         <Route path="/go-heavier/workouts" element={<Workouts />} />
+                        <Route path="/go-heavier/import" element={<Import />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />
