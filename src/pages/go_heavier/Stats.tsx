@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import BarChart, { BarChartPoint } from "../../components/go_heavier/BarChart"
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
-import { canAccess, isSignedIn, subscribeAccessReady } from "../../roles"
+import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import SignInPrompt from "../../components/SignInPrompt"
 import { apiFetch } from "../../auth"
 import {
@@ -60,6 +60,7 @@ interface State {
 }
 
 export class Stats extends React.Component<Props, State> {
+    unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
 
     constructor(props: Props) {
@@ -92,10 +93,22 @@ export class Stats extends React.Component<Props, State> {
     }
 
     componentDidMount() {
+        // Not just a re-render: signing in (or an admin changing your role)
+        // fires this too, and without retrying autoFetch here, someone who
+        // signs in from the "sign in to continue" prompt on this exact page
+        // would see nothing happen - the one-time subscribeAccessReady
+        // callback already fired, showing that prompt, before they signed in.
+        this.unsubscribeAccess = subscribeAccess(() => {
+            this.forceUpdate()
+            if (!this.state.loaded) {
+                this.autoFetch()
+            }
+        })
         this.unsubscribeReady = subscribeAccessReady(this.autoFetch)
     }
 
     componentWillUnmount() {
+        this.unsubscribeAccess?.()
         this.unsubscribeReady?.()
     }
 
