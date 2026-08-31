@@ -99,7 +99,20 @@ export class Sessions extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+        // Not just a re-render: signing in (or an admin changing your role)
+        // fires this too, and without retrying here, someone who signs in
+        // from the "sign in to continue" prompt on this exact page would see
+        // nothing happen - the one-time subscribeAccessReady callback
+        // already fired, showing that prompt, before they signed in.
+        // autoFetchSessions guards itself against refetching once loaded;
+        // autoFetchStats doesn't, so that one's guarded here instead.
+        this.unsubscribeAccess = subscribeAccess(() => {
+            this.forceUpdate()
+            this.autoFetchSessions()
+            if (!this.state.stats) {
+                this.autoFetchStats()
+            }
+        })
         this.unsubscribeReady = subscribeAccessReady(() => {
             this.autoFetchSessions()
             this.autoFetchStats()

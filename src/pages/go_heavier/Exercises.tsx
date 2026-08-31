@@ -114,7 +114,17 @@ export default class Exercises extends React.Component<{}, State> {
     }
 
     componentDidMount() {
-        this.unsubscribeAccess = subscribeAccess(() => this.forceUpdate())
+        // Not just a re-render: signing in (or an admin changing your role)
+        // fires this too, and without retrying autoFetch here, someone who
+        // signs in from the "sign in to continue" prompt on this exact page
+        // would see nothing happen - the one-time subscribeAccessReady
+        // callback already fired, showing that prompt, before they signed in.
+        // autoFetch's own hasFetchedOnce guard keeps this from refetching
+        // once already loaded.
+        this.unsubscribeAccess = subscribeAccess(() => {
+            this.forceUpdate()
+            this.autoFetch()
+        })
         this.unsubscribeReady = subscribeAccessReady(this.autoFetch)
     }
 
