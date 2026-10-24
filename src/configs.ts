@@ -8,10 +8,16 @@ export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000"
 // secret - it identifies the app to Google, it doesn't authenticate anything.
 export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || ""
 
-// Every workout page the app has fetched, written by the workouts page. The
-// suffix is bumped whenever the workout shape changes so a stale cache from an
-// older schema is ignored rather than rendered.
-export const WORKOUTS_CACHE_KEY = "go-heavier-workouts-v2"
+// Keys for the cached Go Heavier lists, all read and written through
+// src/cache.ts. The suffix is bumped whenever the cached shape changes so an
+// entry from an older build is ignored rather than rendered; all four moved
+// up a version when the caches gained a savedAt stamp and moved from
+// sessionStorage to localStorage.
+export const WORKOUTS_CACHE_KEY = "go-heavier-workouts-v3"
+export const SESSIONS_CACHE_KEY = "go-heavier-sessions-v2"
+export const EXERCISES_CACHE_KEY = "go-heavier-exercises-v2"
+export const LOCATIONS_CACHE_KEY = "go-heavier-locations-v2"
+export const SESSION_STATS_CACHE_KEY = "go-heavier-session-stats-v1"
 
 export function countryCodeToEmoji(countryCode: string): string {
     const codePoints = countryCode

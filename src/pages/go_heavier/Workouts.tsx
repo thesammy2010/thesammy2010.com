@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import WorkoutForm from "../../components/go_heavier/WorkoutForm"
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE, WORKOUTS_CACHE_KEY, formatNotes } from "../../configs"
+import { clearCache, isArray, isStale, readCache, writeCache } from "../../cache"
 import { apiFetch } from "../../auth"
 import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import SignInPrompt from "../../components/SignInPrompt"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import { formatTableDateTime } from "../../components/go_heavier/format"
+import { dedupeById } from "../../components/go_heavier/pagination"
 import "../GoHeavier.css"
 import "./Workouts.css"
 
@@ -35,15 +37,6 @@ type WorkoutRow = WorkoutData & {
 // Safety cap on the page walk so a misbehaving endpoint can't loop forever.
 const MAX_WORKOUT_PAGES = 500
 
-// Pagination is offset-based, so a page can overlap another when rows are
-// inserted between requests. Always merge on id rather than concatenating.
-const mergeById = (existing: WorkoutData[], incoming: WorkoutData[]): WorkoutData[] => {
-    const seen = new Set(existing.map(workout => workout.id))
-    return [...existing, ...incoming.filter(workout => !seen.has(workout.id))]
-}
-
-const dedupeById = (workouts: WorkoutData[]): WorkoutData[] => mergeById([], workouts)
-
 interface State {
     configLoaded: boolean | null
     loadError: string | null
@@ -58,6 +51,8 @@ interface State {
         type: 'success' | 'error' | 'info'
     } | null
     hasFetchedOnce?: boolean
+    // Whether what we started from was old enough to be worth revalidating.
+    cacheIsStale?: boolean
     showDateFilter?: boolean
     showExerciseFilter?: boolean
     showLocationFilter?: boolean
@@ -81,18 +76,23 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
     private tableContainerRef: React.RefObject<HTMLDivElement>
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire autoFetch for
+    // the same access-ready transition (the ready callback once, the access
+    // callback again because the same event that made access ready is also
+    // an access change) - synchronously, before either's fetch has resolved
+    // and flipped hasFetchedOnce. Without this, that raced a full extra
+    // pagination walk: every page requested twice. Set the instant a fetch
+    // starts, so the second, re-entrant autoFetch call sees it and backs off.
+    private autoFetchInFlight = false
 
     constructor(props: WorkoutsProps) {
         super(props)
         
-        // Guards against a cache written before an error response (e.g. a
-        // 403 body) was excluded from what gets cached - an old entry like
-        // that would otherwise be trusted as the workout list forever,
-        // since it's truthy and never re-fetched (and dedupeById would
-        // throw immediately on a non-array).
-        const cachedData = localStorage.getItem(WORKOUTS_CACHE_KEY)
-        const parsedWorkouts = cachedData ? JSON.parse(cachedData) : undefined
-        const cachedWorkouts = Array.isArray(parsedWorkouts) ? dedupeById(parsedWorkouts) : undefined
+        // Cached sets render immediately; autoFetch decides whether they're
+        // old enough to also be revalidated in the background. readCache's
+        // isArray check also keeps dedupeById from being handed a non-array.
+        const cached = readCache<WorkoutData[]>(WORKOUTS_CACHE_KEY, isArray)
+        const cachedWorkouts = cached ? dedupeById(cached.data) : undefined
         
         // Read filters from URL
         const startDate = props.searchParams.get('startDate') || ''
@@ -113,6 +113,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             isRefreshing: false,
             toast: null,
             hasFetchedOnce: !!cachedWorkouts,
+            cacheIsStale: isStale(cached),
             showDateFilter: false,
             showExerciseFilter: false,
             showLocationFilter: false,
@@ -154,13 +155,20 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
         return dedupeById(all)
     }
 
-    fetchWorkouts = async (minDuration: number = 300) => {
+    // `quiet` is the background revalidate: the same four requests, but it
+    // leaves the spinner alone and swallows failures, because there are
+    // already sets on screen and nobody asked for this. A visible error
+    // there would replace a working page with a complaint about a request
+    // the reader never made.
+    fetchWorkouts = async (minDuration: number = 300, quiet: boolean = false) => {
         const startedAt = Date.now()
         const waitOut = () => new Promise<void>(resolve =>
             setTimeout(resolve, Math.max(0, minDuration - (Date.now() - startedAt)))
         )
 
-        this.setState({ isRefreshing: true })
+        if (!quiet) {
+            this.setState({ isRefreshing: true })
+        }
         try {
             const [workouts, sessions, locationsRes, exercisesRes] = await Promise.all([
                 this.fetchAllWorkouts(),
@@ -179,7 +187,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             const locations = await locationsRes.json()
             const exercises = await exercisesRes.json()
 
-            localStorage.setItem(WORKOUTS_CACHE_KEY, JSON.stringify(workouts))
+            writeCache(WORKOUTS_CACHE_KEY, workouts)
 
             await waitOut()
             this.setState({
@@ -190,16 +198,24 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                 configLoaded: true,
                 loadError: null,
                 isRefreshing: false,
-                hasFetchedOnce: true
+                hasFetchedOnce: true,
+                cacheIsStale: false
             })
         } catch (error) {
             console.error("Error fetching workouts:", error)
+            if (quiet) {
+                return
+            }
             await waitOut()
             this.setState({ configLoaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
+    // Pressing refresh is a request for current data, so the cached copy is
+    // dropped before the fetch rather than overwritten after it - nothing
+    // stale survives the click, even if the request then fails.
     handleRefresh = () => {
+        clearCache(WORKOUTS_CACHE_KEY)
         this.fetchWorkouts()
     }
 
@@ -229,13 +245,28 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             return
         }
 
+        if (this.autoFetchInFlight) {
+            return
+        }
+
+        let fetchPromise: Promise<unknown>
         if (!this.state.hasFetchedOnce) {
-            this.handleRefresh()
+            fetchPromise = this.fetchWorkouts()
+        } else if (this.state.cacheIsStale) {
+            // Cached sets have aged past the point of being worth a request.
+            // fetchSupportingData is not also called: fetchWorkouts already
+            // loads the sessions, locations and exercises alongside the sets.
+            fetchPromise = this.fetchWorkouts(0, true)
         } else {
             // Cached sets carry only a session_id, so the sessions still have to be
             // fetched to resolve each row's time and location.
-            this.fetchSupportingData()
+            fetchPromise = this.fetchSupportingData()
         }
+
+        this.autoFetchInFlight = true
+        fetchPromise.finally(() => {
+            this.autoFetchInFlight = false
+        })
     }
 
     componentDidMount() {
@@ -704,7 +735,7 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
                                 onSuccess={() => {
                                     // handleRefresh below repopulates from page 1,
                                     // which already includes the new workout.
-                                    localStorage.removeItem(WORKOUTS_CACHE_KEY)
+                                    clearCache(WORKOUTS_CACHE_KEY)
                                     this.setState({ showForm: false })
                                     this.showToast("Workout created successfully", 'success')
                                     this.handleRefresh()

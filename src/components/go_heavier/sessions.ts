@@ -1,5 +1,6 @@
 import { API_URL, ApiError } from "../../configs"
 import { apiFetch } from "../../auth"
+import { dedupeById } from "./pagination"
 
 // A session is one visit to a gym. Sets belong to a session, and the session
 // carries the location and the time — a set no longer carries either itself.
@@ -45,7 +46,17 @@ export interface SessionStats {
     by_weekday?: WeekdayStats[]
 }
 
-export const SESSIONS_CACHE_KEY = "go-heavier-sessions"
+// Validates a cached stats payload. An error body (a 403's {"detail": ...})
+// is also a non-null object, so checking the shape is an object isn't enough
+// to tell one from real stats - `sessions` is required and numeric on every
+// genuine response, and absent from any error the API returns.
+export function isSessionStats(data: unknown): boolean {
+    return (
+        typeof data === "object" &&
+        data !== null &&
+        typeof (data as SessionStats).sessions === "number"
+    )
+}
 
 export async function fetchSessionStats(): Promise<SessionStats> {
     const response = await apiFetch(`${API_URL}/go-heavier/sessions/stats`)
@@ -77,7 +88,11 @@ export function fetchAllSessions(exerciseId?: string): Promise<SessionSummary[]>
     return inFlight
 }
 
-// The endpoint pages its results, newest first, so walk until one comes back empty.
+// The endpoint pages its results, newest first, so walk until one comes back
+// empty. Offset-based, so a session created or deleted between two page
+// requests shifts everything after it by one - a later page can then repeat
+// a row an earlier page already returned. dedupeById is the fix, not a
+// defensive extra: without it a session logged mid-walk can appear twice.
 async function walkSessions(exerciseId?: string): Promise<SessionSummary[]> {
     const all: SessionSummary[] = []
 
@@ -99,7 +114,7 @@ async function walkSessions(exerciseId?: string): Promise<SessionSummary[]> {
         all.push(...pageSessions)
     }
 
-    return all
+    return dedupeById(all)
 }
 
 export function indexSessions(sessions: SessionSummary[]): Record<string, SessionSummary> {

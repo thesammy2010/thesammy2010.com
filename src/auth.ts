@@ -5,6 +5,8 @@
 // just a thin subscription over the same value.
 import { useEffect, useState } from "react"
 
+import { clearAllCaches } from "./cache"
+
 const TOKEN_KEY = "go-heavier-google-id-token"
 
 export interface GoogleProfile {
@@ -85,6 +87,10 @@ export function setToken(next: string | null): void {
 
 export function signOut(): void {
     setToken(null)
+    // The cached lists describe one person's gym history and now outlive the
+    // tab, so without this they'd sit on a shared machine for whoever signs
+    // in next.
+    clearAllCaches()
 }
 
 export function useAuthToken(): string | null {

@@ -5,7 +5,8 @@ import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import SessionForm from "../../components/go_heavier/SessionForm"
 import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import SignInPrompt from "../../components/SignInPrompt"
-import { PERMISSION_DENIED_MESSAGE } from "../../configs"
+import { PERMISSION_DENIED_MESSAGE, SESSIONS_CACHE_KEY, SESSION_STATS_CACHE_KEY } from "../../configs"
+import { clearCache, isArray, isStale, readCache, writeCache } from "../../cache"
 import {
     formatCount,
     formatDays,
@@ -14,13 +15,13 @@ import {
     formatWeight
 } from "../../components/go_heavier/format"
 import {
-    SESSIONS_CACHE_KEY,
     SessionHighlight,
     SessionStats,
     SessionSummary,
     WeekdayStats,
     fetchAllSessions,
-    fetchSessionStats
+    fetchSessionStats,
+    isSessionStats
 } from "../../components/go_heavier/sessions"
 import "../GoHeavier.css"
 import "../../components/go_heavier/Stats.css"
@@ -35,35 +36,54 @@ interface State {
     loadError: string | null
     sessions?: SessionSummary[]
     isRefreshing: boolean
+    // Whether what we started from was old enough to be worth revalidating.
+    cacheIsStale: boolean
     stats: SessionStats | null
     statsLoading: boolean
     statsError: string | null
+    // Whether the stats we started from were old enough to be worth
+    // revalidating. Tracked apart from the session list's own flag: the two
+    // are separate requests with separate cache entries.
+    statsCacheIsStale: boolean
     showForm: boolean
 }
 
 export class Sessions extends React.Component<Props, State> {
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire the autoFetch
+    // methods for the same access-ready transition, synchronously, before
+    // their fetch has resolved and flipped the state each one guards itself
+    // on - without this, that raced two concurrent fetches apiece. Set the
+    // instant a fetch starts, so a second, re-entrant call sees it and
+    // backs off. Two flags: sessions and stats are independent requests.
+    private sessionsFetchInFlight = false
+    private statsFetchInFlight = false
 
     constructor(props: Props) {
         super(props)
 
-        // Guards against a cache written before an error response (e.g. a
-        // 403 body) was excluded from what gets cached - an old entry like
-        // that would otherwise be trusted as the session list forever,
-        // since it's truthy and never re-fetched.
-        const cachedData = sessionStorage.getItem(SESSIONS_CACHE_KEY)
-        const parsedSessions = cachedData ? JSON.parse(cachedData) : undefined
-        const cachedSessions = Array.isArray(parsedSessions) ? parsedSessions : undefined
+        // Cached sessions render immediately; autoFetchSessions decides
+        // whether they're old enough to also be revalidated in the
+        // background.
+        const cached = readCache<SessionSummary[]>(SESSIONS_CACHE_KEY, isArray)
+        const cachedSessions = cached?.data
+
+        // The stats card gets the same treatment as the list below it, so
+        // the whole page paints at once instead of leaving a spinner in the
+        // card over already-rendered sessions.
+        const cachedStats = readCache<SessionStats>(SESSION_STATS_CACHE_KEY, isSessionStats)
 
         this.state = {
             loaded: cachedSessions ? true : null,
             loadError: null,
             sessions: cachedSessions,
             isRefreshing: false,
-            stats: null,
-            statsLoading: true,
+            cacheIsStale: isStale(cached),
+            stats: cachedStats?.data ?? null,
+            statsLoading: !cachedStats,
             statsError: null,
+            statsCacheIsStale: isStale(cachedStats),
             showForm: false
         }
     }
@@ -82,12 +102,25 @@ export class Sessions extends React.Component<Props, State> {
             this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
             return
         }
-        // Cached sessions render straight away; the refresh button is the
-        // only thing that goes back to the API.
-        if (this.state.sessions) {
+        if (this.sessionsFetchInFlight) {
             return
         }
-        this.fetchSessions()
+        // Cached sessions render straight away. Only go back to the API if
+        // they've aged past the point of being worth a request, and do it
+        // quietly so the list doesn't flicker.
+        if (this.state.sessions) {
+            if (this.state.cacheIsStale) {
+                this.sessionsFetchInFlight = true
+                this.fetchSessions(0, true).finally(() => {
+                    this.sessionsFetchInFlight = false
+                })
+            }
+            return
+        }
+        this.sessionsFetchInFlight = true
+        this.fetchSessions().finally(() => {
+            this.sessionsFetchInFlight = false
+        })
     }
 
     autoFetchStats = () => {
@@ -95,7 +128,25 @@ export class Sessions extends React.Component<Props, State> {
             this.setState({ statsLoading: false, statsError: PERMISSION_DENIED_MESSAGE })
             return
         }
-        this.fetchStats()
+        if (this.statsFetchInFlight) {
+            return
+        }
+        // Cached stats are already on screen. Only go back to the API if
+        // they've aged past the point of being worth a request, and do it
+        // quietly so the numbers don't drop back to a spinner.
+        if (this.state.stats) {
+            if (this.state.statsCacheIsStale) {
+                this.statsFetchInFlight = true
+                this.fetchStats(true).finally(() => {
+                    this.statsFetchInFlight = false
+                })
+            }
+            return
+        }
+        this.statsFetchInFlight = true
+        this.fetchStats().finally(() => {
+            this.statsFetchInFlight = false
+        })
     }
 
     componentDidMount() {
@@ -104,14 +155,14 @@ export class Sessions extends React.Component<Props, State> {
         // from the "sign in to continue" prompt on this exact page would see
         // nothing happen - the one-time subscribeAccessReady callback
         // already fired, showing that prompt, before they signed in.
-        // autoFetchSessions guards itself against refetching once loaded;
-        // autoFetchStats doesn't, so that one's guarded here instead.
+        // Both autoFetch methods guard themselves against refetching what
+        // they already have (hasFetchedOnce-style state) and against
+        // overlapping with their own in-flight fetch (sessionsFetchInFlight/
+        // statsFetchInFlight), so neither needs guarding here.
         this.unsubscribeAccess = subscribeAccess(() => {
             this.forceUpdate()
             this.autoFetchSessions()
-            if (!this.state.stats) {
-                this.autoFetchStats()
-            }
+            this.autoFetchStats()
         })
         this.unsubscribeReady = subscribeAccessReady(() => {
             this.autoFetchSessions()
@@ -124,38 +175,68 @@ export class Sessions extends React.Component<Props, State> {
         this.unsubscribeReady?.()
     }
 
-    fetchStats = async () => {
-        this.setState({ statsLoading: true, statsError: null })
+    // `quiet` is the background revalidate, matching fetchSessions: it
+    // leaves the card's loading state alone and swallows failures, since
+    // there are already numbers on screen and nobody asked for this.
+    fetchStats = async (quiet: boolean = false) => {
+        if (!quiet) {
+            this.setState({ statsLoading: true, statsError: null })
+        }
         try {
             const stats = await fetchSessionStats()
-            this.setState({ stats, statsLoading: false })
+            writeCache(SESSION_STATS_CACHE_KEY, stats)
+            this.setState({ stats, statsLoading: false, statsError: null, statsCacheIsStale: false })
         } catch (error) {
             console.error("Error fetching session stats:", error)
+            if (quiet) {
+                return
+            }
             this.setState({ statsError: (error as Error).message, statsLoading: false })
         }
     }
 
-    fetchSessions = async (minDuration: number = 300) => {
+    // `quiet` is the background revalidate: same walk of the session pages,
+    // but it leaves the spinner alone and swallows failures, because there
+    // are already sessions on screen and nobody asked for this. A visible
+    // error there would replace a working page with a complaint about a
+    // request the reader never made.
+    fetchSessions = async (minDuration: number = 300, quiet: boolean = false) => {
         const startedAt = Date.now()
         const waitOut = () => new Promise<void>(resolve =>
             setTimeout(resolve, Math.max(0, minDuration - (Date.now() - startedAt)))
         )
 
-        this.setState({ isRefreshing: true })
+        if (!quiet) {
+            this.setState({ isRefreshing: true })
+        }
         try {
             const sessions = await fetchAllSessions()
-            sessionStorage.setItem(SESSIONS_CACHE_KEY, JSON.stringify(sessions))
+            writeCache(SESSIONS_CACHE_KEY, sessions)
 
             await waitOut()
-            this.setState({ sessions, loaded: true, loadError: null, isRefreshing: false })
+            this.setState({
+                sessions,
+                loaded: true,
+                loadError: null,
+                isRefreshing: false,
+                cacheIsStale: false
+            })
         } catch (error) {
             console.error("Error fetching sessions:", error)
+            if (quiet) {
+                return
+            }
             await waitOut()
             this.setState({ loaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
     }
 
+    // Pressing refresh is a request for current data, so the cached copy is
+    // dropped before the fetch rather than overwritten after it - nothing
+    // stale survives the click, even if the request then fails.
     handleRefresh = () => {
+        clearCache(SESSIONS_CACHE_KEY)
+        clearCache(SESSION_STATS_CACHE_KEY)
         this.fetchSessions()
         this.fetchStats()
     }
@@ -266,7 +347,7 @@ export class Sessions extends React.Component<Props, State> {
                             onSuccess={(session) => {
                                 this.setState({ showForm: false })
                                 // The new session is empty, so open it ready for sets.
-                                sessionStorage.removeItem(SESSIONS_CACHE_KEY)
+                                clearCache(SESSIONS_CACHE_KEY)
                                 this.props.navigate(`/go-heavier/sessions/${session.id}`)
                             }}
                         />

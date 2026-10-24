@@ -150,4 +150,19 @@ describe("fetchAllSessions", () => {
 
         await expect(fetchAllSessions()).rejects.toThrow("Failed to load sessions")
     })
+
+    // Offset pagination assumes the list doesn't change shape mid-walk. A
+    // session logged between two page requests shifts everything after it by
+    // one, so a later page can repeat a row an earlier page already
+    // returned - exactly what this simulates by putting "b" on both pages.
+    it("dedupes a session repeated across pages by an insert mid-walk", async () => {
+        mockPages([
+            [session("a", "2026-01-01T10:00:00Z"), session("b", "2026-01-02T10:00:00Z")],
+            [session("b", "2026-01-02T10:00:00Z"), session("c", "2026-01-03T10:00:00Z")]
+        ])
+
+        const sessions = await fetchAllSessions()
+
+        expect(sessions.map(item => item.id)).toEqual(["a", "b", "c"])
+    })
 })
