@@ -35,6 +35,12 @@ interface State {
 export default class Exercises extends React.Component<{}, State> {
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire autoFetch for
+    // the same access-ready transition, synchronously, before fetchExercises
+    // has resolved and flipped hasFetchedOnce - without this, that raced two
+    // concurrent fetches. Set the instant a fetch starts, so the second,
+    // re-entrant autoFetch call sees it and backs off.
+    private autoFetchInFlight = false
 
     constructor(props: {}) {
         super(props)
@@ -131,16 +137,25 @@ export default class Exercises extends React.Component<{}, State> {
             this.setState({ configLoaded: false, loadError: PERMISSION_DENIED_MESSAGE })
             return
         }
+        if (this.autoFetchInFlight) {
+            return
+        }
         if (this.state.hasFetchedOnce) {
             // Already showing cached exercises. Only go back to the API if
             // they've aged past the point of being worth a request, and do
             // it quietly so the list doesn't flicker.
             if (this.state.cacheIsStale) {
-                this.fetchExercises(true)
+                this.autoFetchInFlight = true
+                this.fetchExercises(true).finally(() => {
+                    this.autoFetchInFlight = false
+                })
             }
             return
         }
-        this.fetchExercises()
+        this.autoFetchInFlight = true
+        this.fetchExercises().finally(() => {
+            this.autoFetchInFlight = false
+        })
     }
 
     componentDidMount() {

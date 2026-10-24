@@ -69,6 +69,12 @@ interface State {
 export class Stats extends React.Component<Props, State> {
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire autoFetch for
+    // the same access-ready transition, synchronously, before fetchEverything
+    // has resolved and flipped state.loaded - without this, that raced two
+    // concurrent fetches. Set the instant a fetch starts, so the second,
+    // re-entrant autoFetch call sees it and backs off.
+    private autoFetchInFlight = false
 
     constructor(props: Props) {
         super(props)
@@ -96,7 +102,13 @@ export class Stats extends React.Component<Props, State> {
             this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
             return
         }
-        this.fetchEverything()
+        if (this.autoFetchInFlight) {
+            return
+        }
+        this.autoFetchInFlight = true
+        this.fetchEverything().finally(() => {
+            this.autoFetchInFlight = false
+        })
     }
 
     componentDidMount() {

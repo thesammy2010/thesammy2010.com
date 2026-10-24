@@ -76,6 +76,14 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
     private tableContainerRef: React.RefObject<HTMLDivElement>
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire autoFetch for
+    // the same access-ready transition (the ready callback once, the access
+    // callback again because the same event that made access ready is also
+    // an access change) - synchronously, before either's fetch has resolved
+    // and flipped hasFetchedOnce. Without this, that raced a full extra
+    // pagination walk: every page requested twice. Set the instant a fetch
+    // starts, so the second, re-entrant autoFetch call sees it and backs off.
+    private autoFetchInFlight = false
 
     constructor(props: WorkoutsProps) {
         super(props)
@@ -237,18 +245,28 @@ export class Workouts extends React.Component<WorkoutsProps, State> {
             return
         }
 
+        if (this.autoFetchInFlight) {
+            return
+        }
+
+        let fetchPromise: Promise<unknown>
         if (!this.state.hasFetchedOnce) {
-            this.fetchWorkouts()
+            fetchPromise = this.fetchWorkouts()
         } else if (this.state.cacheIsStale) {
             // Cached sets have aged past the point of being worth a request.
             // fetchSupportingData is not also called: fetchWorkouts already
             // loads the sessions, locations and exercises alongside the sets.
-            this.fetchWorkouts(0, true)
+            fetchPromise = this.fetchWorkouts(0, true)
         } else {
             // Cached sets carry only a session_id, so the sessions still have to be
             // fetched to resolve each row's time and location.
-            this.fetchSupportingData()
+            fetchPromise = this.fetchSupportingData()
         }
+
+        this.autoFetchInFlight = true
+        fetchPromise.finally(() => {
+            this.autoFetchInFlight = false
+        })
     }
 
     componentDidMount() {

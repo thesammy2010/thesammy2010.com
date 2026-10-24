@@ -51,6 +51,14 @@ interface State {
 export class Sessions extends React.Component<Props, State> {
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire the autoFetch
+    // methods for the same access-ready transition, synchronously, before
+    // their fetch has resolved and flipped the state each one guards itself
+    // on - without this, that raced two concurrent fetches apiece. Set the
+    // instant a fetch starts, so a second, re-entrant call sees it and
+    // backs off. Two flags: sessions and stats are independent requests.
+    private sessionsFetchInFlight = false
+    private statsFetchInFlight = false
 
     constructor(props: Props) {
         super(props)
@@ -94,16 +102,25 @@ export class Sessions extends React.Component<Props, State> {
             this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
             return
         }
+        if (this.sessionsFetchInFlight) {
+            return
+        }
         // Cached sessions render straight away. Only go back to the API if
         // they've aged past the point of being worth a request, and do it
         // quietly so the list doesn't flicker.
         if (this.state.sessions) {
             if (this.state.cacheIsStale) {
-                this.fetchSessions(0, true)
+                this.sessionsFetchInFlight = true
+                this.fetchSessions(0, true).finally(() => {
+                    this.sessionsFetchInFlight = false
+                })
             }
             return
         }
-        this.fetchSessions()
+        this.sessionsFetchInFlight = true
+        this.fetchSessions().finally(() => {
+            this.sessionsFetchInFlight = false
+        })
     }
 
     autoFetchStats = () => {
@@ -111,16 +128,25 @@ export class Sessions extends React.Component<Props, State> {
             this.setState({ statsLoading: false, statsError: PERMISSION_DENIED_MESSAGE })
             return
         }
+        if (this.statsFetchInFlight) {
+            return
+        }
         // Cached stats are already on screen. Only go back to the API if
         // they've aged past the point of being worth a request, and do it
         // quietly so the numbers don't drop back to a spinner.
         if (this.state.stats) {
             if (this.state.statsCacheIsStale) {
-                this.fetchStats(true)
+                this.statsFetchInFlight = true
+                this.fetchStats(true).finally(() => {
+                    this.statsFetchInFlight = false
+                })
             }
             return
         }
-        this.fetchStats()
+        this.statsFetchInFlight = true
+        this.fetchStats().finally(() => {
+            this.statsFetchInFlight = false
+        })
     }
 
     componentDidMount() {
@@ -130,7 +156,9 @@ export class Sessions extends React.Component<Props, State> {
         // nothing happen - the one-time subscribeAccessReady callback
         // already fired, showing that prompt, before they signed in.
         // Both autoFetch methods guard themselves against refetching what
-        // they already have, so neither needs guarding here.
+        // they already have (hasFetchedOnce-style state) and against
+        // overlapping with their own in-flight fetch (sessionsFetchInFlight/
+        // statsFetchInFlight), so neither needs guarding here.
         this.unsubscribeAccess = subscribeAccess(() => {
             this.forceUpdate()
             this.autoFetchSessions()

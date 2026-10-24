@@ -30,6 +30,12 @@ interface State {
 export class GoHeavier extends React.Component<Props, State> {
     unsubscribeAccess?: () => void
     unsubscribeReady?: () => void
+    // subscribeAccessReady and subscribeAccess can both fire autoFetch for
+    // the same access-ready transition, synchronously, before fetchCounts
+    // has resolved and flipped state.loaded - without this, that raced two
+    // concurrent fetchCounts calls. Set the instant a fetch starts, so the
+    // second, re-entrant autoFetch call sees it and backs off.
+    private autoFetchInFlight = false
 
     constructor(props: Props) {
         super(props)
@@ -106,7 +112,13 @@ export class GoHeavier extends React.Component<Props, State> {
             this.setState({ loaded: false, loadError: PERMISSION_DENIED_MESSAGE })
             return
         }
-        this.fetchCounts()
+        if (this.autoFetchInFlight) {
+            return
+        }
+        this.autoFetchInFlight = true
+        this.fetchCounts().finally(() => {
+            this.autoFetchInFlight = false
+        })
     }
 
     componentDidMount() {
