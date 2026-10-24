@@ -1,7 +1,8 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, ApiError, formatNotes } from "../../configs"
+import { API_URL, ApiError, EXERCISES_CACHE_KEY, formatNotes } from "../../configs"
+import { clearCache } from "../../cache"
 import { apiFetch } from "../../auth"
 import { canAccess, subscribeAccess } from "../../roles"
 import { formatCount, formatFullDate, formatLongDate, formatWeight } from "../../components/go_heavier/format"
@@ -263,7 +264,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
             await apiFetch(`${API_URL}/go-heavier/exercises/${this.props.id}`, {
                 method: "DELETE"
             })
-            sessionStorage.removeItem('go-heavier-exercises')
+            clearCache(EXERCISES_CACHE_KEY)
             this.props.navigate("/go-heavier/exercises")
         } catch (error) {
             console.error("Error deleting exercise:", error)
@@ -345,7 +346,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
 
             const result = await response.json()
             
-            sessionStorage.removeItem('go-heavier-exercises')
+            clearCache(EXERCISES_CACHE_KEY)
             this.setState({ 
                 exercise: result,
                 isEditing: false,

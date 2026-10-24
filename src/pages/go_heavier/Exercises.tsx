@@ -2,8 +2,9 @@ import React from "react"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import Exercise from "../../components/go_heavier/Exercise"
 import ExerciseForm from "../../components/go_heavier/ExerciseForm"
-import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
+import { API_URL, ApiError, EXERCISES_CACHE_KEY, PERMISSION_DENIED_MESSAGE } from "../../configs"
 import { apiFetch } from "../../auth"
+import { clearCache, isArray, isStale, readCache, writeCache } from "../../cache"
 import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import SignInPrompt from "../../components/SignInPrompt"
 import "../GoHeavier.css"
@@ -20,6 +21,8 @@ interface State {
         type: 'success' | 'error' | 'info'
     } | null
     hasFetchedOnce?: boolean
+    // Whether what we started from was old enough to be worth revalidating.
+    cacheIsStale?: boolean
     showFilters?: boolean
     filters: {
         muscleGroups: string[]
@@ -36,14 +39,11 @@ export default class Exercises extends React.Component<{}, State> {
     constructor(props: {}) {
         super(props)
         
-        // Guards against a cache written before an error response (e.g. a
-        // 403 body) was excluded from what gets cached - an old entry like
-        // that would otherwise be trusted as the exercise list forever,
-        // since it's truthy and never re-fetched.
-        const cachedData = sessionStorage.getItem('go-heavier-exercises')
-        const parsedExercises = cachedData ? JSON.parse(cachedData) : undefined
-        const cachedExercises = Array.isArray(parsedExercises) ? parsedExercises : undefined
-        
+        // Cached exercises render immediately; autoFetch decides whether
+        // they're old enough to also be revalidated in the background.
+        const cached = readCache<any[]>(EXERCISES_CACHE_KEY, isArray)
+        const cachedExercises = cached?.data
+
         this.state = {
             configLoaded: cachedExercises ? true : null,
             loadError: null,
@@ -52,6 +52,7 @@ export default class Exercises extends React.Component<{}, State> {
             isRefreshing: false,
             toast: null,
             hasFetchedOnce: !!cachedExercises,
+            cacheIsStale: isStale(cached),
             showFilters: false,
             filters: {
                 muscleGroups: [],
@@ -69,8 +70,15 @@ export default class Exercises extends React.Component<{}, State> {
         }, 3000)
     }
 
-    handleRefresh = async () => {
-        this.setState({ isRefreshing: true })
+    // `quiet` is the background revalidate: same request, but it leaves the
+    // spinner alone and swallows failures, because there are already
+    // exercises on screen and nobody asked for this. A visible error there
+    // would replace a working page with a complaint about a request the
+    // reader never made.
+    fetchExercises = async (quiet: boolean = false) => {
+        if (!quiet) {
+            this.setState({ isRefreshing: true })
+        }
         try {
             const response = await apiFetch(`${API_URL}/go-heavier/exercises`)
             if (!response.ok) {
@@ -78,21 +86,37 @@ export default class Exercises extends React.Component<{}, State> {
             }
             const result = await response.json()
 
-            sessionStorage.setItem('go-heavier-exercises', JSON.stringify(result))
+            writeCache(EXERCISES_CACHE_KEY, result)
 
-            setTimeout(() => {
-                this.setState({
-                    exercises: result,
-                    configLoaded: true,
-                    loadError: null,
-                    isRefreshing: false,
-                    hasFetchedOnce: true
-                })
-            }, 300)
+            const apply = () => this.setState({
+                exercises: result,
+                configLoaded: true,
+                loadError: null,
+                isRefreshing: false,
+                hasFetchedOnce: true,
+                cacheIsStale: false
+            })
+
+            if (quiet) {
+                apply()
+            } else {
+                setTimeout(apply, 300)
+            }
         } catch (error) {
             console.error("Error fetching exercises:", error)
+            if (quiet) {
+                return
+            }
             this.setState({ configLoaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
+    }
+
+    // Pressing refresh is a request for current data, so the cached copy is
+    // dropped before the fetch rather than overwritten after it - nothing
+    // stale survives the click, even if the request then fails.
+    handleRefresh = async () => {
+        clearCache(EXERCISES_CACHE_KEY)
+        await this.fetchExercises()
     }
 
     // Only skips the very first, automatic load - the refresh/retry buttons
@@ -108,9 +132,15 @@ export default class Exercises extends React.Component<{}, State> {
             return
         }
         if (this.state.hasFetchedOnce) {
+            // Already showing cached exercises. Only go back to the API if
+            // they've aged past the point of being worth a request, and do
+            // it quietly so the list doesn't flicker.
+            if (this.state.cacheIsStale) {
+                this.fetchExercises(true)
+            }
             return
         }
-        this.handleRefresh()
+        this.fetchExercises()
     }
 
     componentDidMount() {
@@ -414,7 +444,7 @@ export default class Exercises extends React.Component<{}, State> {
                                 }}
                                 onSuccess={(newExercise) => {
                                     this.state.exercises?.push(newExercise)
-                                    sessionStorage.removeItem('go-heavier-exercises')
+                                    clearCache(EXERCISES_CACHE_KEY)
                                     this.setState({ showForm: false })
                                     this.showToast("Exercise created successfully", 'success')
                                 }}

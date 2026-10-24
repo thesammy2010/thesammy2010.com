@@ -1,7 +1,8 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
-import { API_URL, ApiError, countryCodeToEmoji } from "../../configs"
+import { API_URL, ApiError, LOCATIONS_CACHE_KEY, countryCodeToEmoji } from "../../configs"
+import { clearCache } from "../../cache"
 import { apiFetch } from "../../auth"
 import { canAccess, subscribeAccess } from "../../roles"
 import { formatCount, formatLongDate, formatWeight } from "../../components/go_heavier/format"
@@ -194,7 +195,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
                 method: "DELETE"
             })
             // Clear cache and navigate back
-            sessionStorage.removeItem('go-heavier-locations')
+            clearCache(LOCATIONS_CACHE_KEY)
             this.props.navigate("/go-heavier/locations")
         } catch (error) {
             console.error("Error deleting location:", error)
@@ -304,7 +305,7 @@ class LocationDetailClass extends React.Component<{ id: string; navigate: any },
             const result = await response.json()
             
             // Clear cache and update local state
-            sessionStorage.removeItem('go-heavier-locations')
+            clearCache(LOCATIONS_CACHE_KEY)
             this.setState({ 
                 location: result,
                 isEditing: false,

@@ -1,7 +1,8 @@
 import React from "react"
 
-import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
+import { API_URL, ApiError, LOCATIONS_CACHE_KEY, PERMISSION_DENIED_MESSAGE } from "../../configs"
 import { apiFetch } from "../../auth"
+import { clearCache, isArray, isStale, readCache, writeCache } from "../../cache"
 import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import Location from "../../components/go_heavier/Location"
@@ -17,6 +18,8 @@ interface State {
     showForm?: boolean
     isRefreshing?: boolean
     hasFetchedOnce?: boolean
+    // Whether what we started from was old enough to be worth revalidating.
+    cacheIsStale?: boolean
 }
 
 export default class Locations extends React.Component<{}, State> {
@@ -26,27 +29,31 @@ export default class Locations extends React.Component<{}, State> {
     constructor(props: {}) {
         super(props)
         
-        // Try to load cached data from sessionStorage. Guards against a
-        // cache written before an error response (e.g. a 403 body) was
-        // excluded from what gets cached - an old entry like that would
-        // otherwise be trusted as the location list forever, since it's
-        // truthy and never re-fetched.
-        const cachedData = sessionStorage.getItem('go-heavier-locations')
-        const parsedLocations = cachedData ? JSON.parse(cachedData) : undefined
-        const cachedLocations = Array.isArray(parsedLocations) ? parsedLocations : undefined
-        
+        // Cached locations render immediately; autoFetch decides whether
+        // they're old enough to also be revalidated in the background.
+        const cached = readCache<any[]>(LOCATIONS_CACHE_KEY, isArray)
+        const cachedLocations = cached?.data
+
         this.state = {
             configLoaded: cachedLocations ? true : null,
             loadError: null,
             locations: cachedLocations,
             showForm: false,
             isRefreshing: false,
-            hasFetchedOnce: !!cachedLocations
+            hasFetchedOnce: !!cachedLocations,
+            cacheIsStale: isStale(cached)
         }
     }
 
-    handleRefresh = async () => {
-        this.setState({ isRefreshing: true })
+    // `quiet` is the background revalidate: same request, but it leaves the
+    // spinner alone and swallows failures, because there are already
+    // locations on screen and nobody asked for this. A visible error there
+    // would replace a working page with a complaint about a request the
+    // reader never made.
+    fetchLocations = async (quiet: boolean = false) => {
+        if (!quiet) {
+            this.setState({ isRefreshing: true })
+        }
         try {
             const response = await apiFetch(`${API_URL}/go-heavier/locations`)
             if (!response.ok) {
@@ -54,23 +61,38 @@ export default class Locations extends React.Component<{}, State> {
             }
             const result = await response.json()
 
-            // Cache the data
-            sessionStorage.setItem('go-heavier-locations', JSON.stringify(result))
+            writeCache(LOCATIONS_CACHE_KEY, result)
 
-            // Wait a bit for the fade animation
-            setTimeout(() => {
-                this.setState({
-                    locations: result,
-                    configLoaded: true,
-                    loadError: null,
-                    isRefreshing: false,
-                    hasFetchedOnce: true
-                })
-            }, 300)
+            const apply = () => this.setState({
+                locations: result,
+                configLoaded: true,
+                loadError: null,
+                isRefreshing: false,
+                hasFetchedOnce: true,
+                cacheIsStale: false
+            })
+
+            if (quiet) {
+                apply()
+            } else {
+                // Wait a bit for the fade animation
+                setTimeout(apply, 300)
+            }
         } catch (error) {
             console.error("Error fetching locations:", error)
+            if (quiet) {
+                return
+            }
             this.setState({ configLoaded: false, loadError: (error as Error).message, isRefreshing: false })
         }
+    }
+
+    // Pressing refresh is a request for current data, so the cached copy is
+    // dropped before the fetch rather than overwritten after it - nothing
+    // stale survives the click, even if the request then fails.
+    handleRefresh = async () => {
+        clearCache(LOCATIONS_CACHE_KEY)
+        await this.fetchLocations()
     }
 
     // Only skips the very first, automatic load - the refresh/retry buttons
@@ -86,9 +108,15 @@ export default class Locations extends React.Component<{}, State> {
             return
         }
         if (this.state.hasFetchedOnce) {
+            // Already showing cached locations. Only go back to the API if
+            // they've aged past the point of being worth a request, and do
+            // it quietly so the list doesn't flicker.
+            if (this.state.cacheIsStale) {
+                this.fetchLocations(true)
+            }
             return
         }
-        this.handleRefresh()
+        this.fetchLocations()
     }
 
     componentDidMount() {

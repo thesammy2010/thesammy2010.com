@@ -3,7 +3,14 @@ import { useNavigate } from "react-router-dom"
 
 import GoHeavierNavBar from "../../components/go_heavier/NavBar"
 import BarChart, { BarChartPoint } from "../../components/go_heavier/BarChart"
-import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
+import {
+    API_URL,
+    ApiError,
+    PERMISSION_DENIED_MESSAGE,
+    SESSIONS_CACHE_KEY,
+    SESSION_STATS_CACHE_KEY
+} from "../../configs"
+import { clearCache, writeCache } from "../../cache"
 import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "../../roles"
 import SignInPrompt from "../../components/SignInPrompt"
 import { apiFetch } from "../../auth"
@@ -131,6 +138,15 @@ export class Stats extends React.Component<Props, State> {
             }
             const totals = await totalsRes.json()
 
+            // This page needs the sessions and the stats anyway, so write
+            // them through to the shared caches: the sessions page can then
+            // render from what this visit already paid for, and vice versa.
+            // Nothing here reads them back - the three requests are
+            // all-or-nothing, so a cached two-thirds wouldn't let this page
+            // paint any sooner.
+            writeCache(SESSIONS_CACHE_KEY, sessions)
+            writeCache(SESSION_STATS_CACHE_KEY, stats)
+
             await waitOut()
             this.setState({ sessions, stats, totals, loaded: true, loadError: null, isRefreshing: false })
         } catch (error) {
@@ -140,7 +156,13 @@ export class Stats extends React.Component<Props, State> {
         }
     }
 
+    // Pressing refresh is a request for current data, so the shared entries
+    // this page writes are dropped before the fetch rather than overwritten
+    // after it - nothing stale survives the click, here or on the sessions
+    // page, even if the request then fails.
     handleRefresh = () => {
+        clearCache(SESSIONS_CACHE_KEY)
+        clearCache(SESSION_STATS_CACHE_KEY)
         this.fetchEverything()
     }
 

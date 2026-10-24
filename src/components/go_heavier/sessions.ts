@@ -45,7 +45,17 @@ export interface SessionStats {
     by_weekday?: WeekdayStats[]
 }
 
-export const SESSIONS_CACHE_KEY = "go-heavier-sessions"
+// Validates a cached stats payload. An error body (a 403's {"detail": ...})
+// is also a non-null object, so checking the shape is an object isn't enough
+// to tell one from real stats - `sessions` is required and numeric on every
+// genuine response, and absent from any error the API returns.
+export function isSessionStats(data: unknown): boolean {
+    return (
+        typeof data === "object" &&
+        data !== null &&
+        typeof (data as SessionStats).sessions === "number"
+    )
+}
 
 export async function fetchSessionStats(): Promise<SessionStats> {
     const response = await apiFetch(`${API_URL}/go-heavier/sessions/stats`)
