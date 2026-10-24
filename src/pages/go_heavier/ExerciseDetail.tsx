@@ -7,6 +7,7 @@ import { apiFetch } from "../../auth"
 import { canAccess, subscribeAccess } from "../../roles"
 import { formatCount, formatFullDate, formatLongDate, formatWeight } from "../../components/go_heavier/format"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
+import { dedupeById } from "../../components/go_heavier/pagination"
 import "../../components/go_heavier/Stats.css"
 import "./ExerciseDetail.css"
 import "../go_heavier/Exercises.css"
@@ -160,6 +161,10 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
         }
     }
 
+    // Offset-based pagination, so a set logged or deleted between two page
+    // requests shifts everything after it by one - a later page can then
+    // repeat a row an earlier page already returned. dedupeById is the fix,
+    // not a defensive extra: without it a set logged mid-walk can appear twice.
     fetchAllSets = async (): Promise<WorkoutSet[]> => {
         const sets: WorkoutSet[] = []
 
@@ -180,7 +185,7 @@ class ExerciseDetailClass extends React.Component<{ id: string; navigate: any },
             sets.push(...pageSets)
         }
 
-        return sets
+        return dedupeById(sets)
     }
 
 

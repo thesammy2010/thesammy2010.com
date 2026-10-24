@@ -9,6 +9,7 @@ import { canAccess, isSignedIn, subscribeAccess, subscribeAccessReady } from "..
 import SignInPrompt from "../../components/SignInPrompt"
 import { SessionSummary, fetchAllSessions, indexSessions } from "../../components/go_heavier/sessions"
 import { formatTableDateTime } from "../../components/go_heavier/format"
+import { dedupeById } from "../../components/go_heavier/pagination"
 import "../GoHeavier.css"
 import "./Workouts.css"
 
@@ -35,15 +36,6 @@ type WorkoutRow = WorkoutData & {
 
 // Safety cap on the page walk so a misbehaving endpoint can't loop forever.
 const MAX_WORKOUT_PAGES = 500
-
-// Pagination is offset-based, so a page can overlap another when rows are
-// inserted between requests. Always merge on id rather than concatenating.
-const mergeById = (existing: WorkoutData[], incoming: WorkoutData[]): WorkoutData[] => {
-    const seen = new Set(existing.map(workout => workout.id))
-    return [...existing, ...incoming.filter(workout => !seen.has(workout.id))]
-}
-
-const dedupeById = (workouts: WorkoutData[]): WorkoutData[] => mergeById([], workouts)
 
 interface State {
     configLoaded: boolean | null
