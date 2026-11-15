@@ -22,6 +22,12 @@ import Import from "./pages/go_heavier/Import"
 import Admin from "./pages/Admin"
 import ProvisionUser from "./pages/admin/ProvisionUser"
 import Users from "./pages/admin/Users"
+import Finance from "./pages/Finance"
+import Transactions from "./pages/finance/Transactions"
+import TransactionDetail from "./pages/finance/TransactionDetail"
+import Insights from "./pages/finance/Insights"
+import Budgets from "./pages/finance/Budgets"
+import Manage from "./pages/finance/Manage"
 import { GOOGLE_CLIENT_ID } from "./configs"
 
 const App: React.FC = () => {
@@ -42,6 +48,12 @@ const App: React.FC = () => {
                         <Route path="/go-heavier/sessions/:id" element={<SessionDetail />} />
                         <Route path="/go-heavier/workouts" element={<Workouts />} />
                         <Route path="/go-heavier/import" element={<Import />} />
+                        <Route path="/finance" element={<Finance />} />
+                        <Route path="/finance/transactions" element={<Transactions />} />
+                        <Route path="/finance/transactions/:id" element={<TransactionDetail />} />
+                        <Route path="/finance/insights" element={<Insights />} />
+                        <Route path="/finance/budgets" element={<Budgets />} />
+                        <Route path="/finance/manage" element={<Manage />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />

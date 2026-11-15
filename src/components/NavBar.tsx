@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 
-import { useIsAdmin } from "../roles"
+import { useCanAccess, useIsAdmin } from "../roles"
 import SignIn from "./SignIn"
 import "./NavBar.css"
 
@@ -13,6 +13,9 @@ const LINKS = [
 export default function NavBar() {
     const location = useLocation()
     const isAdmin = useIsAdmin()
+    // Finance is personal data and every /finance route is admin-only, so the
+    // link only shows for someone who can open it.
+    const canSeeFinance = useCanAccess("GET", "/finance/transactions")
     const [menuOpen, setMenuOpen] = useState(false)
 
     // A link tap should close the mobile menu rather than leave it open over
@@ -24,7 +27,12 @@ export default function NavBar() {
     const isActive = (to: string) =>
         location.pathname === to || location.pathname.startsWith(`${to}/`)
 
-    const links = isAdmin ? [...LINKS, { to: "/admin", label: "🔧 Admin" }] : LINKS
+    const links = [
+        ...LINKS.slice(0, 1),
+        ...(canSeeFinance ? [{ to: "/finance", label: "Finance" }] : []),
+        ...LINKS.slice(1),
+        ...(isAdmin ? [{ to: "/admin", label: "🔧 Admin" }] : [])
+    ]
 
     return (
         <nav className="site-navbar">
