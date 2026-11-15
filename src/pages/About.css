@@ -40,7 +40,13 @@
     color: #a0aec0;
 }
 
-/* The one thing worth clicking through to */
+/* The sections worth clicking through to */
+.about-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .about-card {
     display: flex;
     align-items: flex-start;
@@ -85,6 +91,17 @@
     font-size: 0.9375rem;
     line-height: 1.6;
     color: #5a6c7d;
+}
+
+.about-subheading {
+    margin: 20px 0 10px 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.about-section h2 + .about-subheading {
+    margin-top: 0;
 }
 
 .about-tags {

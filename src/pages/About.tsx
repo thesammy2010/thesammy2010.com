@@ -1,53 +1,81 @@
 import React from "react"
 import { Link } from "react-router-dom"
 
+import { useCanAccess } from "../roles"
 import "./About.css"
 
-export default class About extends React.Component {
-    render(): React.ReactNode {
-        return (
-            <div className="about-page">
-                <header className="about-hero">
-                    <h1>About this site</h1>
-                    <p className="about-lead">
-                        This site was created for me to learn React.
-                    </p>
-                </header>
+const WEBSITE_STACK = ["React", "TypeScript", "React Router", "Google Sign-In", "GitHub Pages"]
+const API_STACK = ["Python", "FastAPI", "SQLModel", "PostgreSQL", "Alembic", "Fly.io"]
 
-                <section className="about-section">
-                    <h2>What's here</h2>
+export default function About() {
+    // Finance is personal data behind an admin-only API, so it's only
+    // mentioned to someone who can open it, the same rule as the nav link.
+    const canSeeFinance = useCanAccess("GET", "/finance/transactions")
+
+    return (
+        <div className="about-page">
+            <header className="about-hero">
+                <h1>About this site</h1>
+                <p className="about-lead">
+                    This site was created for me to learn React. It has since grown into the place I keep track
+                    of things, backed by an API of its own.
+                </p>
+            </header>
+
+            <section className="about-section">
+                <h2>What's here</h2>
+                <div className="about-cards">
                     <Link to="/go-heavier" className="about-card">
                         <span className="about-card-icon">💪</span>
                         <span className="about-card-body">
                             <span className="about-card-title">Go Heavier</span>
                             <span className="about-card-text">
-                                A training log for the gym: the places I train, the exercises I
-                                do, and every set I lift, charted over time.
+                                A training log for the gym: the places I train, the exercises I do, and every set I
+                                lift, charted over time.
                             </span>
                         </span>
                     </Link>
-                </section>
+                    {canSeeFinance && (
+                        <Link to="/finance" className="about-card">
+                            <span className="about-card-icon">💷</span>
+                            <span className="about-card-body">
+                                <span className="about-card-title">Finance</span>
+                                <span className="about-card-text">
+                                    Where the money goes: every spend, each month against its budget, and a forecast
+                                    for the month in progress.
+                                </span>
+                            </span>
+                        </Link>
+                    )}
+                </div>
+            </section>
 
-                <section className="about-section">
-                    <h2>Built with</h2>
-                    <ul className="about-tags">
-                        <li>React</li>
-                        <li>TypeScript</li>
-                        <li>React Router</li>
-                    </ul>
-                    <p className="about-note">
-                        The source is on{" "}
-                        <a
-                            href="https://github.com/thesammy2010/thesammy2010.com"
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            GitHub
-                        </a>
-                        .
-                    </p>
-                </section>
-            </div>
-        )
-    }
+            <section className="about-section">
+                <h2>Built with</h2>
+                <h3 className="about-subheading">Website</h3>
+                <ul className="about-tags">
+                    {WEBSITE_STACK.map((tag) => (
+                        <li key={tag}>{tag}</li>
+                    ))}
+                </ul>
+                <h3 className="about-subheading">API</h3>
+                <ul className="about-tags">
+                    {API_STACK.map((tag) => (
+                        <li key={tag}>{tag}</li>
+                    ))}
+                </ul>
+                <p className="about-note">
+                    The source for both is on GitHub:{" "}
+                    <a href="https://github.com/thesammy2010/thesammy2010.com" target="_blank" rel="noreferrer">
+                        the website
+                    </a>{" "}
+                    and{" "}
+                    <a href="https://github.com/thesammy2010/api.thesammy2010.com" target="_blank" rel="noreferrer">
+                        the API
+                    </a>
+                    .
+                </p>
+            </section>
+        </div>
+    )
 }
