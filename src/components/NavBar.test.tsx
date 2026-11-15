@@ -4,6 +4,22 @@ import { MemoryRouter } from "react-router-dom"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import NavBar from "./NavBar"
 
+// Go Heavier is admin-only, so most of these render as someone who can open
+// it; the visitor's view is checked on its own below.
+let mockCanAccess = true
+jest.mock("../roles", () => ({
+    useCanAccess: () => mockCanAccess,
+    useIsAdmin: () => false
+}))
+
+jest.mock("./squash/api", () => ({
+    useSquashAccess: () => ({ status: "signedOut" })
+}))
+
+beforeEach(() => {
+    mockCanAccess = true
+})
+
 function renderAt(path: string) {
     render(
         <GoogleOAuthProvider clientId="test-client-id">
@@ -48,5 +64,14 @@ describe("NavBar", () => {
         renderAt("/go-heavier-extra")
 
         expect(screen.getByRole("link", { name: "Go Heavier" })).not.toHaveClass("active")
+    })
+
+    it("hides admin-only sections from someone who can't open them", () => {
+        mockCanAccess = false
+        renderAt("/")
+
+        expect(screen.queryByRole("link", { name: "Go Heavier" })).not.toBeInTheDocument()
+        expect(screen.queryByRole("link", { name: "Finance" })).not.toBeInTheDocument()
+        expect(screen.getByRole("link", { name: "About" })).toBeInTheDocument()
     })
 })
