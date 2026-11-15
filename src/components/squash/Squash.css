@@ -696,6 +696,22 @@ select.squash-input {
     gap: 8px;
 }
 
+.squash-edit-games {
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.squash-edit-games [aria-pressed="true"] {
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.squash-enter-note {
+    flex-basis: 100%;
+    font-size: 0.8125rem;
+}
+
 .squash-enter-label {
     font-weight: 600;
     color: #2c3e50;
