@@ -126,14 +126,14 @@ export default class BarChart extends React.Component<Props, State> {
                                     ))}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="chart-axis">
-                            {data.map((point, index) => (
-                                <span key={point.label} className="chart-axis-label">
-                                    {index % labelEvery === 0 ? point.label : ""}
-                                </span>
-                            ))}
+                            <div className="chart-axis">
+                                {data.map((point, index) => (
+                                    <span key={point.label} className="chart-axis-label">
+                                        {index % labelEvery === 0 ? point.label : ""}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </>
                 )}
