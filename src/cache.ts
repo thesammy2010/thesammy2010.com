@@ -141,9 +141,8 @@ export const ALL_CACHE_KEYS = [
 ]
 
 /**
- * Drops every cached list. Used on sign-out: the data describes one person's
- * gym history, and now that it survives the tab it would otherwise sit on a
- * shared machine for the next person to load.
+ * Drops every cached list. Sign-out goes further and clears all of storage
+ * (see signOut in auth.ts).
  */
 export function clearAllCaches(): void {
     ALL_CACHE_KEYS.forEach(clearCache)

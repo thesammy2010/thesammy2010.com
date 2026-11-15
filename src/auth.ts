@@ -4,8 +4,7 @@
 // need to react to sign-in/sign-out use the useAuthToken hook below, which is
 // just a thin subscription over the same value.
 import { useEffect, useState } from "react"
-
-import { clearAllCaches } from "./cache"
+import { googleLogout } from "@react-oauth/google"
 
 const TOKEN_KEY = "go-heavier-google-id-token"
 
@@ -85,12 +84,23 @@ export function setToken(next: string | null): void {
     listeners.forEach(listener => listener(next))
 }
 
+// Leaves the browser as a first-time visitor would find it: no token, no
+// cached gym history (which outlives the tab and would otherwise sit on a
+// shared machine for whoever signs in next), and no in-memory state.
 export function signOut(): void {
     setToken(null)
-    // The cached lists describe one person's gym history and now outlive the
-    // tab, so without this they'd sit on a shared machine for whoever signs
-    // in next.
-    clearAllCaches()
+    try {
+        localStorage.clear()
+        sessionStorage.clear()
+    } catch {
+        // No storage to clear.
+    }
+    // Without this One Tap silently signs the same account straight back in
+    // on the next page load.
+    googleLogout()
+    // A full load rather than a router navigation, so every page component
+    // and module-level value (roles, access maps) starts from scratch too.
+    window.location.assign(`${process.env.PUBLIC_URL}/`)
 }
 
 export function useAuthToken(): string | null {
