@@ -28,6 +28,10 @@ import TransactionDetail from "./pages/finance/TransactionDetail"
 import Insights from "./pages/finance/Insights"
 import Budgets from "./pages/finance/Budgets"
 import Manage from "./pages/finance/Manage"
+import Squash from "./pages/Squash"
+import MatchDetail from "./pages/squash/MatchDetail"
+import SquashPlayers from "./pages/squash/Players"
+import PlayerDetail from "./pages/squash/PlayerDetail"
 import { GOOGLE_CLIENT_ID } from "./configs"
 
 const App: React.FC = () => {
@@ -54,6 +58,10 @@ const App: React.FC = () => {
                         <Route path="/finance/insights" element={<Insights />} />
                         <Route path="/finance/budgets" element={<Budgets />} />
                         <Route path="/finance/manage" element={<Manage />} />
+                        <Route path="/squash" element={<Squash />} />
+                        <Route path="/squash/matches/:id" element={<MatchDetail />} />
+                        <Route path="/squash/players" element={<SquashPlayers />} />
+                        <Route path="/squash/players/:id" element={<PlayerDetail />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />

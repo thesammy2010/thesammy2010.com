@@ -1,0 +1,342 @@
+// Types and requests for the /squash API.
+//
+// Squash access doesn't come from a role: the API lets in anyone who's an
+// active player in the group, plus admins, so friends can use it without
+// seeing anything else. /endpoints reports every squash route as GUEST, which
+// canAccess() can't tell apart from "any signed-in user", so membership is
+// read from GET /squash/players/me instead (see useSquashAccess).
+import { useEffect, useRef, useState } from "react"
+
+import { API_URL, ApiError } from "../../configs"
+import { apiFetch, getToken, subscribeToken } from "../../auth"
+
+export type MatchFormat = "singles" | "doubles"
+export type MatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled"
+export type Side = 1 | 2
+
+export interface Player {
+    id: string
+    name: string
+    user_id: string | null
+    email: string | null
+    is_active: boolean
+}
+
+export interface PlayerInput {
+    name: string
+    user_id: string | null
+    email: string | null
+    is_active: boolean
+}
+
+export interface MatchPlayer {
+    player_id: string
+    side: Side
+}
+
+export interface Game {
+    number: number
+    side1_points: number
+    side2_points: number
+    winning_side: Side | null
+    // 0 for a game whose score was entered rather than scored live
+    rallies: number
+}
+
+export interface MatchInput {
+    format: MatchFormat
+    status: MatchStatus
+    played_at: string | null
+    venue: string | null
+    points_to: number
+    best_of: number | null
+    notes: string | null
+    players: MatchPlayer[]
+}
+
+export interface Match extends MatchInput {
+    id: string
+    games: Game[]
+    side1_games: number
+    side2_games: number
+    winning_side: Side | null
+    serving_side: Side | null
+    version: number
+    created_by_id: string
+    created_at: string
+}
+
+export interface Rally {
+    game: number
+    number: number
+    won_by_side: Side
+    server_id: string | null
+    side1_points: number
+    side2_points: number
+}
+
+export interface PlayerStats {
+    player_id: string
+    matches_played: number
+    matches_won: number
+    matches_lost: number
+    matches_drawn: number
+    games_won: number
+    games_lost: number
+    points_won: number
+    points_lost: number
+    win_rate: number | null
+}
+
+export interface HeadToHead {
+    player_id: string
+    opponent_id: string
+    matches_played: number
+    matches_won: number
+    matches_lost: number
+    matches_drawn: number
+    games_won: number
+    games_lost: number
+}
+
+// Matches the API's DEFAULT_DB_PAGE_SIZE: a shorter page is the last one.
+export const MATCHES_PAGE_SIZE = 50
+
+/**
+ * Someone else changed the match first: a rally, undo or completion sent
+ * against an older version. The API sends the match as it is now, so the
+ * scorer can show it straight away instead of making another request.
+ */
+export class StaleMatchError extends ApiError {
+    match: Match
+
+    constructor(message: string, match: Match) {
+        super(409, message)
+        this.match = match
+    }
+}
+
+// FastAPI puts the reason in `detail`: a string for most errors, a list of
+// field errors for a 422, and for a squash 409 an object holding the match.
+async function toError(response: Response, fallback: string): Promise<ApiError> {
+    if (response.status === 403) {
+        return new ApiError(403, fallback)
+    }
+    try {
+        const detail = (await response.json())?.detail
+        if (response.status === 409 && detail?.match) {
+            return new StaleMatchError(detail.detail ?? "The match changed", detail.match)
+        }
+        if (typeof detail === "string") {
+            return new ApiError(response.status, detail)
+        }
+        if (Array.isArray(detail) && typeof detail[0]?.msg === "string") {
+            // "Value error, A player can only be in a match once"
+            return new ApiError(response.status, detail[0].msg.replace(/^Value error, /, ""))
+        }
+    } catch {
+        // Not JSON; use the fallback.
+    }
+    return new ApiError(response.status, fallback)
+}
+
+type Query = Record<string, string | number | boolean | null | undefined>
+
+function url(path: string, query: Query = {}): string {
+    const params = new URLSearchParams()
+    Object.entries(query).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== "") {
+            params.set(key, String(value))
+        }
+    })
+    const search = params.toString()
+    return `${API_URL}/squash${path}${search ? `?${search}` : ""}`
+}
+
+async function request<T>(
+    method: string,
+    path: string,
+    fallback: string,
+    { query, body }: { query?: Query; body?: unknown } = {}
+): Promise<T> {
+    const response = await apiFetch(url(path, query), {
+        method,
+        headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body)
+    })
+    if (!response.ok) {
+        throw await toError(response, fallback)
+    }
+    return response.status === 204 ? (undefined as T) : response.json()
+}
+
+export interface MatchFilters {
+    player_id?: string
+    status?: MatchStatus
+    format?: MatchFormat
+}
+
+export const squashApi = {
+    players: (includeInactive = false) =>
+        request<Player[]>("GET", "/players", "Failed to load players", {
+            query: { include_inactive: includeInactive }
+        }),
+    player: (id: string) => request<Player>("GET", `/players/${id}`, "Failed to load the player"),
+    createPlayer: (body: PlayerInput) => request<Player>("POST", "/players", "Failed to add the player", { body }),
+    updatePlayer: (id: string, body: PlayerInput) =>
+        request<Player>("PUT", `/players/${id}`, "Failed to save the player", { body }),
+    playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),
+    headToHead: (id: string, opponentId: string) =>
+        request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head"),
+
+    matches: (filters: MatchFilters, page: number) =>
+        request<Match[]>("GET", "/matches", "Failed to load matches", { query: { ...filters, page } }),
+    match: (id: string) => request<Match>("GET", `/matches/${id}`, "Failed to load the match"),
+    // null while the match is still at `since`: the API answers 204, which
+    // keeps polling every couple of seconds cheap.
+    pollMatch: (id: string, since: number) =>
+        request<Match | undefined>("GET", `/matches/${id}`, "Failed to refresh the match", {
+            query: { since_version: since }
+        }).then((match) => match ?? null),
+    createMatch: (body: MatchInput) => request<Match>("POST", "/matches", "Failed to create the match", { body }),
+    updateMatch: (id: string, body: MatchInput) =>
+        request<Match>("PUT", `/matches/${id}`, "Failed to save the match", { body }),
+    deleteMatch: (id: string) => request<void>("DELETE", `/matches/${id}`, "Failed to delete the match"),
+    completeMatch: (id: string, version: number) =>
+        request<Match>("POST", `/matches/${id}/complete`, "Failed to end the match", { query: { version } }),
+    setGame: (id: string, number: number, body: { side1_points: number; side2_points: number }) =>
+        request<Match>("PUT", `/matches/${id}/games/${number}`, "Failed to save the game", { body }),
+    deleteLastGame: (id: string) =>
+        request<Match>("DELETE", `/matches/${id}/games/last`, "Failed to remove the game"),
+    rallies: (id: string) => request<Rally[]>("GET", `/matches/${id}/rallies`, "Failed to load the rallies"),
+    addRally: (id: string, wonBySide: Side, version: number) =>
+        request<Match>("POST", `/matches/${id}/rallies`, "Failed to score the point", {
+            body: { won_by_side: wonBySide, version }
+        }),
+    undoRally: (id: string, version: number) =>
+        request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })
+}
+
+export type SquashAccess =
+    | { status: "loading" }
+    | { status: "signedOut" }
+    // Signed in, but neither a player nor an admin
+    | { status: "denied" }
+    | { status: "error"; message: string }
+    // `me` is null for an admin who doesn't play
+    | { status: "member"; me: Player | null }
+
+let access: SquashAccess = { status: "loading" }
+let started = false
+// Bumped per check, so a slow answer for a token that has since changed
+// can't overwrite the newer one.
+let checkId = 0
+const listeners = new Set<() => void>()
+
+function setAccess(next: SquashAccess): void {
+    access = next
+    listeners.forEach((listener) => listener())
+}
+
+async function checkAccess(): Promise<void> {
+    const id = ++checkId
+    if (!getToken()) {
+        setAccess({ status: "signedOut" })
+        return
+    }
+    setAccess({ status: "loading" })
+    let next: SquashAccess
+    try {
+        const response = await apiFetch(url("/players/me"))
+        if (response.ok) {
+            next = { status: "member", me: await response.json() }
+        } else if (response.status === 404) {
+            next = { status: "member", me: null }
+        } else if (response.status === 401 || response.status === 403) {
+            next = { status: "denied" }
+        } else {
+            next = { status: "error", message: "Couldn't check whether you're in the squash group" }
+        }
+    } catch (error) {
+        console.error("Failed to check squash membership", error)
+        next = { status: "error", message: "Couldn't reach the server" }
+    }
+    if (id === checkId) {
+        setAccess(next)
+    }
+}
+
+// The first caller starts the check; later ones share it. It runs again
+// whenever the signed-in user changes.
+export function useSquashAccess(): SquashAccess {
+    const [, forceRender] = useState(0)
+    useEffect(() => {
+        const listener = () => forceRender((n) => n + 1)
+        listeners.add(listener)
+        if (!started) {
+            started = true
+            subscribeToken(() => void checkAccess())
+            void checkAccess()
+        }
+        return () => {
+            listeners.delete(listener)
+        }
+    }, [])
+    return access
+}
+
+export type LoadState<T> =
+    | { status: "loading" }
+    | { status: "signedOut" }
+    | { status: "denied" }
+    | { status: "error"; message: string }
+    | { status: "ready"; data: T; me: Player | null }
+
+/**
+ * Runs `load` once squash membership is confirmed, and again whenever `deps`
+ * change or reload() is called. Data from the previous load stays in `state`
+ * while the next is in flight, with `refreshing` set.
+ */
+export function useSquashLoad<T>(load: () => Promise<T>, deps: unknown[]) {
+    const membership = useSquashAccess()
+    const [state, setState] = useState<LoadState<T>>({ status: "loading" })
+    const [refreshing, setRefreshing] = useState(false)
+    const [nonce, setNonce] = useState(0)
+    const loadRef = useRef(load)
+    loadRef.current = load
+    const me = membership.status === "member" ? membership.me : null
+
+    useEffect(() => {
+        if (membership.status === "loading") {
+            return
+        }
+        if (membership.status !== "member") {
+            setState(membership)
+            return
+        }
+
+        let cancelled = false
+        setRefreshing(true)
+        loadRef.current().then(
+            (data) => {
+                if (!cancelled) {
+                    setState({ status: "ready", data, me })
+                    setRefreshing(false)
+                }
+            },
+            (error) => {
+                if (!cancelled) {
+                    console.error("Error loading squash data:", error)
+                    setState({ status: "error", message: (error as Error).message })
+                    setRefreshing(false)
+                }
+            }
+        )
+        return () => {
+            cancelled = true
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [membership.status, me?.id, nonce, ...deps])
+
+    return { state, setState, refreshing, reload: () => setNonce((n) => n + 1) }
+}

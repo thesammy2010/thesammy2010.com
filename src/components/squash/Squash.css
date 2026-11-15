@@ -1,0 +1,857 @@
+/* Squash section. Builds on the Go Heavier stat tiles and nav bar layout;
+   everything here is what those don't already cover. Side 1 is blue and
+   side 2 orange everywhere, so a side reads the same on every page. */
+
+:root {
+    --squash-side-1: #3b5bdb;
+    --squash-side-1-soft: #edf2ff;
+    --squash-side-2: #e8590c;
+    --squash-side-2-soft: #fff4e6;
+}
+
+.squash-navbar {
+    background: linear-gradient(135deg, #1e40af 0%, #0e7490 100%);
+}
+
+.squash-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.squash-page.refreshing {
+    opacity: 0.5;
+}
+
+.squash-page .stats-grid {
+    margin-bottom: 0;
+}
+
+.squash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.squash-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2c3e50;
+}
+
+.squash-section-title {
+    margin: 8px 0 -4px 0;
+    font-size: 1.125rem;
+    color: #2c3e50;
+}
+
+.squash-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    min-width: 0;
+}
+
+.squash-card-title {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.squash-card > .squash-muted + * {
+    margin-top: 12px;
+}
+
+.squash-muted {
+    color: #718096;
+    font-size: 0.875rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+.squash-link {
+    color: #1e40af;
+    text-decoration: none;
+}
+
+.squash-link:hover {
+    text-decoration: underline;
+}
+
+.squash-you {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #e0e7ff;
+    color: #3730a3;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.squash-empty {
+    text-align: center;
+    color: #718096;
+}
+
+.squash-empty p {
+    margin: 0 0 12px 0;
+}
+
+/* Sides */
+.squash-side-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.squash-side-dot.squash-side-1,
+.squash-rally-dot.squash-side-1 {
+    background: var(--squash-side-1);
+}
+
+.squash-side-dot.squash-side-2,
+.squash-rally-dot.squash-side-2 {
+    background: var(--squash-side-2);
+}
+
+.squash-side-1-text {
+    color: var(--squash-side-1);
+}
+
+.squash-side-2-text {
+    color: var(--squash-side-2);
+}
+
+/* Buttons */
+.squash-primary-button,
+.squash-secondary-button,
+.squash-danger-button {
+    border-radius: 8px;
+    padding: 8px 16px;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.squash-primary-button {
+    background: #1e40af;
+    color: white;
+}
+
+.squash-primary-button:hover:not(:disabled) {
+    background: #1e3a8a;
+}
+
+.squash-secondary-button {
+    background: white;
+    color: #2c3e50;
+    border-color: #cbd5e0;
+}
+
+.squash-secondary-button:hover:not(:disabled) {
+    border-color: #1e40af;
+    color: #1e40af;
+}
+
+.squash-danger-button {
+    background: white;
+    color: #c53030;
+    border-color: #feb2b2;
+}
+
+.squash-danger-button:hover:not(:disabled) {
+    background: #c53030;
+    color: white;
+}
+
+.squash-primary-button:disabled,
+.squash-secondary-button:disabled,
+.squash-danger-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.squash-text-button {
+    background: none;
+    border: none;
+    padding: 4px 0;
+    font: inherit;
+    font-size: 0.875rem;
+    color: #1e40af;
+    cursor: pointer;
+}
+
+.squash-text-button:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.squash-text-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.squash-load-more {
+    align-self: center;
+}
+
+.squash-confirm {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: #2c3e50;
+}
+
+/* Inputs. ExerciseForm.css styles every select on the site with a top
+   margin and full width, which these undo. */
+.squash-input {
+    height: 38px;
+    margin-top: 0;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.875rem;
+    background: white;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+select.squash-input {
+    width: auto;
+}
+
+.squash-input:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.15);
+}
+
+.squash-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: #4a5568;
+    cursor: pointer;
+}
+
+.squash-checkbox input {
+    margin: 0;
+}
+
+.squash-inline-error {
+    flex-basis: 100%;
+    padding: 4px 0 0 0;
+    margin: 0;
+    font-size: 0.8125rem;
+}
+
+.squash-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Two-way toggle */
+.squash-segmented {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 10px;
+    background: #edf2f7;
+}
+
+.squash-segmented button {
+    border: none;
+    background: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4a5568;
+    cursor: pointer;
+}
+
+.squash-segmented button.active {
+    background: white;
+    color: #1e40af;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Match cards */
+.squash-match-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.squash-match-card {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.squash-match-card:hover {
+    border-color: #1e40af;
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.12);
+}
+
+.squash-match-card.live {
+    border-color: #38a169;
+}
+
+.squash-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.squash-when {
+    font-size: 0.875rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.squash-card-foot {
+    margin-top: 10px;
+    font-size: 0.8125rem;
+}
+
+.squash-status {
+    flex-shrink: 0;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.squash-status-in_progress {
+    background: #c6f6d5;
+    color: #22543d;
+    animation: squash-pulse 2s ease-in-out infinite;
+}
+
+.squash-status-scheduled {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.squash-status-cancelled {
+    background: #fed7d7;
+    color: #822727;
+}
+
+@keyframes squash-pulse {
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .squash-status-in_progress {
+        animation: none;
+    }
+}
+
+.squash-scoreline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.squash-scoreline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #4a5568;
+}
+
+.squash-scoreline-row.winner {
+    color: #1a202c;
+    font-weight: 700;
+}
+
+.squash-scoreline-names {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.squash-scoreline-games {
+    display: flex;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-scoreline-games span {
+    min-width: 24px;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+.squash-scoreline-games span.won {
+    color: #1a202c;
+    font-weight: 700;
+}
+
+.squash-scoreline-games span.open {
+    color: #38a169;
+    font-weight: 600;
+}
+
+.squash-scoreline-total {
+    min-width: 28px;
+    text-align: right;
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Match page */
+.squash-scoreboard-sides {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.squash-scoreboard-side {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.25rem;
+    color: #4a5568;
+}
+
+.squash-scoreboard-side.winner {
+    color: #1a202c;
+    font-weight: 700;
+}
+
+.squash-scoreboard-names {
+    flex: 1;
+    min-width: 0;
+}
+
+.squash-scoreboard-games {
+    font-size: 2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-notes {
+    margin: 8px 0 0 0;
+    font-size: 0.9375rem;
+    color: #4a5568;
+}
+
+.squash-following {
+    text-align: center;
+}
+
+/* Live scorer */
+.squash-scorer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.squash-scorer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.squash-ball {
+    font-weight: 700;
+}
+
+.squash-scorer-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.squash-point-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 220px;
+    padding: 16px 12px;
+    border-radius: 16px;
+    border: 3px solid transparent;
+    font: inherit;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.squash-point-button.squash-side-1 {
+    background: var(--squash-side-1-soft);
+    border-color: var(--squash-side-1);
+    color: var(--squash-side-1);
+}
+
+.squash-point-button.squash-side-2 {
+    background: var(--squash-side-2-soft);
+    border-color: var(--squash-side-2);
+    color: var(--squash-side-2);
+}
+
+.squash-point-button:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.squash-point-button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.squash-point-button:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.squash-point-names {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.squash-point-score {
+    font-size: 5rem;
+    line-height: 1;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-point-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.squash-serving {
+    font-weight: 700;
+}
+
+.squash-notice {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #fffbeb;
+    border: 1px solid #f6e05e;
+    color: #744210;
+    font-size: 0.875rem;
+}
+
+.squash-scorer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Games table */
+.squash-games-table,
+.squash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-games-table th,
+.squash-games-table td,
+.squash-table th,
+.squash-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+}
+
+.squash-games-table th:first-child,
+.squash-table th:first-child {
+    text-align: left;
+}
+
+.squash-games-table thead th,
+.squash-table thead th {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom-color: #e0e0e0;
+}
+
+.squash-games-table tbody th,
+.squash-table tbody th {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.squash-games-table td {
+    color: #a0aec0;
+}
+
+.squash-games-table td.won {
+    color: #1a202c;
+    font-weight: 700;
+}
+
+.squash-games-table td.open {
+    color: #38a169;
+    font-weight: 600;
+}
+
+.squash-table tbody tr:last-child th,
+.squash-table tbody tr:last-child td,
+.squash-games-table tbody tr:last-child th,
+.squash-games-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.squash-inactive {
+    opacity: 0.55;
+}
+
+.squash-pending {
+    display: block;
+    font-size: 0.75rem;
+}
+
+.squash-ahead {
+    color: #2f855a;
+    font-weight: 600;
+}
+
+.squash-behind {
+    color: #c53030;
+    font-weight: 600;
+}
+
+.squash-row-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+/* Typed-in game */
+.squash-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.squash-details[open] summary {
+    margin-bottom: 8px;
+}
+
+.squash-enter-game {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.squash-enter-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 4px;
+}
+
+.squash-points-input {
+    width: 70px;
+    text-align: center;
+}
+
+/* Point by point */
+.squash-rally-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.squash-rally-label {
+    flex-shrink: 0;
+    width: 110px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.squash-rally-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
+.squash-rally-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.squash-manage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Players */
+.squash-ladder {
+    overflow-x: auto;
+}
+
+.squash-player-editor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.squash-player-editor .squash-input {
+    flex: 1 1 200px;
+}
+
+/* Match form */
+.squash-form select {
+    width: 100%;
+    margin-top: 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.9rem;
+    background: white;
+    box-sizing: border-box;
+}
+
+.squash-form .squash-segmented {
+    align-self: flex-start;
+}
+
+.squash-sides-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.squash-side-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid;
+    min-width: 0;
+}
+
+.squash-side-picker.squash-side-1 {
+    border-color: var(--squash-side-1);
+    background: var(--squash-side-1-soft);
+}
+
+.squash-side-picker.squash-side-2 {
+    border-color: var(--squash-side-2);
+    background: var(--squash-side-2-soft);
+}
+
+.squash-side-picker legend {
+    padding: 0 6px;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.squash-side-1 legend {
+    color: var(--squash-side-1);
+}
+
+.squash-side-2 legend {
+    color: var(--squash-side-2);
+}
+
+.squash-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 767px) {
+    .squash-page {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .squash-card {
+        padding: 16px;
+    }
+
+    .squash-hide-narrow {
+        display: none;
+    }
+
+    .squash-point-button {
+        min-height: 180px;
+    }
+
+    .squash-point-score {
+        font-size: 4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .squash-form-row,
+    .squash-sides-picker {
+        grid-template-columns: 1fr;
+    }
+
+    .squash-rally-label {
+        width: 80px;
+    }
+}

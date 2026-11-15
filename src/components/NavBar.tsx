@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 
 import { useCanAccess, useIsAdmin } from "../roles"
+import { useSquashAccess } from "./squash/api"
 import SignIn from "./SignIn"
 import "./NavBar.css"
 
@@ -16,6 +17,9 @@ export default function NavBar() {
     // Finance is personal data and every /finance route is admin-only, so the
     // link only shows for someone who can open it.
     const canSeeFinance = useCanAccess("GET", "/finance/transactions")
+    // Squash is for the group's players whatever their role, so it's shown
+    // from membership rather than from the access map.
+    const canSeeSquash = useSquashAccess().status === "member"
     const [menuOpen, setMenuOpen] = useState(false)
 
     // A link tap should close the mobile menu rather than leave it open over
@@ -29,6 +33,7 @@ export default function NavBar() {
 
     const links = [
         ...LINKS.slice(0, 1),
+        ...(canSeeSquash ? [{ to: "/squash", label: "Squash" }] : []),
         ...(canSeeFinance ? [{ to: "/finance", label: "Finance" }] : []),
         ...LINKS.slice(1),
         ...(isAdmin ? [{ to: "/admin", label: "🔧 Admin" }] : [])

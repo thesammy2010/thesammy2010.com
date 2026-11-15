@@ -2,6 +2,7 @@ import React from "react"
 import { Link } from "react-router-dom"
 
 import { useCanAccess } from "../roles"
+import { useSquashAccess } from "../components/squash/api"
 import "./About.css"
 
 const WEBSITE_STACK = ["React", "TypeScript", "React Router", "Google Sign-In", "GitHub Pages"]
@@ -11,6 +12,8 @@ export default function About() {
     // Finance is personal data behind an admin-only API, so it's only
     // mentioned to someone who can open it, the same rule as the nav link.
     const canSeeFinance = useCanAccess("GET", "/finance/transactions")
+    // Squash is for the group's players, so it's shown to them alone too.
+    const canSeeSquash = useSquashAccess().status === "member"
 
     return (
         <div className="about-page">
@@ -35,6 +38,18 @@ export default function About() {
                             </span>
                         </span>
                     </Link>
+                    {canSeeSquash && (
+                        <Link to="/squash" className="about-card">
+                            <span className="about-card-icon">🎾</span>
+                            <span className="about-card-body">
+                                <span className="about-card-title">Squash</span>
+                                <span className="about-card-text">
+                                    Matches with friends, scored point by point from a phone at the court, with
+                                    everyone's record and head-to-heads.
+                                </span>
+                            </span>
+                        </Link>
+                    )}
                     {canSeeFinance && (
                         <Link to="/finance" className="about-card">
                             <span className="about-card-icon">💷</span>
