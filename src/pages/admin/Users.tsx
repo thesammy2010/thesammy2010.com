@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 
 import { API_URL, ApiError, PERMISSION_DENIED_MESSAGE } from "../../configs"
-import { apiFetch } from "../../auth"
+import { apiFetch, signOut } from "../../auth"
 import { isSignedIn, useCanAccess, useIsAdmin, useOwnUserId, UserRole } from "../../roles"
 import AdminNavBar from "../../components/admin/NavBar"
 import RoleSelect from "../../components/admin/RoleSelect"
@@ -88,6 +88,12 @@ export default function Users() {
             })
             if (!response.ok) {
                 throw new ApiError(response.status, "Failed to delete user")
+            }
+            // The account behind the current token no longer exists, so
+            // leave exactly as a sign-out would.
+            if (userId === ownUserId) {
+                signOut()
+                return
             }
             setUsers((prev) => prev?.filter((user) => user.id !== userId) ?? null)
             setConfirmingId(null)

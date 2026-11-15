@@ -49,11 +49,12 @@
     color: #667eea;
 }
 
-/* Plot */
+/* Plot. A grid so the axis row sits under the bars only, not the scale. */
 .chart-plot {
-    display: flex;
-    gap: 12px;
-    height: 220px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 220px auto;
+    column-gap: 12px;
 }
 
 .chart-scale {
@@ -160,19 +161,22 @@
 }
 
 .chart-axis {
+    grid-column: 2;
     display: flex;
     gap: 2px;
     margin-top: 8px;
 }
 
+/* A label is usually wider than its column, so it spills evenly into the
+   neighbouring columns, whose labels are thinned out by labelEvery. */
 .chart-axis-label {
     flex: 1;
     min-width: 0;
-    text-align: center;
+    display: flex;
+    justify-content: center;
     font-size: 0.6875rem;
     color: #a0aec0;
     white-space: nowrap;
-    overflow: hidden;
 }
 
 /* Table view, so every value is reachable without hovering */
@@ -213,6 +217,6 @@
     }
 
     .chart-plot {
-        height: 180px;
+        grid-template-rows: 180px auto;
     }
 }

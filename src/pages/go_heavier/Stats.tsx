@@ -221,8 +221,9 @@ export class Stats extends React.Component<Props, State> {
     render(): React.ReactNode {
         const { stats, totals } = this.state
         const months = buildMonthlyTotals(this.state.sessions ?? [])
-        // 13 months of labels collide on a narrow screen; thin them out.
-        const labelEvery = months.length > 12 ? 2 : 1
+        // A month label is wider than its column once there are more than a
+        // handful of months, so thin them out to stop neighbours colliding.
+        const labelEvery = months.length > 6 ? 2 : 1
         const weekdays = stats?.by_weekday ?? []
 
         return (
