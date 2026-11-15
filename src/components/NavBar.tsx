@@ -6,14 +6,13 @@ import { useSquashAccess } from "./squash/api"
 import SignIn from "./SignIn"
 import "./NavBar.css"
 
-const LINKS = [
-    { to: "/go-heavier", label: "Go Heavier" },
-    { to: "/about", label: "About" }
-]
 
 export default function NavBar() {
     const location = useLocation()
     const isAdmin = useIsAdmin()
+    // Go Heavier is admin-only for now, so like Finance it's only offered to
+    // someone who can open it rather than to everyone who'd then be refused.
+    const canSeeGoHeavier = useCanAccess("GET", "/go-heavier/sessions")
     // Finance is personal data and every /finance route is admin-only, so the
     // link only shows for someone who can open it.
     const canSeeFinance = useCanAccess("GET", "/finance/transactions")
@@ -32,10 +31,10 @@ export default function NavBar() {
         location.pathname === to || location.pathname.startsWith(`${to}/`)
 
     const links = [
-        ...LINKS.slice(0, 1),
+        ...(canSeeGoHeavier ? [{ to: "/go-heavier", label: "Go Heavier" }] : []),
         ...(canSeeSquash ? [{ to: "/squash", label: "Squash" }] : []),
         ...(canSeeFinance ? [{ to: "/finance", label: "Finance" }] : []),
-        ...LINKS.slice(1),
+        { to: "/about", label: "About" },
         ...(isAdmin ? [{ to: "/admin", label: "🔧 Admin" }] : [])
     ]
 

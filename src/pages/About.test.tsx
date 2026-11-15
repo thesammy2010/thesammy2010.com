@@ -8,6 +8,10 @@ jest.mock("../roles", () => ({
     useCanAccess: () => mockCanAccess
 }))
 
+jest.mock("../components/squash/api", () => ({
+    useSquashAccess: () => ({ status: "signedOut" })
+}))
+
 function renderAbout() {
     render(
         <MemoryRouter>
@@ -27,7 +31,16 @@ describe("About", () => {
         expect(screen.getByRole("heading", { level: 1, name: /about this site/i })).toBeInTheDocument()
     })
 
-    it("links through to Go Heavier", () => {
+    // Go Heavier and Finance are admin-only, so a visitor sees neither.
+    it("tells a visitor the sections are private", () => {
+        renderAbout()
+
+        expect(screen.queryByRole("link", { name: /go heavier/i })).not.toBeInTheDocument()
+        expect(screen.getByText(/sign in to see the ones you can use/i)).toBeInTheDocument()
+    })
+
+    it("links through to Go Heavier for someone who can open it", () => {
+        mockCanAccess = true
         renderAbout()
 
         expect(screen.getByRole("link", { name: /go heavier/i })).toHaveAttribute("href", "/go-heavier")

@@ -238,6 +238,35 @@ function setAccess(next: SquashAccess): void {
     listeners.forEach((listener) => listener())
 }
 
+// /players/me answers an admin who doesn't play with a 404 saying so. Any
+// other 404, such as FastAPI's own "Not Found" from an API that doesn't have
+// /squash yet, means squash isn't there to use.
+async function isNotAPlayer(response: Response): Promise<boolean> {
+    try {
+        const detail = (await response.json())?.detail
+        return typeof detail === "string" && detail !== "Not Found"
+    } catch {
+        return false
+    }
+}
+
+// What GET /squash/players/me says about the caller.
+export async function accessFrom(response: Response): Promise<SquashAccess> {
+    if (response.ok) {
+        return { status: "member", me: await response.json() }
+    }
+    if (response.status === 404) {
+        return (await isNotAPlayer(response))
+            ? // An admin who doesn't play: let in, with no player of their own.
+              { status: "member", me: null }
+            : { status: "error", message: "Squash isn't available on this server yet" }
+    }
+    if (response.status === 401 || response.status === 403) {
+        return { status: "denied" }
+    }
+    return { status: "error", message: "Couldn't check whether you're in the squash group" }
+}
+
 async function checkAccess(): Promise<void> {
     const id = ++checkId
     if (!getToken()) {
@@ -247,16 +276,7 @@ async function checkAccess(): Promise<void> {
     setAccess({ status: "loading" })
     let next: SquashAccess
     try {
-        const response = await apiFetch(url("/players/me"))
-        if (response.ok) {
-            next = { status: "member", me: await response.json() }
-        } else if (response.status === 404) {
-            next = { status: "member", me: null }
-        } else if (response.status === 401 || response.status === 403) {
-            next = { status: "denied" }
-        } else {
-            next = { status: "error", message: "Couldn't check whether you're in the squash group" }
-        }
+        next = await accessFrom(await apiFetch(url("/players/me")))
     } catch (error) {
         console.error("Failed to check squash membership", error)
         next = { status: "error", message: "Couldn't reach the server" }
