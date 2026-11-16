@@ -202,12 +202,17 @@ export const squashApi = {
     updateMatch: (id: string, body: MatchInput) =>
         request<Match>("PUT", `/matches/${id}`, "Failed to save the match", { body }),
     deleteMatch: (id: string) => request<void>("DELETE", `/matches/${id}`, "Failed to delete the match"),
+    // Answers with whichever of the two was played first, which is kept; the
+    // other is deleted.
+    mergeMatches: (id: string, otherId: string) =>
+        request<Match>("POST", `/matches/${id}/merge`, "Failed to merge the matches", {
+            body: { match_id: otherId }
+        }),
     completeMatch: (id: string, version: number) =>
         request<Match>("POST", `/matches/${id}/complete`, "Failed to end the match", { query: { version } }),
     setGame: (id: string, number: number, body: { side1_points: number; side2_points: number }) =>
         request<Match>("PUT", `/matches/${id}/games/${number}`, "Failed to save the game", { body }),
-    deleteLastGame: (id: string) =>
-        request<Match>("DELETE", `/matches/${id}/games/last`, "Failed to remove the game"),
+    deleteLastGame: (id: string) => request<Match>("DELETE", `/matches/${id}/games/last`, "Failed to remove the game"),
     rallies: (id: string) => request<Rally[]>("GET", `/matches/${id}/rallies`, "Failed to load the rallies"),
     addRally: (id: string, wonBySide: Side, version: number) =>
         request<Match>("POST", `/matches/${id}/rallies`, "Failed to score the point", {
