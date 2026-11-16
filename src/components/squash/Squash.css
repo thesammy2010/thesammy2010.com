@@ -271,7 +271,7 @@ select.squash-input {
     gap: 12px;
 }
 
-/* Two-way toggle */
+/* Segmented toggle */
 .squash-segmented {
     display: inline-flex;
     padding: 3px;
