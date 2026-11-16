@@ -5,7 +5,8 @@ import "./Squash.css"
 
 const LINKS = [
     { to: "/squash", label: "🏆 Matches", exact: false, also: "/squash/matches" },
-    { to: "/squash/players", label: "👥 Players", exact: false }
+    { to: "/squash/players", label: "👥 Players", exact: false },
+    { to: "/squash/stats", label: "📊 Stats", exact: false }
 ]
 
 // The Go Heavier nav bar's layout under its own colours.

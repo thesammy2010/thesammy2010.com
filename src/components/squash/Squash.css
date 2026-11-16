@@ -822,6 +822,56 @@ select.squash-input {
     gap: 12px;
 }
 
+/* Stats */
+.squash-results {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.squash-result {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: white;
+}
+
+.squash-result:hover {
+    filter: brightness(1.1);
+}
+
+.squash-result-W {
+    background: #2f855a;
+}
+
+.squash-result-L {
+    background: #c53030;
+}
+
+.squash-result-D {
+    background: #a0aec0;
+}
+
+.squash-stats-records tbody th {
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.squash-table td.squash-stats-record {
+    text-align: left;
+}
+
+.squash-stats-record .squash-muted {
+    display: block;
+    margin-top: 2px;
+}
+
 @media (max-width: 767px) {
     .squash-page {
         padding: 16px;
