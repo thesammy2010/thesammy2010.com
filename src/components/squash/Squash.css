@@ -924,6 +924,114 @@ select.squash-input {
     background: #edf2ff;
 }
 
+/* Elo ladder */
+.squash-rank {
+    display: inline-block;
+    min-width: 1.75em;
+    color: #a0aec0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-table td.squash-rating {
+    font-weight: 700;
+    color: #1a202c;
+}
+
+/* Rating history chart */
+.squash-rating-chart {
+    margin: 12px 0 20px 0;
+}
+
+.squash-rating-frame {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-right: 44px;
+}
+
+.squash-rating-axis {
+    position: relative;
+    flex: 0 0 36px;
+}
+
+.squash-rating-axis span {
+    position: absolute;
+    right: 0;
+    transform: translateY(-50%);
+    font-size: 0.6875rem;
+    color: #a0aec0;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-rating-plot {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.squash-rating-grid {
+    stroke: #edf2f7;
+    stroke-width: 1;
+}
+
+.squash-rating-line {
+    fill: none;
+    stroke: #1e40af;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.squash-rating-dot {
+    background: #1e40af;
+}
+
+.squash-rating-end {
+    position: absolute;
+    left: calc(100% + 10px);
+    transform: translateY(-50%);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #2c3e50;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+/* Insights */
+.squash-card-title-inline {
+    margin: 0;
+}
+
+.squash-refreshing {
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.squash-insights-table td {
+    white-space: nowrap;
+}
+
+.squash-insights-notes {
+    margin: 12px 0 0 0;
+    padding-left: 20px;
+    color: #2c3e50;
+    font-size: 0.9375rem;
+}
+
+.squash-insights-notes li + li {
+    margin-top: 4px;
+}
+
+.squash-insights-grid {
+    margin-top: 12px;
+}
+
+/* Venues */
+.squash-venues {
+    margin-bottom: 12px;
+}
+
 /* Players */
 .squash-ladder {
     overflow-x: auto;

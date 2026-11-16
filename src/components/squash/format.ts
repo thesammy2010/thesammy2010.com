@@ -156,6 +156,11 @@ export function winRate(value: number | null): string {
     return value === null ? EM_DASH : `${Math.round(value * 100)}%`
 }
 
+// "+12", "−8" (a true minus sign) or "0"
+export function signed(value: number): string {
+    return value > 0 ? `+${value}` : value < 0 ? `−${-value}` : "0"
+}
+
 // "4-2", or "4-2-1" with draws
 export function record(won: number, lost: number, drawn: number): string {
     return drawn > 0 ? `${won}-${lost}-${drawn}` : `${won}-${lost}`

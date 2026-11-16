@@ -1,7 +1,17 @@
 import React, { useEffect, useRef, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 
-import { Match, MatchInput, Player, Rally, squashApi, StaleMatchError, useSquashLoad } from "../../components/squash/api"
+import {
+    Match,
+    MatchInput,
+    MatchInsights,
+    Player,
+    Rally,
+    squashApi,
+    StaleMatchError,
+    useSquashLoad
+} from "../../components/squash/api"
+import { MatchInsightsCard } from "../../components/squash/Insights"
 import LiveScorer from "../../components/squash/LiveScorer"
 import MatchForm from "../../components/squash/MatchForm"
 import MergeMatches from "../../components/squash/MergeMatches"
@@ -23,6 +33,7 @@ interface MatchData {
     match: Match
     players: Player[]
     rallies: Rally[]
+    insights: MatchInsights
 }
 
 // Long enough not to hammer the API, short enough that a point scored on
@@ -34,7 +45,7 @@ function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchInput {
         format: match.format,
         status: match.status,
         played_at: match.played_at,
-        venue: match.venue,
+        venue_id: match.venue_id,
         points_to: match.points_to,
         best_of: match.best_of,
         notes: match.notes,
@@ -191,12 +202,13 @@ export default function MatchDetail() {
     const [busy, setBusy] = useState(false)
 
     const { state, setState, refreshing, reload } = useSquashLoad<MatchData>(async () => {
-        const [match, players, rallies] = await Promise.all([
+        const [match, players, rallies, insights] = await Promise.all([
             squashApi.match(id),
             squashApi.players(true),
-            squashApi.rallies(id)
+            squashApi.rallies(id),
+            squashApi.matchInsights(id)
         ])
-        return { match, players, rallies }
+        return { match, players, rallies, insights }
     }, [id])
 
     const ready = state.status === "ready" ? state : null
@@ -213,11 +225,11 @@ export default function MatchDetail() {
         setState((prev) =>
             prev.status === "ready" ? { ...prev, data: { ...prev.data, match: next } } : prev
         )
-        squashApi.rallies(next.id).then(
-            (rallies) =>
+        Promise.all([squashApi.rallies(next.id), squashApi.matchInsights(next.id)]).then(
+            ([rallies, insights]) =>
                 setState((prev) =>
                     prev.status === "ready" && prev.data.match.version === next.version
-                        ? { ...prev, data: { ...prev.data, rallies } }
+                        ? { ...prev, data: { ...prev.data, rallies, insights } }
                         : prev
                 ),
             () => undefined
@@ -263,7 +275,7 @@ export default function MatchDetail() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Match">
-            {({ match, players, rallies }, me) => {
+            {({ match, players, rallies, insights }, me) => {
                 const canChange =
                     isAdmin ||
                     (ownUserId !== null && match.created_by_id === ownUserId) ||
@@ -365,6 +377,8 @@ export default function MatchDetail() {
                         )}
 
                         <PointByPoint match={match} rallies={rallies} players={players} />
+
+                        <MatchInsightsCard match={match} insights={insights} players={players} />
 
                         {canChange && (
                             <div className="squash-card squash-manage">

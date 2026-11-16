@@ -1,8 +1,20 @@
 import React from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useParams, useSearchParams } from "react-router-dom"
 
-import { HeadToHead, Match, Player, PlayerStats, squashApi, useSquashLoad } from "../../components/squash/api"
+import {
+    HeadToHead,
+    Match,
+    MatchFormat,
+    Player,
+    PlayerInsights,
+    PlayerStats,
+    RatingChange,
+    squashApi,
+    useSquashLoad
+} from "../../components/squash/api"
+import { PlayerInsightsCard } from "../../components/squash/Insights"
 import MatchCard from "../../components/squash/MatchCard"
+import RatingChart from "../../components/squash/RatingChart"
 import SquashPage from "../../components/squash/SquashPage"
 import { record, winRate } from "../../components/squash/format"
 
@@ -12,6 +24,66 @@ interface PlayerData {
     stats: PlayerStats
     headToHeads: HeadToHead[]
     matches: Match[]
+}
+
+interface RatingData {
+    history: RatingChange[]
+    insights: PlayerInsights
+}
+
+const FORMATS: { value: MatchFormat | ""; label: string }[] = [
+    { value: "", label: "All" },
+    { value: "singles", label: "Singles" },
+    { value: "doubles", label: "Doubles" }
+]
+
+// The rating chart and point-by-point figures, for all matches or one
+// format, loaded apart from the rest so switching format is quick.
+function RatingAndInsights({ id }: { id: string }) {
+    const [searchParams, setSearchParams] = useSearchParams()
+    const param = searchParams.get("format")
+    const format: MatchFormat | undefined = param === "singles" || param === "doubles" ? param : undefined
+    const { state, refreshing } = useSquashLoad<RatingData>(async () => {
+        const [history, insights] = await Promise.all([
+            squashApi.ratingHistory(id, format),
+            squashApi.playerInsights(id, format)
+        ])
+        return { history, insights }
+    }, [id, format])
+
+    return (
+        <div className={`squash-card ${refreshing ? "squash-refreshing" : ""}`}>
+            <div className="squash-header">
+                <h4 className="squash-card-title squash-card-title-inline">Rating and point by point</h4>
+                <div className="squash-segmented" role="radiogroup" aria-label="Format">
+                    {FORMATS.map(({ value, label }) => (
+                        <button
+                            key={label}
+                            type="button"
+                            role="radio"
+                            aria-checked={(format ?? "") === value}
+                            className={(format ?? "") === value ? "active" : ""}
+                            onClick={() => setSearchParams(value ? { format: value } : {}, { replace: true })}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            {state.status === "loading" && <p className="squash-muted">Loading...</p>}
+            {state.status === "error" && <p className="error-message">{state.message}</p>}
+            {state.status === "ready" && (
+                <>
+                    {state.data.history.length > 0 ? (
+                        <RatingChart history={state.data.history} />
+                    ) : (
+                        <p className="squash-muted">No completed {format ?? ""} matches to rate yet.</p>
+                    )}
+                    <PlayerInsightsCard insights={state.data.insights} />
+                </>
+            )}
+        </div>
+    )
 }
 
 function Tile({ value, label }: { value: string; label: string }) {
@@ -61,11 +133,16 @@ export default function PlayerDetail() {
 
                     <div className="stats-grid">
                         <Tile value={String(stats.matches_played)} label="Matches" />
-                        <Tile value={record(stats.matches_won, stats.matches_lost, stats.matches_drawn)} label="Won-lost" />
+                        <Tile
+                            value={record(stats.matches_won, stats.matches_lost, stats.matches_drawn)}
+                            label="Won-lost"
+                        />
                         <Tile value={winRate(stats.win_rate)} label="Win rate" />
                         <Tile value={`${stats.games_won}-${stats.games_lost}`} label="Games" />
                         <Tile value={`${stats.points_won}-${stats.points_lost}`} label="Points" />
                     </div>
+
+                    <RatingAndInsights id={player.id} />
 
                     {headToHeads.length > 0 && (
                         <div className="squash-card">
@@ -86,8 +163,12 @@ export default function PlayerDetail() {
                                         .map((h) => (
                                             <tr key={h.opponent_id}>
                                                 <th scope="row">
-                                                    <Link className="squash-link" to={`/squash/players/${h.opponent_id}`}>
-                                                        {players.find((p) => p.id === h.opponent_id)?.name ?? "Unknown player"}
+                                                    <Link
+                                                        className="squash-link"
+                                                        to={`/squash/players/${h.opponent_id}`}
+                                                    >
+                                                        {players.find((p) => p.id === h.opponent_id)?.name ??
+                                                            "Unknown player"}
                                                     </Link>
                                                 </th>
                                                 <td>{h.matches_played}</td>

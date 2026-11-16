@@ -8,10 +8,12 @@ import {
     MatchFormat,
     MATCHES_PAGE_SIZE,
     Player,
+    Rating,
     Side,
     squashApi,
     useSquashLoad
 } from "../../components/squash/api"
+import EloLadder from "../../components/squash/EloLadder"
 import SquashPage from "../../components/squash/SquashPage"
 import { formatWhen, record, sideNames } from "../../components/squash/format"
 import {
@@ -30,6 +32,8 @@ interface StatsData {
     players: Player[]
     // Completed, most recent first
     matches: Match[]
+    // Each format's own ladder
+    ratings: Record<MatchFormat, Rating[]>
 }
 
 const FORM_LENGTH = 5
@@ -99,13 +103,18 @@ export default function Stats() {
     const chosen = searchParams.get("format")
 
     const { state, refreshing, reload } = useSquashLoad<StatsData>(async () => {
-        const [players, matches] = await Promise.all([squashApi.players(true), allCompleted()])
-        return { players, matches }
+        const [players, matches, singles, doubles] = await Promise.all([
+            squashApi.players(true),
+            allCompleted(),
+            squashApi.ratings("singles"),
+            squashApi.ratings("doubles")
+        ])
+        return { players, matches, ratings: { singles, doubles } }
     }, [])
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Stats">
-            {({ players, matches: all }, me) => {
+            {({ players, matches: all, ratings }, me) => {
                 if (all.length === 0) {
                     return (
                         <>
@@ -179,6 +188,10 @@ export default function Stats() {
                             <Tile value={formatCount(sum.points)} label="Points" />
                             <Tile value={formatCount(sum.scoredLive)} label="Scored live" />
                         </div>
+
+                        {ratings[format].length > 0 && (
+                            <EloLadder ratings={ratings[format]} players={players} me={me} />
+                        )}
 
                         {months.length > 0 && (
                             <div className="squash-card">

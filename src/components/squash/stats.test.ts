@@ -18,6 +18,7 @@ function match(games: Game[], overrides: Partial<Match> = {}): Match {
         status: "completed",
         played_at: null,
         venue: null,
+        venue_id: null,
         points_to: 11,
         best_of: 5,
         notes: null,

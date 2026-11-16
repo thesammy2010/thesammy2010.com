@@ -47,7 +47,8 @@ export interface MatchInput {
     format: MatchFormat
     status: MatchStatus
     played_at: string | null
-    venue: string | null
+    // One of /squash/venues
+    venue_id: string | null
     points_to: number
     best_of: number | null
     notes: string | null
@@ -56,6 +57,8 @@ export interface MatchInput {
 
 export interface Match extends MatchInput {
     id: string
+    // The venue's name, for showing
+    venue: string | null
     games: Game[]
     side1_games: number
     side2_games: number
@@ -97,6 +100,89 @@ export interface HeadToHead {
     matches_drawn: number
     games_won: number
     games_lost: number
+}
+
+export interface VenueInput {
+    name: string
+    address: string | null
+    notes: string | null
+    is_active: boolean
+}
+
+export interface Venue extends VenueInput {
+    id: string
+}
+
+// A player's place on the Elo ladder. Everyone starts on 1000.
+export interface Rating {
+    rank: number
+    player_id: string
+    name: string
+    rating: number
+    matches_rated: number
+    // Too few matches for the rating to mean much yet
+    provisional: boolean
+    peak: number
+    last_change: number
+}
+
+// What one completed match did to a player's rating
+export interface RatingChange {
+    match_id: string
+    played_at: string | null
+    rating_before: number
+    rating_after: number
+    change: number
+}
+
+// A side's, or a player's, rallies in games scored live. Rates are null
+// with nothing to divide by.
+export interface RallyInsights {
+    side: Side | null
+    rallies_played: number
+    rallies_won: number
+    rally_win_rate: number | null
+    serves_played: number
+    serves_won: number
+    serve_win_rate: number | null
+    receives_played: number
+    receives_won: number
+    receive_win_rate: number | null
+    longest_run: number
+    biggest_lead: number
+    game_points: number
+    game_points_won: number
+    game_point_win_rate: number | null
+}
+
+export interface PlayerInsights {
+    player_id: string
+    games_scored_live: number
+    rallies: RallyInsights
+    // Games won from 3 or more down, and lost from 3 or more up
+    comebacks: number
+    biggest_comeback: number
+    leads_lost: number
+    // Every game that reached one short all, live or not
+    deuce_games_won: number
+    deuce_games_lost: number
+}
+
+export interface GameInsights {
+    number: number
+    scored_live: boolean
+    went_to_deuce: boolean
+    comeback_by_side: Side | null
+    deepest_deficit: number | null
+    // Empty for a game not scored live
+    sides: RallyInsights[]
+}
+
+export interface MatchInsights {
+    match_id: string
+    // Each side over every game scored live
+    sides: RallyInsights[]
+    games: GameInsights[]
 }
 
 // Matches the API's DEFAULT_DB_PAGE_SIZE: a shorter page is the last one.
@@ -188,6 +274,22 @@ export const squashApi = {
     playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),
     headToHead: (id: string, opponentId: string) =>
         request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head"),
+    // Highest rated first; without a format every match counts to one rating
+    ratings: (format?: MatchFormat) =>
+        request<Rating[]>("GET", "/ratings", "Failed to load the ratings", { query: { format } }),
+    // Oldest first
+    ratingHistory: (id: string, format?: MatchFormat) =>
+        request<RatingChange[]>("GET", `/players/${id}/ratings`, "Failed to load the rating history", {
+            query: { format }
+        }),
+    playerInsights: (id: string, format?: MatchFormat) =>
+        request<PlayerInsights>("GET", `/players/${id}/insights`, "Failed to load the insights", { query: { format } }),
+
+    venues: (includeInactive = false) =>
+        request<Venue[]>("GET", "/venues", "Failed to load venues", { query: { include_inactive: includeInactive } }),
+    createVenue: (body: VenueInput) => request<Venue>("POST", "/venues", "Failed to add the venue", { body }),
+    updateVenue: (id: string, body: VenueInput) =>
+        request<Venue>("PUT", `/venues/${id}`, "Failed to save the venue", { body }),
 
     matches: (filters: MatchFilters, page: number) =>
         request<Match[]>("GET", "/matches", "Failed to load matches", { query: { ...filters, page } }),
@@ -213,6 +315,8 @@ export const squashApi = {
     setGame: (id: string, number: number, body: { side1_points: number; side2_points: number }) =>
         request<Match>("PUT", `/matches/${id}/games/${number}`, "Failed to save the game", { body }),
     deleteLastGame: (id: string) => request<Match>("DELETE", `/matches/${id}/games/last`, "Failed to remove the game"),
+    matchInsights: (id: string) =>
+        request<MatchInsights>("GET", `/matches/${id}/insights`, "Failed to load the insights"),
     rallies: (id: string) => request<Rally[]>("GET", `/matches/${id}/rallies`, "Failed to load the rallies"),
     addRally: (id: string, wonBySide: Side, version: number) =>
         request<Match>("POST", `/matches/${id}/rallies`, "Failed to score the point", {
