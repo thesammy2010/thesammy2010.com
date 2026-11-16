@@ -16,6 +16,29 @@ export function sideOf(match: Pick<Match, "players">, playerId: string | undefin
     return match.players.find((p) => p.player_id === playerId)?.side ?? null
 }
 
+/**
+ * Whether the API would merge the two: the same format and points per game,
+ * neither cancelled, and the same players paired the same way, on either
+ * side. Whether the earlier one's last game is finished is left to the API.
+ */
+export function canMerge(match: Match, other: Match): boolean {
+    if (
+        match.id === other.id ||
+        match.format !== other.format ||
+        match.points_to !== other.points_to ||
+        match.status === "cancelled" ||
+        other.status === "cancelled" ||
+        match.players.length !== other.players.length
+    ) {
+        return false
+    }
+    const sides = match.players.map((p) => [p.side, sideOf(other, p.player_id)])
+    return (
+        sides.every(([mine, theirs]) => mine === theirs) ||
+        sides.every(([mine, theirs]) => theirs !== null && mine !== theirs)
+    )
+}
+
 export function isLive(match: Pick<Match, "status">): boolean {
     return match.status === "scheduled" || match.status === "in_progress"
 }
@@ -63,7 +86,8 @@ export function gameWinner(side1: number, side2: number, pointsTo: number): Side
 export function ballFor(match: Match): { side: Side; kind: "game" | "match" } | null {
     const game = currentGame(match)
     for (const side of SIDES) {
-        const [mine, theirs] = side === 1 ? [game.side1_points, game.side2_points] : [game.side2_points, game.side1_points]
+        const [mine, theirs] =
+            side === 1 ? [game.side1_points, game.side2_points] : [game.side2_points, game.side1_points]
         if (gameWinner(mine + 1, theirs, match.points_to) === 1) {
             const gamesNeeded = match.best_of === null ? null : (match.best_of + 1) / 2
             const won = side === 1 ? match.side1_games : match.side2_games

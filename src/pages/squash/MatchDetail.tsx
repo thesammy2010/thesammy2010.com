@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { Match, MatchInput, Player, Rally, squashApi, StaleMatchError, useSquashLoad } from "../../components/squash/api"
 import LiveScorer from "../../components/squash/LiveScorer"
 import MatchForm from "../../components/squash/MatchForm"
+import MergeMatches from "../../components/squash/MergeMatches"
 import SquashPage from "../../components/squash/SquashPage"
 import {
     formatLabel,
@@ -182,6 +183,7 @@ export default function MatchDetail() {
     const isAdmin = useIsAdmin()
     const ownUserId = useOwnUserId()
     const [editing, setEditing] = useState(false)
+    const [merging, setMerging] = useState(false)
     const [confirming, setConfirming] = useState<"cancel" | "delete" | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
     const [busy, setBusy] = useState(false)
@@ -367,6 +369,11 @@ export default function MatchDetail() {
                                 <button type="button" className="squash-secondary-button" onClick={() => setEditing(true)}>
                                     Edit details
                                 </button>
+                                {match.status !== "cancelled" && !merging && (
+                                    <button type="button" className="squash-secondary-button" onClick={() => setMerging(true)}>
+                                        Merge with another match
+                                    </button>
+                                )}
                                 {isLive(match) && confirming !== "cancel" && (
                                     <button type="button" className="squash-secondary-button" onClick={() => setConfirming("cancel")}>
                                         Cancel match
@@ -419,6 +426,23 @@ export default function MatchDetail() {
                                 )}
                                 {actionError && <p className="error-message squash-inline-error">{actionError}</p>}
                             </div>
+                        )}
+
+                        {merging && (
+                            <MergeMatches
+                                key={match.id}
+                                match={match}
+                                onClose={() => setMerging(false)}
+                                onMerged={(kept) => {
+                                    setMerging(false)
+                                    // This match may be the one that was deleted.
+                                    if (kept.id === match.id) {
+                                        applyMatch(kept)
+                                    } else {
+                                        navigate(`/squash/matches/${kept.id}`, { replace: true })
+                                    }
+                                }}
+                            />
                         )}
 
                         {editing && (

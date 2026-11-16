@@ -1,5 +1,15 @@
 import type { Game, Match, Player } from "./api"
-import { ballFor, currentGame, gameScores, gameWinner, nextEnteredGame, record, sideNames, winRate } from "./format"
+import {
+    ballFor,
+    canMerge,
+    currentGame,
+    gameScores,
+    gameWinner,
+    nextEnteredGame,
+    record,
+    sideNames,
+    winRate
+} from "./format"
 
 function game(number: number, side1: number, side2: number, rallies = side1 + side2): Game {
     return { number, side1_points: side1, side2_points: side2, winning_side: gameWinner(side1, side2, 11), rallies }
@@ -125,5 +135,77 @@ describe("labels", () => {
         expect(record(4, 2, 1)).toBe("4-2-1")
         expect(winRate(0.666)).toBe("67%")
         expect(winRate(null)).toBe("—")
+    })
+})
+
+describe("canMerge", () => {
+    const other = (overrides: Partial<Match> = {}) => match([game(1, 11, 4)], { id: "n", ...overrides })
+
+    it("takes the same players on the same or swapped sides", () => {
+        expect(canMerge(match([]), other())).toBe(true)
+        expect(
+            canMerge(
+                match([]),
+                other({
+                    players: [
+                        { player_id: "b", side: 1 },
+                        { player_id: "a", side: 2 }
+                    ]
+                })
+            )
+        ).toBe(true)
+    })
+
+    it("refuses itself, other players, other formats, points and cancelled matches", () => {
+        expect(canMerge(match([]), match([]))).toBe(false)
+        expect(
+            canMerge(
+                match([]),
+                other({
+                    players: [
+                        { player_id: "a", side: 1 },
+                        { player_id: "c", side: 2 }
+                    ]
+                })
+            )
+        ).toBe(false)
+        expect(canMerge(match([]), other({ points_to: 15 }))).toBe(false)
+        expect(canMerge(match([]), other({ status: "cancelled" }))).toBe(false)
+    })
+
+    it("refuses doubles pairs split up differently", () => {
+        const doubles = (pairs: string[][]) => ({
+            format: "doubles" as const,
+            players: pairs.flatMap((ids, i) => ids.map((player_id) => ({ player_id, side: (i + 1) as 1 | 2 })))
+        })
+        const base = match(
+            [],
+            doubles([
+                ["a", "b"],
+                ["c", "d"]
+            ])
+        )
+        expect(
+            canMerge(
+                base,
+                other(
+                    doubles([
+                        ["c", "d"],
+                        ["a", "b"]
+                    ])
+                )
+            )
+        ).toBe(true)
+        expect(
+            canMerge(
+                base,
+                other(
+                    doubles([
+                        ["a", "c"],
+                        ["b", "d"]
+                    ])
+                )
+            )
+        ).toBe(false)
     })
 })
