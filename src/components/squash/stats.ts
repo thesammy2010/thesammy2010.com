@@ -2,7 +2,7 @@
 // matches. The API's own stats are per player; everything here spans the
 // group, so it's computed from the matches themselves. Like the API, a
 // completed match with no winning side counts as a draw.
-import type { Game, Match, Side } from "./api"
+import type { Game, Match, MatchFormat, Side } from "./api"
 import { sideOf } from "./format"
 
 export type Result = "W" | "L" | "D"
@@ -152,6 +152,49 @@ export function rivalries(matches: Match[]): Rivalry[] {
             byPair.set(key, rivalry)
         })
     return Array.from(byPair.values()).sort((a, b) => b.played - a.played)
+}
+
+export interface Partnership {
+    // Sorted ids, so a pair is the same whichever was listed first
+    playerIds: [string, string]
+    played: number
+    won: number
+    lost: number
+    drawn: number
+}
+
+/** Doubles pairs on the same side, the most played together first. */
+export function partnerships(matches: Match[]): Partnership[] {
+    const byPair = new Map<string, Partnership>()
+    matches
+        .filter((m) => m.format === "doubles")
+        .forEach((match) =>
+            ([1, 2] as Side[]).forEach((side) => {
+                const ids = match.players.filter((p) => p.side === side).map((p) => p.player_id)
+                if (ids.length !== 2) {
+                    return
+                }
+                const playerIds = ids.sort() as [string, string]
+                const key = playerIds.join(":")
+                const pair = byPair.get(key) ?? { playerIds, played: 0, won: 0, lost: 0, drawn: 0 }
+                pair.played += 1
+                if (match.winning_side === null) {
+                    pair.drawn += 1
+                } else if (match.winning_side === side) {
+                    pair.won += 1
+                } else {
+                    pair.lost += 1
+                }
+                byPair.set(key, pair)
+            })
+        )
+    return Array.from(byPair.values()).sort((a, b) => b.played - a.played)
+}
+
+// The format to open the page on: whichever has more matches, singles on a tie.
+export function busierFormat(matches: Match[]): MatchFormat {
+    const doubles = matches.filter((m) => m.format === "doubles").length
+    return doubles > matches.length - doubles ? "doubles" : "singles"
 }
 
 export interface MonthCount {
