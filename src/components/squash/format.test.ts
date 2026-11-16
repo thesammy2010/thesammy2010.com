@@ -8,6 +8,7 @@ import {
     nextEnteredGame,
     record,
     sideNames,
+    signed,
     winRate
 } from "./format"
 
@@ -23,6 +24,7 @@ function match(games: Game[], overrides: Partial<Match> = {}): Match {
         status: "in_progress",
         played_at: null,
         venue: null,
+        venue_id: null,
         points_to: 11,
         best_of: 5,
         notes: null,
@@ -207,5 +209,13 @@ describe("canMerge", () => {
                 )
             )
         ).toBe(false)
+    })
+})
+
+describe("signed", () => {
+    it("marks a rise and a fall, and leaves no change bare", () => {
+        expect(signed(12)).toBe("+12")
+        expect(signed(-8)).toBe("\u22128")
+        expect(signed(0)).toBe("0")
     })
 })

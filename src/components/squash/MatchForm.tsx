@@ -1,6 +1,6 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 
-import { Match, MatchFormat, MatchInput, Player, Side, squashApi } from "./api"
+import { Match, MatchFormat, MatchInput, Player, Side, squashApi, Venue } from "./api"
 import { fromLocalInput, toLocalInput } from "./format"
 import "../go_heavier/LocationForm.css"
 import "./Squash.css"
@@ -40,10 +40,25 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
     const [bestOf, setBestOf] = useState(match ? (match.best_of === null ? "" : String(match.best_of)) : "5")
     const [pointsTo, setPointsTo] = useState(String(match?.points_to ?? 11))
     const [playedAt, setPlayedAt] = useState(toLocalInput(match ? match.played_at : new Date()))
-    const [venue, setVenue] = useState(match?.venue ?? "")
+    const [venueId, setVenueId] = useState(match?.venue_id ?? "")
+    const [venues, setVenues] = useState<Venue[] | null>(null)
     const [notes, setNotes] = useState(match?.notes ?? "")
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    // Every venue, so a match at one the group has stopped using keeps it;
+    // only the active ones are offered otherwise.
+    useEffect(() => {
+        let cancelled = false
+        squashApi.venues(true).then(
+            (all) => !cancelled && setVenues(all),
+            () => !cancelled && setVenues([])
+        )
+        return () => {
+            cancelled = true
+        }
+    }, [])
+    const venueOptions = (venues ?? []).filter((v) => v.is_active || v.id === match?.venue_id)
 
     // Someone already in a match can't be picked twice, so each slot only
     // offers the players not chosen in another one.
@@ -69,7 +84,7 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
             format,
             status: match?.status ?? "scheduled",
             played_at: fromLocalInput(playedAt),
-            venue: venue.trim() || null,
+            venue_id: venueId || null,
             points_to: Number(pointsTo),
             best_of: bestOf === "" ? null : Number(bestOf),
             notes: notes.trim() || null,
@@ -172,13 +187,19 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                         </label>
                         <label>
                             <span>Where</span>
-                            <input
-                                type="text"
-                                value={venue}
-                                onChange={(e) => setVenue(e.target.value)}
-                                maxLength={255}
-                                placeholder="e.g. the club"
-                            />
+                            <select
+                                value={venueId}
+                                onChange={(e) => setVenueId(e.target.value)}
+                                disabled={venues === null}
+                            >
+                                <option value="">{venues === null ? "Loading venues..." : "Not set"}</option>
+                                {venueOptions.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                        {v.name}
+                                        {v.is_active ? "" : " (no longer used)"}
+                                    </option>
+                                ))}
+                            </select>
                         </label>
                     </div>
 

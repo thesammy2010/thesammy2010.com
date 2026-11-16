@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 
 import { Player, PlayerInput, PlayerStats, squashApi, useSquashLoad } from "../../components/squash/api"
 import SquashPage from "../../components/squash/SquashPage"
+import Venues from "../../components/squash/Venues"
 import { record, winRate } from "../../components/squash/format"
 import { useCanAccess } from "../../roles"
 
@@ -207,6 +208,8 @@ export default function Players() {
                             <PlayerEditor onSaved={reload} />
                         </div>
                     )}
+
+                    {canManage && <Venues />}
                 </>
             )}
         </SquashPage>
