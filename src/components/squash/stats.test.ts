@@ -1,6 +1,6 @@
 import type { Game, Match } from "./api"
 import { gameWinner } from "./format"
-import { formFor, matchesPerMonth, pointMargin, records, rivalries, totals } from "./stats"
+import { busierFormat, formFor, matchesPerMonth, partnerships, pointMargin, records, rivalries, totals } from "./stats"
 
 function game(number: number, side1: number, side2: number, rallies = 0): Game {
     return { number, side1_points: side1, side2_points: side2, winning_side: gameWinner(side1, side2, 11), rallies }
@@ -140,5 +140,44 @@ describe("matchesPerMonth", () => {
 
     it("is empty with no dated matches", () => {
         expect(matchesPerMonth([match([])])).toEqual([])
+    })
+})
+
+describe("partnerships", () => {
+    it("counts pairs on the same side of a doubles match, most played first", () => {
+        const doubles = (side1: string[], side2: string[], games: Game[]) =>
+            match(games, {
+                format: "doubles",
+                players: [
+                    ...side1.map((player_id) => ({ player_id, side: 1 as const })),
+                    ...side2.map((player_id) => ({ player_id, side: 2 as const }))
+                ]
+            })
+        const result = partnerships([
+            doubles(["a", "b"], ["c", "d"], [game(1, 11, 5)]),
+            doubles(["d", "c"], ["b", "a"], [game(1, 11, 5)]),
+            doubles(["a", "c"], ["b", "d"], [game(1, 11, 5), game(2, 5, 11)]),
+            aWins()
+        ])
+        expect(result.slice(0, 2)).toEqual([
+            { playerIds: ["a", "b"], played: 2, won: 1, lost: 1, drawn: 0 },
+            { playerIds: ["c", "d"], played: 2, won: 1, lost: 1, drawn: 0 }
+        ])
+        expect(result.find((p) => p.playerIds.join() === "a,c")).toEqual({
+            playerIds: ["a", "c"],
+            played: 1,
+            won: 0,
+            lost: 0,
+            drawn: 1
+        })
+    })
+})
+
+describe("busierFormat", () => {
+    it("picks the format with more matches, singles on a tie", () => {
+        const doubles = () => match([], { format: "doubles" })
+        expect(busierFormat([aWins(), doubles(), doubles()])).toBe("doubles")
+        expect(busierFormat([aWins(), doubles()])).toBe("singles")
+        expect(busierFormat([])).toBe("singles")
     })
 })

@@ -1,14 +1,24 @@
 import React from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 
 import BarChart from "../../components/go_heavier/BarChart"
 import { formatCount } from "../../components/go_heavier/format"
-import { Match, MATCHES_PAGE_SIZE, Player, Side, squashApi, useSquashLoad } from "../../components/squash/api"
-import SquashPage from "../../components/squash/SquashPage"
-import { formatWhen, sideNames } from "../../components/squash/format"
 import {
+    Match,
+    MatchFormat,
+    MATCHES_PAGE_SIZE,
+    Player,
+    Side,
+    squashApi,
+    useSquashLoad
+} from "../../components/squash/api"
+import SquashPage from "../../components/squash/SquashPage"
+import { formatWhen, record, sideNames } from "../../components/squash/format"
+import {
+    busierFormat,
     formFor,
     matchesPerMonth,
+    partnerships,
     pointMargin,
     records,
     Result,
@@ -23,7 +33,8 @@ interface StatsData {
 }
 
 const FORM_LENGTH = 5
-const RIVALRIES_SHOWN = 5
+const PAIRS_SHOWN = 5
+const FORMATS: MatchFormat[] = ["singles", "doubles"]
 
 // Every completed match: the figures span the group's whole history.
 async function allCompleted(): Promise<Match[]> {
@@ -84,6 +95,9 @@ function RecordRow({
 }
 
 export default function Stats() {
+    const [searchParams, setSearchParams] = useSearchParams()
+    const chosen = searchParams.get("format")
+
     const { state, refreshing, reload } = useSquashLoad<StatsData>(async () => {
         const [players, matches] = await Promise.all([squashApi.players(true), allCompleted()])
         return { players, matches }
@@ -91,8 +105,8 @@ export default function Stats() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Stats">
-            {({ players, matches }, me) => {
-                if (matches.length === 0) {
+            {({ players, matches: all }, me) => {
+                if (all.length === 0) {
                     return (
                         <>
                             <h2 className="squash-title">Stats</h2>
@@ -101,6 +115,40 @@ export default function Stats() {
                                 <Link className="squash-link" to="/squash">
                                     Go to matches
                                 </Link>
+                            </div>
+                        </>
+                    )
+                }
+
+                // Singles and doubles are kept apart: a doubles result says less
+                // about a player than a singles one, so mixing them muddies form.
+                const format: MatchFormat = chosen === "singles" || chosen === "doubles" ? chosen : busierFormat(all)
+                const matches = all.filter((m) => m.format === format)
+                const header = (
+                    <div className="squash-header">
+                        <h2 className="squash-title">Stats</h2>
+                        <div className="squash-segmented" role="radiogroup" aria-label="Format">
+                            {FORMATS.map((f) => (
+                                <button
+                                    key={f}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={f === format}
+                                    className={f === format ? "active" : ""}
+                                    onClick={() => setSearchParams({ format: f }, { replace: true })}
+                                >
+                                    {f === "singles" ? "Singles" : "Doubles"}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )
+                if (matches.length === 0) {
+                    return (
+                        <>
+                            {header}
+                            <div className="squash-card squash-empty">
+                                <p>No completed {format} matches yet.</p>
                             </div>
                         </>
                     )
@@ -118,11 +166,12 @@ export default function Stats() {
                         (a, b) =>
                             b.form.results.length - a.form.results.length || a.player.name.localeCompare(b.player.name)
                     )
-                const topRivalries = rivalries(matches).slice(0, RIVALRIES_SHOWN)
+                const topRivalries = rivalries(matches).slice(0, PAIRS_SHOWN)
+                const topPartnerships = partnerships(matches).slice(0, PAIRS_SHOWN)
 
                 return (
                     <>
-                        <h2 className="squash-title">Stats</h2>
+                        {header}
 
                         <div className="stats-grid">
                             <Tile value={formatCount(sum.matches)} label="Matches" />
@@ -135,7 +184,7 @@ export default function Stats() {
                             <div className="squash-card">
                                 <BarChart
                                     title="Matches per month"
-                                    subtitle="Completed matches with a date"
+                                    subtitle={`Completed ${format} matches with a date`}
                                     data={months}
                                     formatValue={formatCount}
                                     // Thinned out like Go Heavier's, so month labels don't collide.
@@ -254,7 +303,7 @@ export default function Stats() {
                         {topRivalries.length > 0 && (
                             <div className="squash-card">
                                 <h4 className="squash-card-title">Rivalries</h4>
-                                <p className="squash-muted">The singles pairings played most.</p>
+                                <p className="squash-muted">The pairings played most.</p>
                                 <table className="squash-table">
                                     <thead>
                                         <tr>
@@ -281,6 +330,45 @@ export default function Stats() {
                                                     {drawn > 0 && (
                                                         <span className="squash-muted"> ({drawn} drawn)</span>
                                                     )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {topPartnerships.length > 0 && (
+                            <div className="squash-card">
+                                <h4 className="squash-card-title">Partnerships</h4>
+                                <p className="squash-muted">The pairs who've played together most.</p>
+                                <table className="squash-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Pair</th>
+                                            <th>Played</th>
+                                            <th>Record</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {topPartnerships.map(({ playerIds: [a, b], played, won, lost, drawn }) => (
+                                            <tr key={`${a}:${b}`}>
+                                                <th scope="row">
+                                                    <Link className="squash-link" to={`/squash/players/${a}`}>
+                                                        {name(a)}
+                                                    </Link>{" "}
+                                                    &amp;{" "}
+                                                    <Link className="squash-link" to={`/squash/players/${b}`}>
+                                                        {name(b)}
+                                                    </Link>
+                                                </th>
+                                                <td>{played}</td>
+                                                <td
+                                                    className={
+                                                        won > lost ? "squash-ahead" : won < lost ? "squash-behind" : ""
+                                                    }
+                                                >
+                                                    {record(won, lost, drawn)}
                                                 </td>
                                             </tr>
                                         ))}
