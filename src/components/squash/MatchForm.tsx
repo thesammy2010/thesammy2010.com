@@ -10,6 +10,8 @@ interface Props {
     me: Player | null
     // Set to edit a match; left out to arrange a new one.
     match?: Match
+    // A new match's format before it's chosen, such as the list's filter
+    defaultFormat?: MatchFormat
     onClose: () => void
     onSaved: (match: Match) => void
 }
@@ -32,9 +34,9 @@ function slotsFor(format: MatchFormat, match: Match | undefined, me: Player | nu
     return [fill(1, me ? [me.id] : []), fill(2, [])]
 }
 
-export default function MatchForm({ players, me, match, onClose, onSaved }: Props) {
-    const [format, setFormat] = useState<MatchFormat>(match?.format ?? "singles")
-    const [slots, setSlots] = useState<Slots>(slotsFor(match?.format ?? "singles", match, me))
+export default function MatchForm({ players, me, match, defaultFormat, onClose, onSaved }: Props) {
+    const [format, setFormat] = useState<MatchFormat>(match?.format ?? defaultFormat ?? "singles")
+    const [slots, setSlots] = useState<Slots>(slotsFor(match?.format ?? defaultFormat ?? "singles", match, me))
     const [bestOf, setBestOf] = useState(match ? (match.best_of === null ? "" : String(match.best_of)) : "5")
     const [pointsTo, setPointsTo] = useState(String(match?.points_to ?? 11))
     const [playedAt, setPlayedAt] = useState(toLocalInput(match ? match.played_at : new Date()))
@@ -50,9 +52,7 @@ export default function MatchForm({ players, me, match, onClose, onSaved }: Prop
     const changeFormat = (next: MatchFormat) => {
         setFormat(next)
         const size = next === "singles" ? 1 : 2
-        setSlots(
-            slots.map((side) => Array.from({ length: size }, (_, i) => side[i] ?? "")) as Slots
-        )
+        setSlots(slots.map((side) => Array.from({ length: size }, (_, i) => side[i] ?? "")) as Slots)
     }
 
     const setSlot = (side: number, index: number, playerId: string) => {
@@ -164,7 +164,11 @@ export default function MatchForm({ players, me, match, onClose, onSaved }: Prop
                     <div className="squash-form-row">
                         <label>
                             <span>When</span>
-                            <input type="datetime-local" value={playedAt} onChange={(e) => setPlayedAt(e.target.value)} />
+                            <input
+                                type="datetime-local"
+                                value={playedAt}
+                                onChange={(e) => setPlayedAt(e.target.value)}
+                            />
                         </label>
                         <label>
                             <span>Where</span>
