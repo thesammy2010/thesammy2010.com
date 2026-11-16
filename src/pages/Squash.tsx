@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import {
     Match,
     MatchFilters,
+    MatchFormat,
     MATCHES_PAGE_SIZE,
     MatchStatus,
     Player,
@@ -24,6 +25,11 @@ interface MatchesData {
 }
 
 const STATUSES: MatchStatus[] = ["in_progress", "scheduled", "completed", "cancelled"]
+const FORMATS: { value: MatchFormat | ""; label: string }[] = [
+    { value: "", label: "All" },
+    { value: "singles", label: "Singles" },
+    { value: "doubles", label: "Doubles" }
+]
 
 // Live matches first, so a match in progress is the first thing on the page
 // for anyone opening it to follow along; the rest stay most recent first.
@@ -36,14 +42,17 @@ export default function Squash() {
     const [searchParams, setSearchParams] = useSearchParams()
     const mine = searchParams.get("mine") === "1"
     const status = (searchParams.get("status") as MatchStatus | null) ?? undefined
+    const formatParam = searchParams.get("format")
+    const format: MatchFormat | undefined =
+        formatParam === "singles" || formatParam === "doubles" ? formatParam : undefined
     const access = useSquashAccess()
     const me = access.status === "member" ? access.me : null
-    const filters = (): MatchFilters => ({ status, player_id: mine && me ? me.id : undefined })
+    const filters = (): MatchFilters => ({ status, format, player_id: mine && me ? me.id : undefined })
 
     const { state, refreshing, reload } = useSquashLoad<MatchesData>(async () => {
         const [players, firstPage] = await Promise.all([squashApi.players(true), squashApi.matches(filters(), 1)])
         return { players, firstPage }
-    }, [mine, status])
+    }, [mine, status, format])
 
     const [more, setMore] = useState<Match[]>([])
     const [nextPage, setNextPage] = useState(2)
@@ -128,6 +137,20 @@ export default function Squash() {
                                     </button>
                                 </div>
                             )}
+                            <div className="squash-segmented" role="radiogroup" aria-label="Format">
+                                {FORMATS.map(({ value, label }) => (
+                                    <button
+                                        key={label}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={(format ?? "") === value}
+                                        className={(format ?? "") === value ? "active" : ""}
+                                        onClick={() => setParam("format", value)}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
                             <select
                                 className="squash-input"
                                 value={status ?? ""}
@@ -145,7 +168,7 @@ export default function Squash() {
 
                         {matches.length === 0 ? (
                             <div className="squash-card squash-empty">
-                                <p>No matches yet.</p>
+                                <p>{format ? `No ${format} matches yet.` : "No matches yet."}</p>
                                 <button className="squash-primary-button" onClick={() => setShowForm(true)}>
                                     Arrange the first one
                                 </button>
@@ -160,7 +183,11 @@ export default function Squash() {
 
                         {moreError && <p className="error-message">{moreError}</p>}
                         {!done && matches.length > 0 && (
-                            <button className="squash-secondary-button squash-load-more" onClick={loadMore} disabled={loadingMore}>
+                            <button
+                                className="squash-secondary-button squash-load-more"
+                                onClick={loadMore}
+                                disabled={loadingMore}
+                            >
                                 {loadingMore ? "Loading..." : "Load more"}
                             </button>
                         )}
@@ -169,6 +196,7 @@ export default function Squash() {
                             <MatchForm
                                 players={activePlayers}
                                 me={me}
+                                defaultFormat={format}
                                 onClose={() => setShowForm(false)}
                                 onSaved={(match) => {
                                     setShowForm(false)

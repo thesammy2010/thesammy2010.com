@@ -5,6 +5,7 @@ import { Match, MatchInput, Player, Rally, squashApi, StaleMatchError, useSquash
 import LiveScorer from "../../components/squash/LiveScorer"
 import MatchForm from "../../components/squash/MatchForm"
 import MergeMatches from "../../components/squash/MergeMatches"
+import MomentumChart from "../../components/squash/MomentumChart"
 import SquashPage from "../../components/squash/SquashPage"
 import {
     formatLabel,
@@ -78,7 +79,7 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
 
 // Each rally as a dot in the colour of the side that won it, a game per row,
 // so runs of points and comebacks show at a glance.
-function PointByPoint({ match, rallies }: { match: Match; rallies: Rally[] }) {
+function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rally[]; players: Player[] }) {
     if (rallies.length === 0) {
         return null
     }
@@ -87,6 +88,7 @@ function PointByPoint({ match, rallies }: { match: Match; rallies: Rally[] }) {
 
     return (
         <div className="squash-card">
+            <MomentumChart match={match} rallies={rallies} players={players} />
             <h4 className="squash-card-title">Point by point</h4>
             {Array.from(byGame.entries()).map(([gameNumber, gameRallies]) => {
                 const game = match.games.find((g) => g.number === gameNumber)
@@ -362,7 +364,7 @@ export default function MatchDetail() {
                             </details>
                         )}
 
-                        <PointByPoint match={match} rallies={rallies} />
+                        <PointByPoint match={match} rallies={rallies} players={players} />
 
                         {canChange && (
                             <div className="squash-card squash-manage">
