@@ -1,13 +1,27 @@
 import type { Rally } from "./api"
 import { momentum, nearestPoint } from "./momentum"
 
+// "1" and "2" are points to that side, "L" a let and "S" a stroke to side 1
 function rallies(game: number, winners: string): Rally[] {
     let side1 = 0
     let side2 = 0
     return winners.split("").map((w, i) => {
-        const won_by_side = w === "1" ? 1 : 2
-        won_by_side === 1 ? side1++ : side2++
-        return { game, number: i + 1, won_by_side, server_id: null, side1_points: side1, side2_points: side2 }
+        const won_by_side = w === "L" ? null : w === "2" ? 2 : 1
+        if (won_by_side === 1) {
+            side1++
+        } else if (won_by_side === 2) {
+            side2++
+        }
+        return {
+            game,
+            number: i + 1,
+            won_by_side,
+            decision: w === "L" ? "let" : w === "S" ? "stroke" : null,
+            appealed_by_side: w === "L" || w === "S" ? 1 : null,
+            server_id: null,
+            side1_points: side1,
+            side2_points: side2
+        }
     })
 }
 
@@ -23,7 +37,11 @@ describe("momentum", () => {
             [5, 6, 7]
         ])
         expect(data.width).toBe(7)
-        expect(data.games[0].points[4]).toMatchObject({ side1: 3, side2: 1, rally: { number: 4, wonBy: 1 } })
+        expect(data.games[0].points[4]).toMatchObject({
+            side1: 3,
+            side2: 1,
+            rally: { number: 4, wonBy: 1, decision: null }
+        })
     })
 
     it("scales to the biggest lead, but never under 3", () => {
@@ -34,6 +52,17 @@ describe("momentum", () => {
     it("puts rallies in order whatever order they arrive in", () => {
         const data = momentum(rallies(1, "12").reverse())
         expect(data.games[0].points.map((p) => p.lead)).toEqual([0, 1, 0])
+    })
+
+    it("leaves out lets, which move no score, and keeps the call on a stroke", () => {
+        const data = momentum(rallies(1, "1LS2"))
+        expect(data.games[0].points.map((p) => [p.x, p.lead])).toEqual([
+            [0, 0],
+            [1, 1],
+            [2, 2],
+            [3, 1]
+        ])
+        expect(data.games[0].points[2].rally).toEqual({ number: 3, wonBy: 1, decision: "stroke" })
     })
 
     it("is empty without rallies", () => {

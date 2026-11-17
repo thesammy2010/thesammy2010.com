@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 
 import { Match, MatchFormat, MatchInput, Player, Side, squashApi, Venue } from "./api"
 import { fromLocalInput, toLocalInput } from "./format"
+import { useCanAccess } from "../../roles"
 import "../go_heavier/LocationForm.css"
 import "./Squash.css"
 
@@ -15,6 +16,9 @@ interface Props {
     onClose: () => void
     onSaved: (match: Match) => void
 }
+
+// The venue picker's choice that adds a venue rather than picking one
+const NEW_VENUE = "new"
 
 const BEST_OF_OPTIONS: { value: string; label: string }[] = [
     { value: "3", label: "Best of 3" },
@@ -42,6 +46,8 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
     const [playedAt, setPlayedAt] = useState(toLocalInput(match ? match.played_at : new Date()))
     const [venueId, setVenueId] = useState(match?.venue_id ?? "")
     const [venues, setVenues] = useState<Venue[] | null>(null)
+    const [newVenue, setNewVenue] = useState("")
+    const canAddVenue = useCanAccess("POST", "/squash/venues")
     const [notes, setNotes] = useState(match?.notes ?? "")
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -80,19 +86,33 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
         e.preventDefault()
         setSaving(true)
         setError(null)
-        const body: MatchInput = {
-            format,
-            status: match?.status ?? "scheduled",
-            played_at: fromLocalInput(playedAt),
-            venue_id: venueId || null,
-            points_to: Number(pointsTo),
-            best_of: bestOf === "" ? null : Number(bestOf),
-            notes: notes.trim() || null,
-            players: slots.flatMap((side, i) =>
-                side.map((playerId) => ({ player_id: playerId, side: (i + 1) as Side }))
-            )
-        }
         try {
+            // A venue typed in is added first, so the match can be saved there
+            const venue =
+                venueId === NEW_VENUE
+                    ? await squashApi.createVenue({
+                          name: newVenue.trim(),
+                          address: null,
+                          notes: null,
+                          is_active: true
+                      })
+                    : null
+            if (venue) {
+                setVenues([...(venues ?? []), venue])
+                setVenueId(venue.id)
+            }
+            const body: MatchInput = {
+                format,
+                status: match?.status ?? "scheduled",
+                played_at: fromLocalInput(playedAt),
+                venue_id: venue ? venue.id : venueId || null,
+                points_to: Number(pointsTo),
+                best_of: bestOf === "" ? null : Number(bestOf),
+                notes: notes.trim() || null,
+                players: slots.flatMap((side, i) =>
+                    side.map((playerId) => ({ player_id: playerId, side: (i + 1) as Side }))
+                )
+            }
             onSaved(match ? await squashApi.updateMatch(match.id, body) : await squashApi.createMatch(body))
         } catch (err) {
             setError((err as Error).message)
@@ -192,16 +212,40 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                                 onChange={(e) => setVenueId(e.target.value)}
                                 disabled={venues === null}
                             >
-                                <option value="">{venues === null ? "Loading venues..." : "Not set"}</option>
+                                <option value="">
+                                    {venues === null
+                                        ? "Loading venues..."
+                                        : venueOptions.length === 0 && !canAddVenue
+                                        ? "No venues yet"
+                                        : "Not set"}
+                                </option>
                                 {venueOptions.map((v) => (
                                     <option key={v.id} value={v.id}>
                                         {v.name}
                                         {v.is_active ? "" : " (no longer used)"}
                                     </option>
                                 ))}
+                                {canAddVenue && <option value={NEW_VENUE}>+ New venue...</option>}
                             </select>
                         </label>
                     </div>
+                    {venueId === NEW_VENUE && (
+                        <label>
+                            <span>New venue</span>
+                            <input
+                                type="text"
+                                value={newVenue}
+                                onChange={(e) => setNewVenue(e.target.value)}
+                                maxLength={255}
+                                placeholder="Such as the club's name"
+                                required
+                                autoFocus
+                            />
+                        </label>
+                    )}
+                    {venues !== null && venueOptions.length === 0 && !canAddVenue && (
+                        <p className="squash-muted">An admin adds venues on the Players page.</p>
+                    )}
 
                     <label>
                         <span>Notes</span>

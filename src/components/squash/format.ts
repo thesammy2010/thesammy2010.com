@@ -1,6 +1,6 @@
 // Display helpers for the squash pages.
 import { EM_DASH } from "../go_heavier/format"
-import type { Game, Match, MatchStatus, Player, Side } from "./api"
+import type { Game, Match, MatchStatus, Player, RallyDecision, Side } from "./api"
 
 export const SIDES: Side[] = [1, 2]
 
@@ -116,6 +116,12 @@ export const STATUS_LABELS: Record<MatchStatus, string> = {
 }
 
 // "Sun 15 Nov, 18:30" (with the year when it isn't this one)
+export const CALLS: Record<RallyDecision, string> = {
+    let: "Let",
+    stroke: "Stroke",
+    no_let: "No let"
+}
+
 export function formatWhen(value: string | null): string {
     if (!value) {
         return "No date set"

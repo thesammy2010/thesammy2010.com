@@ -1,7 +1,7 @@
 // The momentum ("worm") chart's data: side 1's lead after every rally, game
 // by game, each game starting level. Games sit one after another along x
 // with a step's gap between them.
-import type { Rally, Side } from "./api"
+import type { Rally, RallyDecision, Side } from "./api"
 
 export interface MomentumPoint {
     x: number
@@ -10,7 +10,7 @@ export interface MomentumPoint {
     side1: number
     side2: number
     // The rally that made the score, or null for a game's 0-0 start
-    rally: { number: number; wonBy: Side } | null
+    rally: { number: number; wonBy: Side; decision: RallyDecision | null } | null
 }
 
 export interface MomentumGame {
@@ -28,7 +28,10 @@ export interface Momentum {
 
 const MIN_SCALE = 3
 
-/** Counted from who won each rally, so it holds however the scores are stored. */
+/**
+ * Counted from who won each rally, so it holds however the scores are
+ * stored. Lets move no score, so they're left out.
+ */
 export function momentum(rallies: Rally[]): Momentum {
     const byGame = new Map<number, Rally[]>()
     rallies.forEach((rally) => byGame.set(rally.game, [...(byGame.get(rally.game) ?? []), rally]))
@@ -44,7 +47,11 @@ export function momentum(rallies: Rally[]): Momentum {
             ;[...gameRallies]
                 .sort((a, b) => a.number - b.number)
                 .forEach((rally) => {
-                    if (rally.won_by_side === 1) {
+                    const wonBy = rally.won_by_side
+                    if (wonBy === null) {
+                        return
+                    }
+                    if (wonBy === 1) {
                         side1 += 1
                     } else {
                         side2 += 1
@@ -56,7 +63,7 @@ export function momentum(rallies: Rally[]): Momentum {
                         lead: side1 - side2,
                         side1,
                         side2,
-                        rally: { number: rally.number, wonBy: rally.won_by_side }
+                        rally: { number: rally.number, wonBy, decision: rally.decision }
                     })
                 })
             // A step's gap before the next game
