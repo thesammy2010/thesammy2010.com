@@ -69,14 +69,28 @@ export interface Match extends MatchInput {
     created_at: string
 }
 
+// The referee's call on an appeal. A let is replayed with no point and the
+// same server; a stroke is the point to whoever appealed, and a no let the
+// point to their opponent.
+export type RallyDecision = "let" | "stroke" | "no_let"
+
 export interface Rally {
     game: number
     number: number
-    won_by_side: Side
+    // Null for a let, which no one wins
+    won_by_side: Side | null
+    decision: RallyDecision | null
+    appealed_by_side: Side | null
     server_id: string | null
     side1_points: number
     side2_points: number
 }
+
+// A rally played out, or an appeal and its call. A let has no winner and
+// says who appealed; a stroke or no let has a winner, which says who did.
+export type RallyInput =
+    | { won_by_side: Side; decision?: "stroke" | "no_let" }
+    | { decision: "let"; appealed_by_side: Side }
 
 export interface PlayerStats {
     player_id: string
@@ -153,6 +167,11 @@ export interface RallyInsights {
     game_points: number
     game_points_won: number
     game_point_win_rate: number | null
+    // Their appeals by the call they got. Lets only count where who
+    // appealed was recorded.
+    lets: number
+    strokes: number
+    no_lets: number
 }
 
 export interface PlayerInsights {
@@ -172,6 +191,8 @@ export interface GameInsights {
     number: number
     scored_live: boolean
     went_to_deuce: boolean
+    // Every let played, whoever appealed
+    lets: number
     comeback_by_side: Side | null
     deepest_deficit: number | null
     // Empty for a game not scored live
@@ -318,9 +339,9 @@ export const squashApi = {
     matchInsights: (id: string) =>
         request<MatchInsights>("GET", `/matches/${id}/insights`, "Failed to load the insights"),
     rallies: (id: string) => request<Rally[]>("GET", `/matches/${id}/rallies`, "Failed to load the rallies"),
-    addRally: (id: string, wonBySide: Side, version: number) =>
+    addRally: (id: string, rally: RallyInput, version: number) =>
         request<Match>("POST", `/matches/${id}/rallies`, "Failed to score the point", {
-            body: { won_by_side: wonBySide, version }
+            body: { ...rally, version }
         }),
     undoRally: (id: string, version: number) =>
         request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })

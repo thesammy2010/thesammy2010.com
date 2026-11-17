@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { Match, Player, Side, squashApi, StaleMatchError } from "./api"
+import { Match, Player, RallyInput, Side, squashApi, StaleMatchError } from "./api"
 import { ballFor, currentGame, SIDES, sideNames } from "./format"
 
 interface Props {
@@ -12,7 +12,9 @@ interface Props {
 // Scores a match a rally at a time: tap the side that won the point. Every
 // change is sent against the version on screen, so if another phone scored
 // the same rally first the API refuses it and hands back the match as it now
-// stands, which is shown instead of adding the point twice.
+// stands, which is shown instead of adding the point twice. Under each side
+// are the calls on that side's appeals: a let, replayed with no point, a
+// stroke to them, or a no let, the point to their opponent.
 export default function LiveScorer({ match, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
     const [notice, setNotice] = useState<string | null>(null)
@@ -43,14 +45,16 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
         }
     }
 
-    const point = (side: Side) =>
+    const score = (rally: RallyInput) =>
         run(
-            () => squashApi.addRally(match.id, side, match.version),
+            () => squashApi.addRally(match.id, rally, match.version),
             "Someone else scored that rally first, so it's shown as they scored it. Tap again if it was another point."
         )
 
     const undo = () =>
         run(() => squashApi.undoRally(match.id, match.version), "The score changed before the undo went through. Check it and try again.")
+
+    const other = (side: Side): Side => (side === 1 ? 2 : 1)
 
     const end = () => {
         setConfirmingEnd(false)
@@ -78,7 +82,7 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
                             key={side}
                             type="button"
                             className={`squash-point-button squash-side-${side}`}
-                            onClick={() => point(side)}
+                            onClick={() => score({ won_by_side: side })}
                             disabled={busy}
                             aria-label={`Point to ${sideNames(match, side, players)}, now ${points}`}
                         >
@@ -93,6 +97,46 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
                 })}
             </div>
 
+            <div className="squash-scorer-appeals">
+                {SIDES.map((side) => {
+                    const names = sideNames(match, side, players)
+                    return (
+                        <div key={side} className="squash-appeal" role="group" aria-label={`${names} appealed`}>
+                            <span className="squash-appeal-label">Appeal by {names}</span>
+                            <div className="squash-appeal-buttons">
+                                <button
+                                    type="button"
+                                    className="squash-secondary-button"
+                                    onClick={() => score({ decision: "let", appealed_by_side: side })}
+                                    disabled={busy}
+                                    title="Replayed: no point, same server"
+                                >
+                                    Let
+                                </button>
+                                <button
+                                    type="button"
+                                    className="squash-secondary-button"
+                                    onClick={() => score({ won_by_side: side, decision: "stroke" })}
+                                    disabled={busy}
+                                    title={`Point to ${names}`}
+                                >
+                                    Stroke
+                                </button>
+                                <button
+                                    type="button"
+                                    className="squash-secondary-button"
+                                    onClick={() => score({ won_by_side: other(side), decision: "no_let" })}
+                                    disabled={busy}
+                                    title={`Point to ${sideNames(match, other(side), players)}`}
+                                >
+                                    No let
+                                </button>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+
             {notice && (
                 <p className="squash-notice" role="status">
                     {notice}
@@ -101,7 +145,7 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
 
             <div className="squash-scorer-actions">
                 <button type="button" className="squash-secondary-button" onClick={undo} disabled={busy || !canUndo}>
-                    ↶ Undo last point
+                    ↶ Undo last rally
                 </button>
                 {canEnd &&
                     (confirmingEnd ? (

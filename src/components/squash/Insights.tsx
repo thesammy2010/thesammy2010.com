@@ -17,9 +17,18 @@ const ROWS: { label: string; value: (s: RallyInsights) => string }[] = [
     { label: "Biggest lead", value: (s) => String(s.biggest_lead) }
 ]
 
+// Each side's appeals by the call they got, shown once anyone has appealed
+const APPEAL_ROWS: { label: string; value: (s: RallyInsights) => string }[] = [
+    { label: "Strokes", value: (s) => String(s.strokes) },
+    { label: "Lets", value: (s) => String(s.lets) },
+    { label: "No lets", value: (s) => String(s.no_lets) }
+]
+
+const appeals = (s: RallyInsights) => s.strokes + s.lets + s.no_lets
+
 /**
  * What the rallies of a match's live-scored games show, side by side, and
- * the games worth a mention: comebacks and deuce games. Nothing when no game
+ * the games worth a mention: comebacks, deuce games and lets. Nothing when no game
  * was scored live or went to deuce.
  */
 export function MatchInsightsCard({
@@ -33,6 +42,7 @@ export function MatchInsightsCard({
 }) {
     const bySide = (side: Side) => insights.sides.find((s) => s.side === side)
     const live = insights.sides.some((s) => s.rallies_played > 0)
+    const rows = insights.sides.some((s) => appeals(s) > 0) ? [...ROWS, ...APPEAL_ROWS] : ROWS
     const notes = insights.games.flatMap((game) => {
         const lines: string[] = []
         if (game.comeback_by_side !== null) {
@@ -41,6 +51,9 @@ export function MatchInsightsCard({
         }
         if (game.went_to_deuce) {
             lines.push("went to deuce")
+        }
+        if (game.lets > 0) {
+            lines.push(`had ${game.lets} ${game.lets === 1 ? "let" : "lets"}`)
         }
         return lines.length ? [{ number: game.number, text: lines.join(", and ") }] : []
     })
@@ -67,7 +80,7 @@ export function MatchInsightsCard({
                             </tr>
                         </thead>
                         <tbody>
-                            {ROWS.map((row) => (
+                            {rows.map((row) => (
                                 <tr key={row.label}>
                                     <th scope="row">{row.label}</th>
                                     {SIDES.map((side) => {
@@ -127,6 +140,13 @@ export function PlayerInsightsCard({ insights }: { insights: PlayerInsights }) {
                 )}
                 <Tile value={String(insights.leads_lost)} label="Leads lost" />
                 <Tile value={`${insights.deuce_games_won}-${insights.deuce_games_lost}`} label="Deuce games" />
+                {appeals(r) > 0 && (
+                    <>
+                        <Tile value={String(r.strokes)} label="Strokes" />
+                        <Tile value={String(r.lets)} label="Lets" />
+                        <Tile value={String(r.no_lets)} label="No lets" />
+                    </>
+                )}
             </div>
         </>
     )

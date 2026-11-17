@@ -18,6 +18,7 @@ import MergeMatches from "../../components/squash/MergeMatches"
 import MomentumChart from "../../components/squash/MomentumChart"
 import SquashPage from "../../components/squash/SquashPage"
 import {
+    CALLS,
     formatLabel,
     formatWhen,
     gameWinner,
@@ -89,7 +90,8 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
 }
 
 // Each rally as a dot in the colour of the side that won it, a game per row,
-// so runs of points and comebacks show at a glance.
+// so runs of points and comebacks show at a glance. A let is a hollow dot,
+// and a point given on a stroke or no let has a hole in it.
 function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rally[]; players: Player[] }) {
     if (rallies.length === 0) {
         return null
@@ -115,13 +117,21 @@ function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rall
                             )}
                         </span>
                         <span className="squash-rally-dots">
-                            {gameRallies.map((rally) => (
-                                <span
-                                    key={rally.number}
-                                    className={`squash-rally-dot squash-side-${rally.won_by_side}`}
-                                    title={`${rally.side1_points}-${rally.side2_points}`}
-                                />
-                            ))}
+                            {gameRallies.map((rally) => {
+                                const won = rally.won_by_side
+                                const call = rally.decision ? `, ${CALLS[rally.decision].toLowerCase()}` : ""
+                                const kind =
+                                    won === null
+                                        ? "squash-rally-let"
+                                        : `squash-side-${won}${rally.decision ? " squash-rally-call" : ""}`
+                                return (
+                                    <span
+                                        key={rally.number}
+                                        className={`squash-rally-dot ${kind}`}
+                                        title={`${rally.side1_points}-${rally.side2_points}${call}`}
+                                    />
+                                )
+                            })}
                         </span>
                     </div>
                 )

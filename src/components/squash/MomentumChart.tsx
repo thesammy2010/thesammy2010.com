@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react"
 
 import { Match, Player, Rally, Side } from "./api"
 import { momentum, MomentumPoint, nearestPoint } from "./momentum"
-import { sideNames } from "./format"
+import { CALLS, sideNames } from "./format"
 
 interface Props {
     match: Match
@@ -158,7 +158,12 @@ export default function MomentumChart({ match, rallies, players }: Props) {
                         <strong>
                             {hovered.point.side1}-{hovered.point.side2}
                         </strong>
-                        <span>{names[hovered.point.rally.wonBy]} won the point</span>
+                        <span>
+                            {names[hovered.point.rally.wonBy]} won the point
+                            {hovered.point.rally.decision
+                                ? ` on a ${CALLS[hovered.point.rally.decision].toLowerCase()}`
+                                : ""}
+                        </span>
                         <span className="squash-muted">
                             Game {hovered.game}, rally {hovered.point.rally.number}
                         </span>
