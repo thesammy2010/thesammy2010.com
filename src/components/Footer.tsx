@@ -7,6 +7,8 @@ export default function Footer() {
                 <p>
                     <a href="mailto:contact@mail.thesammy2010.com?subject=Hey, I saw your website">Contact Me</a>
                     {"  "}
+                    <a href="/privacy">Privacy</a>
+                    {"  "}
                     <a href="https://github.com/thesammy2010/thesammy2010.com">©{new Date().getFullYear()} thesammy2010.com</a>
                 </p>
             </footer>

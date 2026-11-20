@@ -7,6 +7,7 @@ import NavBar from "./components/NavBar"
 import Home from "./pages/Home"
 import About from "./pages/About"
 import NotFound from "./pages/NotFound"
+import Privacy from "./pages/Privacy"
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import GoHeavier from "./pages/GoHeavier"
@@ -72,6 +73,7 @@ const App: React.FC = () => {
                         <Route path="/squash/players/:id" element={<PlayerDetail />} />
                         <Route path="/squash/stats" element={<SquashStats />} />
                         <Route path="/about" element={<About />} />
+                        <Route path="/privacy" element={<Privacy />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />
                         <Route path="/admin/users" element={<Users />} />
