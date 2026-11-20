@@ -1170,17 +1170,51 @@ select.squash-input {
     flex: 1 1 200px;
 }
 
-/* Match form */
+/* Match form. Selects drawn like the form's inputs: Safari's own select
+   ignores padding, so it's replaced with a plain box and a chevron. */
 .squash-form select {
     width: 100%;
     margin-top: 0;
-    padding: 10px;
-    border: 1px solid #ddd;
+    padding: 10px 36px 10px 12px;
+    border: 1px solid #d1d5db;
     border-radius: 6px;
     font: inherit;
-    font-size: 0.9rem;
-    background: white;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    color: #2c3e50;
+    background: white
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234a5568' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 12px center;
+    -webkit-appearance: none;
+    appearance: none;
     box-sizing: border-box;
+}
+
+.squash-form select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Under a label, the same gap as the form's inputs */
+.squash-form label > select {
+    margin-top: 6px;
+}
+
+/* The popup stacks a label's contents and stretches its input; a checkbox
+   sits beside its words instead */
+.popup-form .squash-checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.popup-form .squash-checkbox input {
+    width: auto;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .squash-form .squash-segmented {
@@ -1414,6 +1448,11 @@ select.squash-input {
 
 .squash-home-section {
     margin-bottom: 20px;
+}
+
+/* The shared section title tucks up to what follows; here it heads a card */
+.squash-home-section .squash-section-title {
+    margin-bottom: 10px;
 }
 
 .squash-home-links {
