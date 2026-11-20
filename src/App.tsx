@@ -21,6 +21,7 @@ import Workouts from "./pages/go_heavier/Workouts"
 import Import from "./pages/go_heavier/Import"
 import Admin from "./pages/Admin"
 import ProvisionUser from "./pages/admin/ProvisionUser"
+import SquashRequests from "./pages/admin/SquashRequests"
 import Users from "./pages/admin/Users"
 import Finance from "./pages/Finance"
 import Transactions from "./pages/finance/Transactions"
@@ -74,6 +75,7 @@ const App: React.FC = () => {
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />
                         <Route path="/admin/users" element={<Users />} />
+                        <Route path="/admin/squash-requests" element={<SquashRequests />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </BrowserRouter>

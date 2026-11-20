@@ -297,6 +297,34 @@ async function request<T>(
     return response.status === 204 ? (undefined as T) : response.json()
 }
 
+export type AccessRequestStatus = "pending" | "approved" | "declined"
+
+// Someone signed in who isn't a player asking to join, as they see it
+export interface AccessRequest {
+    id: string
+    status: AccessRequestStatus
+    message: string | null
+    // The player they became, once approved
+    player_id: string | null
+    reviewed_at: string | null
+    created_at: string
+}
+
+// The same with who asked, for an admin reviewing it
+export interface AdminAccessRequest extends AccessRequest {
+    user_id: string
+    name: string | null
+    email: string | null
+    reviewed_by_id: string | null
+}
+
+// Approving makes them the player given, or else a new one with this name
+// (their Google name when left out)
+export interface Approval {
+    player_id?: string | null
+    name?: string | null
+}
+
 export interface MatchFilters {
     player_id?: string
     status?: MatchStatus
@@ -308,6 +336,30 @@ export interface MatchFilters {
 }
 
 export const squashApi = {
+    // The caller's latest request to join, or null if they've none
+    myAccessRequest: () =>
+        request<AccessRequest>("GET", "/access-requests/me", "Failed to load your request").catch((error) => {
+            if (error instanceof ApiError && error.status === 404) {
+                return null
+            }
+            throw error
+        }),
+    requestAccess: (message: string | null) =>
+        request<AccessRequest>("POST", "/access-requests/me", "Failed to send your request", {
+            body: { message }
+        }),
+    withdrawAccessRequest: () => request<void>("DELETE", "/access-requests/me", "Failed to withdraw your request"),
+    // Newest first
+    accessRequests: (status?: AccessRequestStatus) =>
+        request<AdminAccessRequest[]>("GET", "/access-requests", "Failed to load the requests", {
+            query: { status }
+        }),
+    approveAccessRequest: (id: string, approval: Approval) =>
+        request<AdminAccessRequest>("POST", `/access-requests/${id}/approve`, "Failed to approve the request", {
+            body: approval
+        }),
+    declineAccessRequest: (id: string) =>
+        request<AdminAccessRequest>("POST", `/access-requests/${id}/decline`, "Failed to decline the request"),
     players: (includeInactive = false) =>
         request<Player[]>("GET", "/players", "Failed to load players", {
             query: { include_inactive: includeInactive }
@@ -440,6 +492,11 @@ async function checkAccess(): Promise<void> {
     if (id === checkId) {
         setAccess(next)
     }
+}
+
+// Checks membership again, such as once someone's request has been approved.
+export function recheckSquashAccess(): void {
+    void checkAccess()
 }
 
 // The first caller starts the check; later ones share it. It runs again
