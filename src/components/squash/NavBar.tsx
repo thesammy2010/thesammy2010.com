@@ -4,9 +4,10 @@ import "../go_heavier/NavBar.css"
 import "./Squash.css"
 
 const LINKS = [
-    { to: "/squash", label: "🏆 Matches", exact: false, also: "/squash/matches" },
-    { to: "/squash/players", label: "👥 Players", exact: false },
-    { to: "/squash/stats", label: "📊 Stats", exact: false }
+    { to: "/squash", label: "🏠 Home" },
+    { to: "/squash/matches", label: "🏆 Matches" },
+    { to: "/squash/players", label: "👥 Players" },
+    { to: "/squash/stats", label: "📊 Stats" }
 ]
 
 // The Go Heavier nav bar's layout under its own colours.
@@ -21,10 +22,9 @@ export default function SquashNavBar() {
     }, [location.pathname])
 
     const path = location.pathname
+    // Home is only itself; the rest include the pages under them
     const isActive = (link: (typeof LINKS)[number]) =>
-        link.to === "/squash"
-            ? path === "/squash" || (link.also !== undefined && path.startsWith(link.also))
-            : path === link.to || path.startsWith(`${link.to}/`)
+        link.to === "/squash" ? path === "/squash" : path === link.to || path.startsWith(`${link.to}/`)
 
     return (
         <div className="go-heavier-navbar squash-navbar">

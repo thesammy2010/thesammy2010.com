@@ -7,6 +7,7 @@ import {
     MatchFormat,
     Player,
     PlayerInsights,
+    PlayerRecord,
     PlayerStats,
     RatingChange,
     squashApi,
@@ -95,6 +96,55 @@ function Tile({ value, label }: { value: string; label: string }) {
     )
 }
 
+// Singles and doubles side by side, as a doubles result says less about a
+// player than a singles one. Left out until they've played both.
+function RecordByFormat({ stats }: { stats: PlayerStats }) {
+    const rows: { label: string; r: PlayerRecord }[] = [
+        { label: "Singles", r: stats.singles },
+        { label: "Doubles", r: stats.doubles }
+    ]
+    if (rows.some(({ r }) => r.matches_played === 0)) {
+        return null
+    }
+    return (
+        <div className="squash-card">
+            <h4 className="squash-card-title">Singles and doubles</h4>
+            <table className="squash-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th scope="col">Matches</th>
+                        <th scope="col">Won-lost</th>
+                        <th scope="col">Win rate</th>
+                        <th scope="col" className="squash-hide-narrow">
+                            Games
+                        </th>
+                        <th scope="col" className="squash-hide-narrow">
+                            Points
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map(({ label, r }) => (
+                        <tr key={label}>
+                            <th scope="row">{label}</th>
+                            <td>{r.matches_played}</td>
+                            <td>{record(r.matches_won, r.matches_lost, r.matches_drawn)}</td>
+                            <td>{winRate(r.win_rate)}</td>
+                            <td className="squash-hide-narrow">
+                                {r.games_won}-{r.games_lost}
+                            </td>
+                            <td className="squash-hide-narrow">
+                                {r.points_won}-{r.points_lost}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )
+}
+
 export default function PlayerDetail() {
     const { id = "" } = useParams()
 
@@ -141,6 +191,8 @@ export default function PlayerDetail() {
                         <Tile value={`${stats.games_won}-${stats.games_lost}`} label="Games" />
                         <Tile value={`${stats.points_won}-${stats.points_lost}`} label="Points" />
                     </div>
+
+                    <RecordByFormat stats={stats} />
 
                     <RatingAndInsights id={player.id} />
 

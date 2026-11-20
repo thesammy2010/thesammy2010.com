@@ -20,10 +20,11 @@ interface Props {
 // The venue picker's choice that adds a venue rather than picking one
 const NEW_VENUE = "new"
 
+// Open-ended first, as most matches are played until people stop
 const BEST_OF_OPTIONS: { value: string; label: string }[] = [
+    { value: "", label: "Open-ended: play until we stop" },
     { value: "3", label: "Best of 3" },
-    { value: "5", label: "Best of 5" },
-    { value: "", label: "Open-ended: play until we stop" }
+    { value: "5", label: "Best of 5" }
 ]
 
 // One slot per player a side: [side 1 slots, side 2 slots].
@@ -41,7 +42,7 @@ function slotsFor(format: MatchFormat, match: Match | undefined, me: Player | nu
 export default function MatchForm({ players, me, match, defaultFormat, onClose, onSaved }: Props) {
     const [format, setFormat] = useState<MatchFormat>(match?.format ?? defaultFormat ?? "singles")
     const [slots, setSlots] = useState<Slots>(slotsFor(match?.format ?? defaultFormat ?? "singles", match, me))
-    const [bestOf, setBestOf] = useState(match ? (match.best_of === null ? "" : String(match.best_of)) : "5")
+    const [bestOf, setBestOf] = useState(match?.best_of ? String(match.best_of) : "")
     const [pointsTo, setPointsTo] = useState(String(match?.points_to ?? 11))
     const [playedAt, setPlayedAt] = useState(toLocalInput(match ? match.played_at : new Date()))
     const [venueId, setVenueId] = useState(match?.venue_id ?? "")
@@ -203,6 +204,7 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                                 type="datetime-local"
                                 value={playedAt}
                                 onChange={(e) => setPlayedAt(e.target.value)}
+                                required
                             />
                         </label>
                         <label>

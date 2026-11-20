@@ -9,6 +9,7 @@ import {
     MatchStatus,
     Player,
     squashApi,
+    Venue,
     useSquashAccess,
     useSquashLoad
 } from "../components/squash/api"
@@ -22,6 +23,8 @@ interface MatchesData {
     // Everyone, inactive included, so older matches still get names.
     players: Player[]
     firstPage: Match[]
+    // Every venue, so a match at one no longer used can still be found
+    venues: Venue[]
 }
 
 const STATUSES: MatchStatus[] = ["in_progress", "scheduled", "completed", "cancelled"]
@@ -37,6 +40,18 @@ export function liveFirst(matches: Match[]): Match[] {
     return [...matches.filter((m) => m.status === "in_progress"), ...matches.filter((m) => m.status !== "in_progress")]
 }
 
+// A day picked in a date input ("2026-11-20"), as the start or end of that
+// day where the browser is, for the API's played-at bounds.
+export function dayBound(day: string, end: boolean): string | undefined {
+    if (!day) {
+        return undefined
+    }
+    const [year, month, date] = day.split("-").map(Number)
+    return end
+        ? new Date(year, month - 1, date, 23, 59, 59, 999).toISOString()
+        : new Date(year, month - 1, date).toISOString()
+}
+
 export default function Squash() {
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -47,12 +62,26 @@ export default function Squash() {
         formatParam === "singles" || formatParam === "doubles" ? formatParam : undefined
     const access = useSquashAccess()
     const me = access.status === "member" ? access.me : null
-    const filters = (): MatchFilters => ({ status, format, player_id: mine && me ? me.id : undefined })
+    const venueId = searchParams.get("venue") ?? ""
+    const from = searchParams.get("from") ?? ""
+    const to = searchParams.get("to") ?? ""
+    const filters = (): MatchFilters => ({
+        status,
+        format,
+        player_id: mine && me ? me.id : undefined,
+        venue_id: venueId || undefined,
+        after: dayBound(from, false),
+        before: dayBound(to, true)
+    })
 
     const { state, refreshing, reload } = useSquashLoad<MatchesData>(async () => {
-        const [players, firstPage] = await Promise.all([squashApi.players(true), squashApi.matches(filters(), 1)])
-        return { players, firstPage }
-    }, [mine, status, format])
+        const [players, firstPage, venues] = await Promise.all([
+            squashApi.players(true),
+            squashApi.matches(filters(), 1),
+            squashApi.venues(true).catch(() => [])
+        ])
+        return { players, firstPage, venues }
+    }, [mine, status, format, venueId, from, to])
 
     const [more, setMore] = useState<Match[]>([])
     const [nextPage, setNextPage] = useState(2)
@@ -101,7 +130,7 @@ export default function Squash() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Matches">
-            {({ players, firstPage }) => {
+            {({ players, firstPage, venues }) => {
                 const matches = liveFirst(dedupeById([...firstPage, ...more]))
                 const done = firstPage.length < MATCHES_PAGE_SIZE || lastPageShort
 
@@ -164,11 +193,65 @@ export default function Squash() {
                                     </option>
                                 ))}
                             </select>
+                            {venues.length > 0 && (
+                                <select
+                                    className="squash-input"
+                                    value={venueId}
+                                    onChange={(e) => setParam("venue", e.target.value)}
+                                    aria-label="Venue"
+                                >
+                                    <option value="">Any venue</option>
+                                    {venues.map((v) => (
+                                        <option key={v.id} value={v.id}>
+                                            {v.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            <label className="squash-date-filter">
+                                <span>From</span>
+                                <input
+                                    className="squash-input"
+                                    type="date"
+                                    value={from}
+                                    max={to || undefined}
+                                    onChange={(e) => setParam("from", e.target.value)}
+                                />
+                            </label>
+                            <label className="squash-date-filter">
+                                <span>To</span>
+                                <input
+                                    className="squash-input"
+                                    type="date"
+                                    value={to}
+                                    min={from || undefined}
+                                    onChange={(e) => setParam("to", e.target.value)}
+                                />
+                            </label>
+                            {(venueId || from || to || status) && (
+                                <button
+                                    type="button"
+                                    className="squash-text-button"
+                                    onClick={() => {
+                                        const next = new URLSearchParams(searchParams)
+                                        ;["venue", "from", "to", "status"].forEach((key) => next.delete(key))
+                                        setSearchParams(next, { replace: true })
+                                    }}
+                                >
+                                    Clear filters
+                                </button>
+                            )}
                         </div>
 
                         {matches.length === 0 ? (
                             <div className="squash-card squash-empty">
-                                <p>{format ? `No ${format} matches yet.` : "No matches yet."}</p>
+                                <p>
+                                    {venueId || from || to || status
+                                        ? "No matches fit these filters."
+                                        : format
+                                        ? `No ${format} matches yet.`
+                                        : "No matches yet."}
+                                </p>
                                 <button className="squash-primary-button" onClick={() => setShowForm(true)}>
                                     Arrange the first one
                                 </button>

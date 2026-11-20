@@ -1,24 +1,56 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
-import { Player, Rating } from "./api"
+import { MatchFormat, Player, Rating, squashApi } from "./api"
 import { signed } from "./format"
 
 interface Props {
     ratings: Rating[]
+    // Which ladder, for fetching it again with former players
+    format: MatchFormat
     players: Player[]
     me: Player | null
 }
 
-// The Elo ladder as the API ranks it, highest first.
-export default function EloLadder({ ratings, players, me }: Props) {
+// The Elo ladder as the API ranks it, highest first. Former players are
+// left off unless asked for, when the ladder's fetched again with them.
+export default function EloLadder({ ratings: current, format, players, me }: Props) {
     const inactive = new Set(players.filter((p) => !p.is_active).map((p) => p.id))
+    const [former, setFormer] = useState(false)
+    const [withFormer, setWithFormer] = useState<Rating[] | null>(null)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        setWithFormer(null)
+        setError(null)
+        if (!former) {
+            return
+        }
+        let cancelled = false
+        squashApi.ratings(format, true).then(
+            (all) => !cancelled && setWithFormer(all),
+            (err) => !cancelled && setError((err as Error).message)
+        )
+        return () => {
+            cancelled = true
+        }
+    }, [former, format])
+
+    const ratings = former && withFormer ? withFormer : current
     return (
         <div className="squash-card squash-ladder">
             <h4 className="squash-card-title">Elo ladder</h4>
             <p className="squash-muted">
                 Everyone starts on 1000. A win moves you up and a loss down, further against someone rated higher.
             </p>
+            {inactive.size > 0 && (
+                <label className="squash-checkbox">
+                    <input type="checkbox" checked={former} onChange={(e) => setFormer(e.target.checked)} />
+                    Include players who've left the group
+                    {former && withFormer === null && !error && <span className="squash-muted"> · loading...</span>}
+                </label>
+            )}
+            {error && <p className="error-message">{error}</p>}
             <table className="squash-table">
                 <thead>
                     <tr>

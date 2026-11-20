@@ -1,10 +1,13 @@
 import { useState } from "react"
 
-import { Match, Player, RallyInput, Side, squashApi, StaleMatchError } from "./api"
+import { Match, Player, Rally, RallyInput, Side, squashApi, StaleMatchError } from "./api"
 import { ballFor, currentGame, SIDES, sideNames, toInput } from "./format"
+import { serviceBox } from "./serve"
 
 interface Props {
     match: Match
+    // Every rally so far, for which box to serve from
+    rallies: Rally[]
     players: Player[]
     onMatch: (match: Match) => void
 }
@@ -15,13 +18,29 @@ interface Props {
 // stands, which is shown instead of adding the point twice. Under each side
 // are the calls on that side's appeals: a let, replayed with no point, a
 // stroke to them, or a no let, the point to their opponent.
-export default function LiveScorer({ match, players, onMatch }: Props) {
+//
+// Above the buttons is who's serving and from which box. Who serves first is
+// asked before the first rally; after that the API works it out from who
+// won the last point. Each rally is sent with its server, so the game's page
+// can show who served it. In doubles, which partner serves is picked here.
+export default function LiveScorer({ match, rallies, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
+    const [firstServer, setFirstServer] = useState<Side | null>(null)
+    // The partner serving for each side in doubles, while it's not the first
+    const [partners, setPartners] = useState<Partial<Record<Side, string>>>({})
+    // Hands whose server chose the other box to start
+    const [switched, setSwitched] = useState<Set<string>>(new Set())
     const [notice, setNotice] = useState<string | null>(null)
     const [confirmingEnd, setConfirmingEnd] = useState(false)
 
     const game = currentGame(match)
     const ball = ballFor(match)
+    const started = match.games.some((g) => g.rallies > 0)
+    const serving = match.serving_side ?? (started ? null : firstServer)
+    const box = serviceBox(match, rallies, started ? null : firstServer, switched)
+    const onSide = (side: Side) => match.players.filter((p) => p.side === side).map((p) => p.player_id)
+    const serverId = (side: Side) => partners[side] ?? onSide(side)[0] ?? null
+    const nameOf = (playerId: string | null) => players.find((p) => p.id === playerId)?.name ?? "Unknown player"
     const finishedGames = match.games.filter((g) => g.winning_side !== null).length
     const canUndo = match.games.some((g) => g.rallies > 0)
     // A match can be ended where it stands once a game counts. A best-of
@@ -49,7 +68,12 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
 
     const score = (rally: RallyInput) =>
         run(
-            () => squashApi.addRally(match.id, rally, match.version),
+            () =>
+                squashApi.addRally(
+                    match.id,
+                    { ...rally, server_id: serving === null ? null : serverId(serving) },
+                    match.version
+                ),
             "Someone else scored that rally first, so it's shown as they scored it. Tap again if it was another point."
         )
 
@@ -79,11 +103,75 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
                 )}
             </div>
 
+            {serving === null && !started && (
+                <div className="squash-serve-row" role="group" aria-label="Who serves first">
+                    <span>Who serves first?</span>
+                    {SIDES.map((side) => (
+                        <button
+                            key={side}
+                            type="button"
+                            className="squash-secondary-button"
+                            onClick={() => setFirstServer(side)}
+                        >
+                            {sideNames(match, side, players)}
+                        </button>
+                    ))}
+                </div>
+            )}
+            {serving !== null && (
+                <div className="squash-serve-row">
+                    <span>
+                        <span className={`squash-side-dot squash-side-${serving}`} aria-hidden="true" />{" "}
+                        <strong>{nameOf(serverId(serving))}</strong> to serve
+                        {box && (
+                            <>
+                                {" "}
+                                from the <strong>{box.box}</strong> box
+                            </>
+                        )}
+                    </span>
+                    {box && (
+                        <button
+                            type="button"
+                            className="squash-text-button"
+                            onClick={() => {
+                                const next = new Set(switched)
+                                if (!next.delete(box.hand)) {
+                                    next.add(box.hand)
+                                }
+                                setSwitched(next)
+                            }}
+                        >
+                            Switch box
+                        </button>
+                    )}
+                    {onSide(serving).length > 1 && (
+                        <button
+                            type="button"
+                            className="squash-text-button"
+                            onClick={() => {
+                                const ids = onSide(serving)
+                                const current = serverId(serving)
+                                const next = ids[(ids.indexOf(current ?? "") + 1) % ids.length]
+                                setPartners({ ...partners, [serving]: next })
+                            }}
+                        >
+                            Other partner serving
+                        </button>
+                    )}
+                    {!started && (
+                        <button type="button" className="squash-text-button" onClick={() => setFirstServer(null)}>
+                            Change
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="squash-scorer-buttons">
                 {SIDES.map((side) => {
                     const points = side === 1 ? game.side1_points : game.side2_points
                     const games = side === 1 ? match.side1_games : match.side2_games
-                    const serving = match.serving_side === side
+                    const isServing = serving === side
                     return (
                         <button
                             key={side}
@@ -97,7 +185,7 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
                             <span className="squash-point-score">{points}</span>
                             <span className="squash-point-meta">
                                 {games} {games === 1 ? "game" : "games"}
-                                {serving && <span className="squash-serving">● serving</span>}
+                                {isServing && <span className="squash-serving">● serving</span>}
                             </span>
                         </button>
                     )
