@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { Link } from "react-router-dom"
 
 import { Player, PlayerInput, PlayerStats, squashApi, useSquashLoad } from "../../components/squash/api"
+import PendingRequests from "../../components/squash/PendingRequests"
 import SquashPage from "../../components/squash/SquashPage"
 import Venues from "../../components/squash/Venues"
 import { record, winRate } from "../../components/squash/format"
@@ -133,6 +134,8 @@ export default function Players() {
                             </label>
                         )}
                     </div>
+
+                    <PendingRequests />
 
                     <div className="squash-card squash-ladder">
                         <table className="squash-table">

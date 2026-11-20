@@ -1660,3 +1660,34 @@ select.squash-input {
     border-radius: 999px;
     white-space: nowrap;
 }
+
+/* For admins: people waiting to join, linking to where they're reviewed */
+.squash-asking {
+    display: block;
+    border-left: 4px solid #1e40af;
+    color: #1e40af;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.squash-asking:hover {
+    background: #eef2ff;
+}
+
+/* The games list: what's notable about each game, beside its time */
+.squash-game-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.squash-game-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #edf2f7;
+    color: #4a5568;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}

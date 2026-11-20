@@ -14,6 +14,7 @@ import {
 import MatchCalendar from "../../components/squash/MatchCalendar"
 import MatchCard from "../../components/squash/MatchCard"
 import MatchForm from "../../components/squash/MatchForm"
+import PendingRequests from "../../components/squash/PendingRequests"
 import SquashPage from "../../components/squash/SquashPage"
 import { signed, winRate } from "../../components/squash/format"
 import { changedSince, latestChange, soonestFirst } from "../../components/squash/home"
@@ -148,6 +149,8 @@ export default function SquashHome() {
                                 ➕ New match
                             </button>
                         </div>
+
+                        <PendingRequests />
 
                         {me && (
                             <div className="squash-card">

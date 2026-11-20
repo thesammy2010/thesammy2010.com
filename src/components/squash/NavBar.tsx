@@ -6,6 +6,7 @@ import "./Squash.css"
 const LINKS = [
     { to: "/squash", label: "🏠 Home" },
     { to: "/squash/matches", label: "🏆 Matches" },
+    { to: "/squash/games", label: "🎯 Games" },
     { to: "/squash/players", label: "👥 Players" },
     { to: "/squash/stats", label: "📊 Stats" }
 ]
