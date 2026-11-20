@@ -1593,3 +1593,15 @@ select.squash-input {
     flex-wrap: wrap;
     gap: 8px;
 }
+
+/* A private match: only its players and admins see the score */
+.squash-private-badge {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4a5568;
+    background: #edf2f7;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}

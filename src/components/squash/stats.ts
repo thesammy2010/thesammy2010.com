@@ -27,7 +27,8 @@ export function totals(matches: Match[]): Totals {
 
 export function resultFor(match: Match, playerId: string): Result | null {
     const side = sideOf(match, playerId)
-    if (side === null) {
+    // A private match the caller isn't in has no result to give
+    if (side === null || match.hidden) {
         return null
     }
     if (match.winning_side === null) {

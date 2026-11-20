@@ -12,6 +12,8 @@ function match(overrides: Partial<Match>): Match {
         points_to: 11,
         best_of: null,
         notes: null,
+        is_private: false,
+        hidden: false,
         players: [
             { player_id: "a", side: 1 },
             { player_id: "b", side: 2 }
@@ -61,6 +63,18 @@ describe("calendarMark", () => {
         expect(calendarMark(match({}), null)).toBe("played")
         expect(calendarMark(match({ status: "in_progress" }), "a")).toBe("live")
         expect(calendarMark(match({ status: "scheduled" }), "a")).toBe("upcoming")
+    })
+
+    // A private match someone isn't in gives no result, rather than a draw
+    it("shows a private match's result to nobody it's hidden from", () => {
+        const hidden = match({
+            is_private: true,
+            hidden: true,
+            winning_side: null,
+            side1_games: null,
+            side2_games: null
+        })
+        expect(calendarMark(hidden, "a")).toBe("played")
     })
 })
 

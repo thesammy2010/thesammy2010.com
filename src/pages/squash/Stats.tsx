@@ -40,14 +40,15 @@ const FORM_LENGTH = 5
 const PAIRS_SHOWN = 5
 const FORMATS: MatchFormat[] = ["singles", "doubles"]
 
-// Every completed match: the figures span the group's whole history.
+// Every completed match: the figures span the group's whole history, less
+// the private matches the caller isn't in, whose results they can't see.
 async function allCompleted(): Promise<Match[]> {
     const matches: Match[] = []
     for (let page = 1; ; page++) {
         const next = await squashApi.matches({ status: "completed" }, page)
         matches.push(...next)
         if (next.length < MATCHES_PAGE_SIZE) {
-            return matches
+            return matches.filter((m) => !m.hidden)
         }
     }
 }

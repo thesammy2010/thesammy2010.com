@@ -36,6 +36,8 @@ function play(winners: string, server: Side | null = null): { match: Match; rall
         points_to: 11,
         best_of: null,
         notes: null,
+        is_private: false,
+        hidden: false,
         players: [
             { player_id: "a", side: 1 },
             { player_id: "b", side: 2 }

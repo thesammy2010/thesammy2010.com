@@ -25,7 +25,8 @@ export default function MergeMatches({ match, onClose, onMerged }: Props) {
         let cancelled = false
         squashApi.matches({ player_id: match.players[0]?.player_id, format: match.format }, 1).then(
             (matches) =>
-                !cancelled && setCandidates({ status: "ready", matches: matches.filter((m) => canMerge(match, m)) }),
+                !cancelled &&
+                setCandidates({ status: "ready", matches: matches.filter((m) => !m.hidden && canMerge(match, m)) }),
             (err) => !cancelled && setCandidates({ status: "error", message: (err as Error).message })
         )
         return () => {

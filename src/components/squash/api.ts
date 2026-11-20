@@ -52,6 +52,8 @@ export interface MatchInput {
     points_to: number
     best_of: number | null
     notes: string | null
+    // Only admins and its players see how it went
+    is_private: boolean
     players: MatchPlayer[]
 }
 
@@ -59,9 +61,12 @@ export interface Match extends MatchInput {
     id: string
     // The venue's name, for showing
     venue: string | null
+    // A private match the caller isn't in: only who played and when are
+    // given, with no venue, notes or games, and null games won and winner
+    hidden: boolean
     games: Game[]
-    side1_games: number
-    side2_games: number
+    side1_games: number | null
+    side2_games: number | null
     winning_side: Side | null
     serving_side: Side | null
     version: number
@@ -492,6 +497,17 @@ async function checkAccess(): Promise<void> {
     if (id === checkId) {
         setAccess(next)
     }
+}
+
+// A private match's rallies and insights are refused to anyone not in it,
+// which leaves the rest of its page to show.
+export function unlessPrivate<T>(request: Promise<T>): Promise<T | null> {
+    return request.catch((error) => {
+        if (error instanceof ApiError && error.status === 403) {
+            return null
+        }
+        throw error
+    })
 }
 
 // Checks membership again, such as once someone's request has been approved.
