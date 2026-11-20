@@ -15,6 +15,7 @@ import LiveScorer from "../../components/squash/LiveScorer"
 import MatchForm from "../../components/squash/MatchForm"
 import MergeMatches from "../../components/squash/MergeMatches"
 import MomentumChart from "../../components/squash/MomentumChart"
+import ShareResult from "../../components/squash/ShareResult"
 import SquashPage from "../../components/squash/SquashPage"
 import {
     CALLS,
@@ -300,14 +301,20 @@ export default function MatchDetail() {
                 return (
                     <>
                         <div className="squash-header">
-                            <Link className="squash-link" to="/squash">
+                            <Link className="squash-link" to="/squash/matches">
                                 ← All matches
                             </Link>
                         </div>
 
                         <Scoreboard match={match} players={players} />
 
-                        {isLive(match) && canChange && <LiveScorer match={match} players={players} onMatch={applyMatch} />}
+                        {match.status === "completed" && (
+                            <div className="squash-share-row">
+                                <ShareResult match={match} players={players} />
+                            </div>
+                        )}
+
+                        {isLive(match) && canChange && <LiveScorer match={match} rallies={rallies} players={players} onMatch={applyMatch} />}
                         {isLive(match) && !canChange && (
                             <p className="squash-muted squash-following">Following live. The score updates as it's played.</p>
                         )}
@@ -458,7 +465,7 @@ export default function MatchDetail() {
                                             onClick={() =>
                                                 act(async () => {
                                                     await squashApi.deleteMatch(match.id)
-                                                    navigate("/squash")
+                                                    navigate("/squash/matches")
                                                 })
                                             }
                                         >

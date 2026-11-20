@@ -137,6 +137,26 @@ export const CALLS: Record<RallyDecision, string> = {
     no_let: "No let"
 }
 
+/**
+ * A finished match in a line, for sharing: "Leo beat Alex 3-1 (11-7, 9-11,
+ * 11-5, 11-8)", or "Leo and Alex drew 1-1 (...)". Scores read from the
+ * winner's side, as a result is usually told.
+ */
+export function resultSummary(match: Match, players: Player[]): string {
+    const winner = match.winning_side ?? 1
+    const loser: Side = winner === 1 ? 2 : 1
+    const games = (side: Side) => (side === 1 ? match.side1_games : match.side2_games)
+    const points = (g: Game, side: Side) => (side === 1 ? g.side1_points : g.side2_points)
+    const scores = match.games
+        .filter((g) => g.winning_side !== null)
+        .map((g) => `${points(g, winner)}-${points(g, loser)}`)
+        .join(", ")
+    const verb = match.winning_side === null ? "drew with" : "beat"
+    const sides = `${sideNames(match, winner, players)} ${verb} ${sideNames(match, loser, players)}`
+    const line = `${sides} ${games(winner)}-${games(loser)}`
+    return scores ? `${line} (${scores})` : line
+}
+
 export function formatWhen(value: string | null): string {
     if (!value) {
         return "No date set"

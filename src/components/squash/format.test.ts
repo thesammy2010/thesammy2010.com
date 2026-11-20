@@ -7,6 +7,7 @@ import {
     gameWinner,
     nextEnteredGame,
     record,
+    resultSummary,
     sideNames,
     signed,
     winRate
@@ -217,5 +218,28 @@ describe("signed", () => {
         expect(signed(12)).toBe("+12")
         expect(signed(-8)).toBe("\u22128")
         expect(signed(0)).toBe("0")
+    })
+})
+
+describe("resultSummary", () => {
+    const players = [
+        { id: "a", name: "Leo" },
+        { id: "b", name: "Alex" }
+    ] as Player[]
+
+    it("tells it from the winner's side", () => {
+        const won = match([game(1, 7, 11), game(2, 11, 9), game(3, 4, 11), game(4, 8, 11)], {
+            status: "completed",
+            winning_side: 2
+        })
+        expect(resultSummary(won, players)).toBe("Alex beat Leo 3-1 (11-7, 9-11, 11-4, 11-8)")
+    })
+
+    it("tells a draw, leaving out an unfinished game", () => {
+        const drawn = match([game(1, 11, 5), game(2, 6, 11), game(3, 3, 2)], {
+            status: "completed",
+            winning_side: null
+        })
+        expect(resultSummary(drawn, players)).toBe("Leo drew with Alex 1-1 (11-5, 6-11)")
     })
 })

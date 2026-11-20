@@ -67,6 +67,8 @@ export interface Match extends MatchInput {
     version: number
     created_by_id: string
     created_at: string
+    // In the API's own format, so two compare as strings
+    updated_at?: string | null
 }
 
 // The referee's call on an appeal. A let is replayed with no point and the
@@ -88,12 +90,30 @@ export interface Rally {
 
 // A rally played out, or an appeal and its call. A let has no winner and
 // says who appealed; a stroke or no let has a winner, which says who did.
-export type RallyInput =
+// server_id, where known, is who served it.
+export type RallyInput = (
     | { won_by_side: Side; decision?: "stroke" | "no_let" }
     | { decision: "let"; appealed_by_side: Side }
+) & { server_id?: string | null }
+
+// A player's results over some set of matches
+export interface PlayerRecord {
+    matches_played: number
+    matches_won: number
+    matches_lost: number
+    matches_drawn: number
+    games_won: number
+    games_lost: number
+    points_won: number
+    points_lost: number
+    win_rate: number | null
+}
 
 export interface PlayerStats {
     player_id: string
+    // Every match together, then each format alone
+    singles: PlayerRecord
+    doubles: PlayerRecord
     matches_played: number
     matches_won: number
     matches_lost: number
@@ -281,6 +301,10 @@ export interface MatchFilters {
     player_id?: string
     status?: MatchStatus
     format?: MatchFormat
+    venue_id?: string
+    // Played at or after, and at or before, as ISO date-times
+    after?: string
+    before?: string
 }
 
 export const squashApi = {
@@ -296,8 +320,10 @@ export const squashApi = {
     headToHead: (id: string, opponentId: string) =>
         request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head"),
     // Highest rated first; without a format every match counts to one rating
-    ratings: (format?: MatchFormat) =>
-        request<Rating[]>("GET", "/ratings", "Failed to load the ratings", { query: { format } }),
+    ratings: (format?: MatchFormat, includeInactive = false) =>
+        request<Rating[]>("GET", "/ratings", "Failed to load the ratings", {
+            query: { format, include_inactive: includeInactive }
+        }),
     // Oldest first
     ratingHistory: (id: string, format?: MatchFormat) =>
         request<RatingChange[]>("GET", `/players/${id}/ratings`, "Failed to load the rating history", {

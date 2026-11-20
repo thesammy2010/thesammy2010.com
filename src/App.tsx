@@ -31,6 +31,8 @@ import Manage from "./pages/finance/Manage"
 import Squash from "./pages/Squash"
 import MatchDetail from "./pages/squash/MatchDetail"
 import GameDetail from "./pages/squash/GameDetail"
+import SquashHome from "./pages/squash/Home"
+import SquashHowItWorks from "./pages/squash/HowItWorks"
 import SquashPlayers from "./pages/squash/Players"
 import PlayerDetail from "./pages/squash/PlayerDetail"
 import SquashStats from "./pages/squash/Stats"
@@ -60,7 +62,9 @@ const App: React.FC = () => {
                         <Route path="/finance/insights" element={<Insights />} />
                         <Route path="/finance/budgets" element={<Budgets />} />
                         <Route path="/finance/manage" element={<Manage />} />
-                        <Route path="/squash" element={<Squash />} />
+                        <Route path="/squash" element={<SquashHome />} />
+                        <Route path="/squash/matches" element={<Squash />} />
+                        <Route path="/squash/how" element={<SquashHowItWorks />} />
                         <Route path="/squash/matches/:id" element={<MatchDetail />} />
                         <Route path="/squash/matches/:id/games/:number" element={<GameDetail />} />
                         <Route path="/squash/players" element={<SquashPlayers />} />

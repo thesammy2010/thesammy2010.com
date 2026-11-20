@@ -121,7 +121,7 @@ export default function Stats() {
                             <h2 className="squash-title">Stats</h2>
                             <div className="squash-card squash-empty">
                                 <p>No completed matches yet. Stats appear once the first one is finished.</p>
-                                <Link className="squash-link" to="/squash">
+                                <Link className="squash-link" to="/squash/matches">
                                     Go to matches
                                 </Link>
                             </div>
@@ -190,7 +190,7 @@ export default function Stats() {
                         </div>
 
                         {ratings[format].length > 0 && (
-                            <EloLadder ratings={ratings[format]} players={players} me={me} />
+                            <EloLadder ratings={ratings[format]} format={format} players={players} me={me} />
                         )}
 
                         {months.length > 0 && (
