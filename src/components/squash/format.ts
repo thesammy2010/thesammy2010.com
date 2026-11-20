@@ -1,8 +1,23 @@
 // Display helpers for the squash pages.
 import { EM_DASH } from "../go_heavier/format"
-import type { Game, Match, MatchStatus, Player, RallyDecision, Side } from "./api"
+import type { Game, Match, MatchInput, MatchStatus, Player, RallyDecision, Side } from "./api"
 
 export const SIDES: Side[] = [1, 2]
+
+// The match as it stands, for a PUT that changes only some of it
+export function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchInput {
+    return {
+        format: match.format,
+        status: match.status,
+        played_at: match.played_at,
+        venue_id: match.venue_id,
+        points_to: match.points_to,
+        best_of: match.best_of,
+        notes: match.notes,
+        players: match.players,
+        ...changes
+    }
+}
 
 // "Leo & Alex", or "Unknown player" for someone no longer in the list.
 export function sideNames(match: Pick<Match, "players">, side: Side, players: Player[]): string {

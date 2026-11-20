@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 
 import {
     Match,
-    MatchInput,
     MatchInsights,
     Player,
     Rally,
@@ -26,7 +25,8 @@ import {
     nextEnteredGame,
     SIDES,
     sideNames,
-    STATUS_LABELS
+    STATUS_LABELS,
+    toInput
 } from "../../components/squash/format"
 import { useIsAdmin, useOwnUserId } from "../../roles"
 
@@ -41,20 +41,6 @@ interface MatchData {
 // one phone shows on another before anyone looks up.
 const POLL_MS = 2000
 
-function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchInput {
-    return {
-        format: match.format,
-        status: match.status,
-        played_at: match.played_at,
-        venue_id: match.venue_id,
-        points_to: match.points_to,
-        best_of: match.best_of,
-        notes: match.notes,
-        players: match.players,
-        ...changes
-    }
-}
-
 function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
     return (
         <div className="squash-card squash-scoreboard">
@@ -68,13 +54,17 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
             <div className="squash-scoreboard-sides">
                 {SIDES.map((side) => {
                     const winner = match.status === "completed" && match.winning_side === side
+                    const loser = match.status === "completed" && match.winning_side !== null && !winner
                     return (
-                        <div key={side} className={`squash-scoreboard-side ${winner ? "winner" : ""}`}>
+                        <div
+                            key={side}
+                            className={`squash-scoreboard-side squash-row-side-${side} ${winner ? "winner" : ""} ${
+                                loser ? "loser" : ""
+                            }`}
+                        >
                             <span className={`squash-side-dot squash-side-${side}`} aria-hidden="true" />
-                            <span className="squash-scoreboard-names">
-                                {sideNames(match, side, players)}
-                                {winner && " 🏆"}
-                            </span>
+                            <span className="squash-scoreboard-names">{sideNames(match, side, players)}</span>
+                            {winner && <span className="squash-won-badge">🏆 Won</span>}
                             <span className="squash-scoreboard-games">{side === 1 ? match.side1_games : match.side2_games}</span>
                         </div>
                     )
@@ -90,8 +80,8 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
 }
 
 // Each rally as a dot in the colour of the side that won it, a game per row,
-// so runs of points and comebacks show at a glance. A let is a hollow dot,
-// and a point given on a stroke or no let has a hole in it.
+// so runs of points and comebacks show at a glance. A let is a grey dash,
+// and a point given on a stroke or no let a ring. Each game links to its page.
 function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rally[]; players: Player[] }) {
     if (rallies.length === 0) {
         return null
@@ -108,7 +98,9 @@ function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rall
                 return (
                     <div key={gameNumber} className="squash-rally-row">
                         <span className="squash-rally-label">
-                            Game {gameNumber}
+                            <Link className="squash-link" to={`/squash/matches/${match.id}/games/${gameNumber}`}>
+                                Game {gameNumber}
+                            </Link>
                             {game && (
                                 <span className="squash-muted">
                                     {" "}
@@ -207,6 +199,8 @@ export default function MatchDetail() {
     const ownUserId = useOwnUserId()
     const [editing, setEditing] = useState(false)
     const [merging, setMerging] = useState(false)
+    // A finished match's scores and details are only changed after asking to
+    const [unlocked, setUnlocked] = useState(false)
     const [confirming, setConfirming] = useState<"cancel" | "delete" | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
     const [busy, setBusy] = useState(false)
@@ -220,6 +214,8 @@ export default function MatchDetail() {
         ])
         return { match, players, rallies, insights }
     }, [id])
+
+    useEffect(() => setUnlocked(false), [id])
 
     const ready = state.status === "ready" ? state : null
     const match = ready?.data.match ?? null
@@ -290,13 +286,16 @@ export default function MatchDetail() {
                     isAdmin ||
                     (ownUserId !== null && match.created_by_id === ownUserId) ||
                     (me !== null && match.players.some((p) => p.player_id === me.id))
+                // Once it's over, the controls that change it wait behind Edit
+                const finished = match.status === "completed" || match.status === "cancelled"
+                const editable = canChange && (!finished || unlocked)
                 const lastGame = match.games[match.games.length - 1]
                 // A game typed in can be taken back as a whole; one scored
                 // live is undone a point at a time instead.
-                const canRemoveLastGame = canChange && lastGame !== undefined && lastGame.rallies === 0 && match.status !== "cancelled"
+                const canRemoveLastGame = editable && lastGame !== undefined && lastGame.rallies === 0 && match.status !== "cancelled"
                 // The point that won a best-of match can be taken back,
                 // which reopens it.
-                const canUndoWinner = canChange && match.status === "completed" && lastGame !== undefined && lastGame.rallies > 0
+                const canUndoWinner = editable && match.status === "completed" && lastGame !== undefined && lastGame.rallies > 0
 
                 return (
                     <>
@@ -316,18 +315,27 @@ export default function MatchDetail() {
                         {match.games.length > 0 && (
                             <div className="squash-card">
                                 <h4 className="squash-card-title">Games</h4>
+                                <p className="squash-muted">Tap a game's number for its own page.</p>
                                 <table className="squash-games-table">
                                     <thead>
                                         <tr>
                                             <th>Side</th>
                                             {match.games.map((g) => (
-                                                <th key={g.number}>{g.number}</th>
+                                                <th key={g.number}>
+                                                    <Link
+                                                        className="squash-game-link"
+                                                        to={`/squash/matches/${match.id}/games/${g.number}`}
+                                                        aria-label={`Game ${g.number}`}
+                                                    >
+                                                        {g.number}
+                                                    </Link>
+                                                </th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {SIDES.map((side) => (
-                                            <tr key={side}>
+                                            <tr key={side} className={`squash-row-side-${side}`}>
                                                 <th scope="row">
                                                     <span className={`squash-side-dot squash-side-${side}`} aria-hidden="true" />{" "}
                                                     {sideNames(match, side, players)}
@@ -375,7 +383,7 @@ export default function MatchDetail() {
                             </div>
                         )}
 
-                        {canChange && match.status !== "cancelled" && (match.status !== "completed" || match.best_of === null) && (
+                        {editable && match.status !== "cancelled" && (match.status !== "completed" || match.best_of === null) && (
                             <details className="squash-card squash-details">
                                 <summary>Enter a game's score instead</summary>
                                 <p className="squash-muted">
@@ -390,7 +398,15 @@ export default function MatchDetail() {
 
                         <MatchInsightsCard match={match} insights={insights} players={players} />
 
-                        {canChange && (
+                        {canChange && finished && !unlocked && (
+                            <div className="squash-card squash-manage">
+                                <button type="button" className="squash-secondary-button" onClick={() => setUnlocked(true)}>
+                                    ✏️ Edit
+                                </button>
+                            </div>
+                        )}
+
+                        {editable && (
                             <div className="squash-card squash-manage">
                                 <button type="button" className="squash-secondary-button" onClick={() => setEditing(true)}>
                                     Edit details
@@ -449,6 +465,18 @@ export default function MatchDetail() {
                                             Delete
                                         </button>
                                     </span>
+                                )}
+                                {finished && (
+                                    <button
+                                        type="button"
+                                        className="squash-secondary-button"
+                                        onClick={() => {
+                                            setUnlocked(false)
+                                            setConfirming(null)
+                                        }}
+                                    >
+                                        Done
+                                    </button>
                                 )}
                                 {actionError && <p className="error-message squash-inline-error">{actionError}</p>}
                             </div>
