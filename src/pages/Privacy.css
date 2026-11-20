@@ -1,0 +1,62 @@
+/* Privacy policy page. Every class is prefixed: stylesheets are bundled
+   globally here, so an unprefixed name would leak onto every other page. */
+
+.privacy-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+}
+
+.privacy-hero {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.privacy-hero h1 {
+    margin: 0 0 12px 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #2c3e50;
+}
+
+.privacy-lead {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: #5a6c7d;
+}
+
+.privacy-section {
+    margin-bottom: 32px;
+}
+
+.privacy-section h2 {
+    margin: 0 0 12px 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #a0aec0;
+}
+
+.privacy-section p {
+    margin: 0 0 12px 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.privacy-section a {
+    color: #667eea;
+}
+
+@media (max-width: 640px) {
+    .privacy-page {
+        padding: 32px 16px 48px;
+    }
+
+    .privacy-hero h1 {
+        font-size: 1.75rem;
+    }
+}
