@@ -2,6 +2,7 @@ import React from "react"
 
 import SignInPrompt from "../SignInPrompt"
 import SquashNavBar from "./NavBar"
+import RequestAccess from "./RequestAccess"
 import { LoadState, Player } from "./api"
 import "../../pages/GoHeavier.css"
 import "../go_heavier/Stats.css"
@@ -17,7 +18,7 @@ interface Props<T> {
 }
 
 // The frame every squash page shares: nav bar, then a spinner, a sign-in
-// prompt, a not-in-the-group notice, an error with a retry, or the page.
+// prompt, a way to ask to join the group, an error with a retry, or the page.
 export default function SquashPage<T>({ state, refreshing, onRefresh, what, children }: Props<T>) {
     return (
         <div className="center-container-grid">
@@ -31,15 +32,7 @@ export default function SquashPage<T>({ state, refreshing, onRefresh, what, chil
 
                 {state.status === "signedOut" && <SignInPrompt message="Sign in to see your squash matches." />}
 
-                {state.status === "denied" && (
-                    <div className="error-container">
-                        <h2>Not in the squash group</h2>
-                        <p className="error-message">
-                            Squash is for the group's players. Ask an admin to add you with the email you sign in
-                            with.
-                        </p>
-                    </div>
-                )}
+                {state.status === "denied" && <RequestAccess />}
 
                 {state.status === "error" && (
                     <div className={`error-container ${refreshing ? "retrying" : ""}`}>
