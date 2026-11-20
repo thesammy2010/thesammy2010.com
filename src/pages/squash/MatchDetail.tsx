@@ -137,18 +137,36 @@ function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rall
     )
 }
 
-function EnterGame({ match, onMatch }: { match: Match; onMatch: (match: Match) => void }) {
-    const number = nextEnteredGame(match)
+function EnterGame({
+    match,
+    number = nextEnteredGame(match),
+    onMatch,
+    onCancel
+}: {
+    match: Match
+    number?: number
+    onMatch: (match: Match) => void
+    onCancel?: () => void
+}) {
     const existing = match.games.find((g) => g.number === number)
     const [side1, setSide1] = useState(existing ? String(existing.side1_points) : "")
     const [side2, setSide2] = useState(existing ? String(existing.side2_points) : "")
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    // A score given for a game scored live replaces its point-by-point.
+    const replacing = existing !== undefined && existing.rallies > 0
+    // A game that's over, or one being scored live, takes a finished score:
+    // anything else would reopen the first or leave the second stuck.
+    const mustFinish = replacing || (existing !== undefined && existing.winning_side !== null)
     const unfinished = side1 !== "" && side2 !== "" && gameWinner(Number(side1), Number(side2), match.points_to) === null
 
     const save = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (mustFinish && unfinished) {
+            setError(`That isn't a finished game to ${match.points_to}`)
+            return
+        }
         setSaving(true)
         setError(null)
         try {
@@ -189,9 +207,19 @@ function EnterGame({ match, onMatch }: { match: Match; onMatch: (match: Match) =
                 required
             />
             <button type="submit" className="squash-secondary-button" disabled={saving}>
-                {saving ? "Saving..." : "Save game"}
+                {saving ? "Saving..." : existing?.winning_side === null && replacing ? "Save final score" : "Save game"}
             </button>
-            {unfinished && <span className="squash-muted">Saved as still in play</span>}
+            {onCancel && (
+                <button type="button" className="squash-text-button" onClick={onCancel} disabled={saving}>
+                    Cancel
+                </button>
+            )}
+            {unfinished && !mustFinish && <span className="squash-muted">Saved as still in play</span>}
+            {replacing && (
+                <span className="squash-muted squash-enter-note">
+                    Replaces the {existing.side1_points}–{existing.side2_points} scored point by point
+                </span>
+            )}
             {error && <p className="error-message squash-inline-error">{error}</p>}
         </form>
     )
@@ -206,6 +234,7 @@ export default function MatchDetail() {
     const [merging, setMerging] = useState(false)
     // A finished match's scores and details are only changed after asking to
     const [unlocked, setUnlocked] = useState(false)
+    const [editingGame, setEditingGame] = useState<number | null>(null)
     const [confirming, setConfirming] = useState<"cancel" | "delete" | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
     const [busy, setBusy] = useState(false)
@@ -318,6 +347,9 @@ export default function MatchDetail() {
                 // The point that won a best-of match can be taken back,
                 // which reopens it.
                 const canUndoWinner = editable && match.status === "completed" && lastGame !== undefined && lastGame.rallies > 0
+                // A finished match's games wait behind Edit like the rest
+                const canEditGames = editable && match.status !== "cancelled"
+                const gameBeingEdited = match.games.some((g) => g.number === editingGame) ? editingGame : null
 
                 return (
                     <>
@@ -380,6 +412,36 @@ export default function MatchDetail() {
                                         ))}
                                     </tbody>
                                 </table>
+                                {canEditGames && (
+                                    <div className="squash-row-actions squash-edit-games">
+                                        <span className="squash-muted">Edit game</span>
+                                        {match.games.map((g) => (
+                                            <button
+                                                key={g.number}
+                                                type="button"
+                                                className="squash-text-button"
+                                                aria-label={`Edit game ${g.number}`}
+                                                aria-pressed={gameBeingEdited === g.number}
+                                                disabled={busy}
+                                                onClick={() => setEditingGame(gameBeingEdited === g.number ? null : g.number)}
+                                            >
+                                                {g.number}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                {gameBeingEdited !== null && (
+                                    <EnterGame
+                                        key={`${gameBeingEdited}-${match.version}`}
+                                        match={match}
+                                        number={gameBeingEdited}
+                                        onMatch={(next) => {
+                                            applyMatch(next)
+                                            setEditingGame(null)
+                                        }}
+                                        onCancel={() => setEditingGame(null)}
+                                    />
+                                )}
                                 {(canRemoveLastGame || canUndoWinner) && (
                                     <div className="squash-row-actions">
                                         {canRemoveLastGame && (
@@ -415,8 +477,8 @@ export default function MatchDetail() {
                             <details className="squash-card squash-details">
                                 <summary>Enter a game's score instead</summary>
                                 <p className="squash-muted">
-                                    For games played without scoring them here. The game that decides a best-of match
-                                    finishes it.
+                                    For games played without scoring them here, or to give the final score of the game
+                                    in play. The game that decides a best-of match finishes it.
                                 </p>
                                 <EnterGame key={`${match.version}`} match={match} onMatch={applyMatch} />
                             </details>
@@ -500,6 +562,7 @@ export default function MatchDetail() {
                                         className="squash-secondary-button"
                                         onClick={() => {
                                             setUnlocked(false)
+                                            setEditingGame(null)
                                             setConfirming(null)
                                         }}
                                     >

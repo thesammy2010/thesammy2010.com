@@ -80,8 +80,12 @@ describe("nextEnteredGame", () => {
         expect(nextEnteredGame(match([game(1, 11, 3), game(2, 5, 4, 0)]))).toBe(2)
     })
 
-    it("moves past an unfinished game being scored live", () => {
-        expect(nextEnteredGame(match([game(1, 5, 4)]))).toBe(2)
+    it("gives the final score of a game being scored live", () => {
+        expect(nextEnteredGame(match([game(1, 5, 4)]))).toBe(1)
+    })
+
+    it("moves on after a finished game", () => {
+        expect(nextEnteredGame(match([game(1, 11, 4)]))).toBe(2)
     })
 })
 

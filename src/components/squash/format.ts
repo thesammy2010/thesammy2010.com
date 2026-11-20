@@ -77,11 +77,11 @@ export function currentGame(match: Pick<Match, "games">): Game {
     }
 }
 
-// The game a typed-in score goes to. An unfinished game that was entered by
-// hand can be corrected; one being scored live can't, so the next one is.
+// The game a typed-in score goes to: the unfinished one, whether entered by
+// hand or being scored live, or else the next one.
 export function nextEnteredGame(match: Pick<Match, "games">): number {
     const last = match.games[match.games.length - 1]
-    if (last && last.winning_side === null && last.rallies === 0) {
+    if (last && last.winning_side === null) {
         return last.number
     }
     return (last?.number ?? 0) + 1
