@@ -21,6 +21,7 @@ import Workouts from "./pages/go_heavier/Workouts"
 import Import from "./pages/go_heavier/Import"
 import Admin from "./pages/Admin"
 import ProvisionUser from "./pages/admin/ProvisionUser"
+import SquashRequests from "./pages/admin/SquashRequests"
 import Users from "./pages/admin/Users"
 import Finance from "./pages/Finance"
 import Transactions from "./pages/finance/Transactions"
@@ -30,8 +31,12 @@ import Budgets from "./pages/finance/Budgets"
 import Manage from "./pages/finance/Manage"
 import Squash from "./pages/Squash"
 import MatchDetail from "./pages/squash/MatchDetail"
+import GameDetail from "./pages/squash/GameDetail"
+import SquashHome from "./pages/squash/Home"
+import SquashHowItWorks from "./pages/squash/HowItWorks"
 import SquashPlayers from "./pages/squash/Players"
 import PlayerDetail from "./pages/squash/PlayerDetail"
+import SquashStats from "./pages/squash/Stats"
 import { GOOGLE_CLIENT_ID } from "./configs"
 
 const App: React.FC = () => {
@@ -58,14 +63,19 @@ const App: React.FC = () => {
                         <Route path="/finance/insights" element={<Insights />} />
                         <Route path="/finance/budgets" element={<Budgets />} />
                         <Route path="/finance/manage" element={<Manage />} />
-                        <Route path="/squash" element={<Squash />} />
+                        <Route path="/squash" element={<SquashHome />} />
+                        <Route path="/squash/matches" element={<Squash />} />
+                        <Route path="/squash/how" element={<SquashHowItWorks />} />
                         <Route path="/squash/matches/:id" element={<MatchDetail />} />
+                        <Route path="/squash/matches/:id/games/:number" element={<GameDetail />} />
                         <Route path="/squash/players" element={<SquashPlayers />} />
                         <Route path="/squash/players/:id" element={<PlayerDetail />} />
+                        <Route path="/squash/stats" element={<SquashStats />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />
                         <Route path="/admin/users" element={<Users />} />
+                        <Route path="/admin/squash-requests" element={<SquashRequests />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </BrowserRouter>

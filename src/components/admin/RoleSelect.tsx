@@ -1,6 +1,8 @@
 import { UserRole } from "../../roles"
 import "./RoleSelect.css"
 
+// Squash access comes from being added as a player, not a role, so the old
+// squash role is only shown for a user who still has it
 const ROLE_OPTIONS: UserRole[] = ["guest", "viewer", "editor", "admin"]
 
 interface Props {
@@ -9,9 +11,10 @@ interface Props {
 }
 
 export default function RoleSelect({ value, onChange }: Props) {
+    const options: UserRole[] = value === "squash" ? ["guest", "squash", ...ROLE_OPTIONS.slice(1)] : ROLE_OPTIONS
     return (
         <div className="role-select" role="radiogroup">
-            {ROLE_OPTIONS.map((role) => (
+            {options.map((role) => (
                 <button
                     key={role}
                     type="button"

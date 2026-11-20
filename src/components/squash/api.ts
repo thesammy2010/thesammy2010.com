@@ -47,36 +47,78 @@ export interface MatchInput {
     format: MatchFormat
     status: MatchStatus
     played_at: string | null
-    venue: string | null
+    // One of /squash/venues
+    venue_id: string | null
     points_to: number
     best_of: number | null
     notes: string | null
+    // Only admins and its players see how it went
+    is_private: boolean
     players: MatchPlayer[]
 }
 
 export interface Match extends MatchInput {
     id: string
+    // The venue's name, for showing
+    venue: string | null
+    // A private match the caller isn't in: only who played and when are
+    // given, with no venue, notes or games, and null games won and winner
+    hidden: boolean
     games: Game[]
-    side1_games: number
-    side2_games: number
+    side1_games: number | null
+    side2_games: number | null
     winning_side: Side | null
     serving_side: Side | null
     version: number
     created_by_id: string
     created_at: string
+    // In the API's own format, so two compare as strings
+    updated_at?: string | null
 }
+
+// The referee's call on an appeal. A let is replayed with no point and the
+// same server; a stroke is the point to whoever appealed, and a no let the
+// point to their opponent.
+export type RallyDecision = "let" | "stroke" | "no_let"
 
 export interface Rally {
     game: number
     number: number
-    won_by_side: Side
+    // Null for a let, which no one wins
+    won_by_side: Side | null
+    decision: RallyDecision | null
+    appealed_by_side: Side | null
     server_id: string | null
     side1_points: number
     side2_points: number
 }
 
+// A rally played out, or an appeal and its call. A let has no winner and
+// says who appealed; a stroke or no let has a winner, which says who did.
+// server_id, where known, is who served it.
+export type RallyInput = (
+    | { won_by_side: Side; decision?: "stroke" | "no_let" }
+    | { decision: "let"; appealed_by_side: Side }
+) & { server_id?: string | null }
+
+// A player's results over some set of matches
+export interface PlayerRecord {
+    matches_played: number
+    matches_won: number
+    matches_lost: number
+    matches_drawn: number
+    games_won: number
+    games_lost: number
+    points_won: number
+    points_lost: number
+    win_rate: number | null
+}
+
 export interface PlayerStats {
     player_id: string
+    // Every match together, then each format alone
+    singles: PlayerRecord
+    doubles: PlayerRecord
     matches_played: number
     matches_won: number
     matches_lost: number
@@ -97,6 +139,96 @@ export interface HeadToHead {
     matches_drawn: number
     games_won: number
     games_lost: number
+}
+
+export interface VenueInput {
+    name: string
+    address: string | null
+    notes: string | null
+    is_active: boolean
+}
+
+export interface Venue extends VenueInput {
+    id: string
+}
+
+// A player's place on the Elo ladder. Everyone starts on 1000.
+export interface Rating {
+    rank: number
+    player_id: string
+    name: string
+    rating: number
+    matches_rated: number
+    // Too few matches for the rating to mean much yet
+    provisional: boolean
+    peak: number
+    last_change: number
+}
+
+// What one completed match did to a player's rating
+export interface RatingChange {
+    match_id: string
+    played_at: string | null
+    rating_before: number
+    rating_after: number
+    change: number
+}
+
+// A side's, or a player's, rallies in games scored live. Rates are null
+// with nothing to divide by.
+export interface RallyInsights {
+    side: Side | null
+    rallies_played: number
+    rallies_won: number
+    rally_win_rate: number | null
+    serves_played: number
+    serves_won: number
+    serve_win_rate: number | null
+    receives_played: number
+    receives_won: number
+    receive_win_rate: number | null
+    longest_run: number
+    biggest_lead: number
+    game_points: number
+    game_points_won: number
+    game_point_win_rate: number | null
+    // Their appeals by the call they got. Lets only count where who
+    // appealed was recorded.
+    lets: number
+    strokes: number
+    no_lets: number
+}
+
+export interface PlayerInsights {
+    player_id: string
+    games_scored_live: number
+    rallies: RallyInsights
+    // Games won from 3 or more down, and lost from 3 or more up
+    comebacks: number
+    biggest_comeback: number
+    leads_lost: number
+    // Every game that reached one short all, live or not
+    deuce_games_won: number
+    deuce_games_lost: number
+}
+
+export interface GameInsights {
+    number: number
+    scored_live: boolean
+    went_to_deuce: boolean
+    // Every let played, whoever appealed
+    lets: number
+    comeback_by_side: Side | null
+    deepest_deficit: number | null
+    // Empty for a game not scored live
+    sides: RallyInsights[]
+}
+
+export interface MatchInsights {
+    match_id: string
+    // Each side over every game scored live
+    sides: RallyInsights[]
+    games: GameInsights[]
 }
 
 // Matches the API's DEFAULT_DB_PAGE_SIZE: a shorter page is the last one.
@@ -170,13 +302,69 @@ async function request<T>(
     return response.status === 204 ? (undefined as T) : response.json()
 }
 
+export type AccessRequestStatus = "pending" | "approved" | "declined"
+
+// Someone signed in who isn't a player asking to join, as they see it
+export interface AccessRequest {
+    id: string
+    status: AccessRequestStatus
+    message: string | null
+    // The player they became, once approved
+    player_id: string | null
+    reviewed_at: string | null
+    created_at: string
+}
+
+// The same with who asked, for an admin reviewing it
+export interface AdminAccessRequest extends AccessRequest {
+    user_id: string
+    name: string | null
+    email: string | null
+    reviewed_by_id: string | null
+}
+
+// Approving makes them the player given, or else a new one with this name
+// (their Google name when left out)
+export interface Approval {
+    player_id?: string | null
+    name?: string | null
+}
+
 export interface MatchFilters {
     player_id?: string
     status?: MatchStatus
     format?: MatchFormat
+    venue_id?: string
+    // Played at or after, and at or before, as ISO date-times
+    after?: string
+    before?: string
 }
 
 export const squashApi = {
+    // The caller's latest request to join, or null if they've none
+    myAccessRequest: () =>
+        request<AccessRequest>("GET", "/access-requests/me", "Failed to load your request").catch((error) => {
+            if (error instanceof ApiError && error.status === 404) {
+                return null
+            }
+            throw error
+        }),
+    requestAccess: (message: string | null) =>
+        request<AccessRequest>("POST", "/access-requests/me", "Failed to send your request", {
+            body: { message }
+        }),
+    withdrawAccessRequest: () => request<void>("DELETE", "/access-requests/me", "Failed to withdraw your request"),
+    // Newest first
+    accessRequests: (status?: AccessRequestStatus) =>
+        request<AdminAccessRequest[]>("GET", "/access-requests", "Failed to load the requests", {
+            query: { status }
+        }),
+    approveAccessRequest: (id: string, approval: Approval) =>
+        request<AdminAccessRequest>("POST", `/access-requests/${id}/approve`, "Failed to approve the request", {
+            body: approval
+        }),
+    declineAccessRequest: (id: string) =>
+        request<AdminAccessRequest>("POST", `/access-requests/${id}/decline`, "Failed to decline the request"),
     players: (includeInactive = false) =>
         request<Player[]>("GET", "/players", "Failed to load players", {
             query: { include_inactive: includeInactive }
@@ -188,6 +376,24 @@ export const squashApi = {
     playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),
     headToHead: (id: string, opponentId: string) =>
         request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head"),
+    // Highest rated first; without a format every match counts to one rating
+    ratings: (format?: MatchFormat, includeInactive = false) =>
+        request<Rating[]>("GET", "/ratings", "Failed to load the ratings", {
+            query: { format, include_inactive: includeInactive }
+        }),
+    // Oldest first
+    ratingHistory: (id: string, format?: MatchFormat) =>
+        request<RatingChange[]>("GET", `/players/${id}/ratings`, "Failed to load the rating history", {
+            query: { format }
+        }),
+    playerInsights: (id: string, format?: MatchFormat) =>
+        request<PlayerInsights>("GET", `/players/${id}/insights`, "Failed to load the insights", { query: { format } }),
+
+    venues: (includeInactive = false) =>
+        request<Venue[]>("GET", "/venues", "Failed to load venues", { query: { include_inactive: includeInactive } }),
+    createVenue: (body: VenueInput) => request<Venue>("POST", "/venues", "Failed to add the venue", { body }),
+    updateVenue: (id: string, body: VenueInput) =>
+        request<Venue>("PUT", `/venues/${id}`, "Failed to save the venue", { body }),
 
     matches: (filters: MatchFilters, page: number) =>
         request<Match[]>("GET", "/matches", "Failed to load matches", { query: { ...filters, page } }),
@@ -202,16 +408,23 @@ export const squashApi = {
     updateMatch: (id: string, body: MatchInput) =>
         request<Match>("PUT", `/matches/${id}`, "Failed to save the match", { body }),
     deleteMatch: (id: string) => request<void>("DELETE", `/matches/${id}`, "Failed to delete the match"),
+    // Answers with whichever of the two was played first, which is kept; the
+    // other is deleted.
+    mergeMatches: (id: string, otherId: string) =>
+        request<Match>("POST", `/matches/${id}/merge`, "Failed to merge the matches", {
+            body: { match_id: otherId }
+        }),
     completeMatch: (id: string, version: number) =>
         request<Match>("POST", `/matches/${id}/complete`, "Failed to end the match", { query: { version } }),
     setGame: (id: string, number: number, body: { side1_points: number; side2_points: number }) =>
         request<Match>("PUT", `/matches/${id}/games/${number}`, "Failed to save the game", { body }),
-    deleteLastGame: (id: string) =>
-        request<Match>("DELETE", `/matches/${id}/games/last`, "Failed to remove the game"),
+    deleteLastGame: (id: string) => request<Match>("DELETE", `/matches/${id}/games/last`, "Failed to remove the game"),
+    matchInsights: (id: string) =>
+        request<MatchInsights>("GET", `/matches/${id}/insights`, "Failed to load the insights"),
     rallies: (id: string) => request<Rally[]>("GET", `/matches/${id}/rallies`, "Failed to load the rallies"),
-    addRally: (id: string, wonBySide: Side, version: number) =>
+    addRally: (id: string, rally: RallyInput, version: number) =>
         request<Match>("POST", `/matches/${id}/rallies`, "Failed to score the point", {
-            body: { won_by_side: wonBySide, version }
+            body: { ...rally, version }
         }),
     undoRally: (id: string, version: number) =>
         request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })
@@ -284,6 +497,22 @@ async function checkAccess(): Promise<void> {
     if (id === checkId) {
         setAccess(next)
     }
+}
+
+// A private match's rallies and insights are refused to anyone not in it,
+// which leaves the rest of its page to show.
+export function unlessPrivate<T>(request: Promise<T>): Promise<T | null> {
+    return request.catch((error) => {
+        if (error instanceof ApiError && error.status === 403) {
+            return null
+        }
+        throw error
+    })
+}
+
+// Checks membership again, such as once someone's request has been approved.
+export function recheckSquashAccess(): void {
+    void checkAccess()
 }
 
 // The first caller starts the check; later ones share it. It runs again

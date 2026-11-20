@@ -12,12 +12,14 @@ jest.mock("../roles", () => ({
     useIsAdmin: () => false
 }))
 
+let mockSquashAccess = "signedOut"
 jest.mock("./squash/api", () => ({
-    useSquashAccess: () => ({ status: "signedOut" })
+    useSquashAccess: () => ({ status: mockSquashAccess })
 }))
 
 beforeEach(() => {
     mockCanAccess = true
+    mockSquashAccess = "signedOut"
 })
 
 function renderAt(path: string) {
@@ -73,5 +75,19 @@ describe("NavBar", () => {
         expect(screen.queryByRole("link", { name: "Go Heavier" })).not.toBeInTheDocument()
         expect(screen.queryByRole("link", { name: "Finance" })).not.toBeInTheDocument()
         expect(screen.getByRole("link", { name: "About" })).toBeInTheDocument()
+    })
+
+    // Signed in but not a player: squash is where they ask to join.
+    it.each(["member", "denied"])("offers squash to someone who's %s", (status) => {
+        mockSquashAccess = status
+        renderAt("/")
+
+        expect(screen.getByRole("link", { name: "Squash" })).toHaveAttribute("href", "/squash")
+    })
+
+    it("hides squash when signed out", () => {
+        renderAt("/")
+
+        expect(screen.queryByRole("link", { name: "Squash" })).not.toBeInTheDocument()
     })
 })

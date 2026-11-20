@@ -1,8 +1,24 @@
 // Display helpers for the squash pages.
 import { EM_DASH } from "../go_heavier/format"
-import type { Game, Match, MatchStatus, Player, Side } from "./api"
+import type { Game, Match, MatchInput, MatchStatus, Player, RallyDecision, Side } from "./api"
 
 export const SIDES: Side[] = [1, 2]
+
+// The match as it stands, for a PUT that changes only some of it
+export function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchInput {
+    return {
+        format: match.format,
+        status: match.status,
+        played_at: match.played_at,
+        venue_id: match.venue_id,
+        points_to: match.points_to,
+        best_of: match.best_of,
+        notes: match.notes,
+        is_private: match.is_private,
+        players: match.players,
+        ...changes
+    }
+}
 
 // "Leo & Alex", or "Unknown player" for someone no longer in the list.
 export function sideNames(match: Pick<Match, "players">, side: Side, players: Player[]): string {
@@ -14,6 +30,29 @@ export function sideNames(match: Pick<Match, "players">, side: Side, players: Pl
 
 export function sideOf(match: Pick<Match, "players">, playerId: string | undefined): Side | null {
     return match.players.find((p) => p.player_id === playerId)?.side ?? null
+}
+
+/**
+ * Whether the API would merge the two: the same format and points per game,
+ * neither cancelled, and the same players paired the same way, on either
+ * side. Whether the earlier one's last game is finished is left to the API.
+ */
+export function canMerge(match: Match, other: Match): boolean {
+    if (
+        match.id === other.id ||
+        match.format !== other.format ||
+        match.points_to !== other.points_to ||
+        match.status === "cancelled" ||
+        other.status === "cancelled" ||
+        match.players.length !== other.players.length
+    ) {
+        return false
+    }
+    const sides = match.players.map((p) => [p.side, sideOf(other, p.player_id)])
+    return (
+        sides.every(([mine, theirs]) => mine === theirs) ||
+        sides.every(([mine, theirs]) => theirs !== null && mine !== theirs)
+    )
 }
 
 export function isLive(match: Pick<Match, "status">): boolean {
@@ -63,10 +102,11 @@ export function gameWinner(side1: number, side2: number, pointsTo: number): Side
 export function ballFor(match: Match): { side: Side; kind: "game" | "match" } | null {
     const game = currentGame(match)
     for (const side of SIDES) {
-        const [mine, theirs] = side === 1 ? [game.side1_points, game.side2_points] : [game.side2_points, game.side1_points]
+        const [mine, theirs] =
+            side === 1 ? [game.side1_points, game.side2_points] : [game.side2_points, game.side1_points]
         if (gameWinner(mine + 1, theirs, match.points_to) === 1) {
             const gamesNeeded = match.best_of === null ? null : (match.best_of + 1) / 2
-            const won = side === 1 ? match.side1_games : match.side2_games
+            const won = (side === 1 ? match.side1_games : match.side2_games) ?? 0
             return { side, kind: gamesNeeded !== null && won + 1 >= gamesNeeded ? "match" : "game" }
         }
     }
@@ -92,6 +132,32 @@ export const STATUS_LABELS: Record<MatchStatus, string> = {
 }
 
 // "Sun 15 Nov, 18:30" (with the year when it isn't this one)
+export const CALLS: Record<RallyDecision, string> = {
+    let: "Let",
+    stroke: "Stroke",
+    no_let: "No let"
+}
+
+/**
+ * A finished match in a line, for sharing: "Leo beat Alex 3-1 (11-7, 9-11,
+ * 11-5, 11-8)", or "Leo and Alex drew 1-1 (...)". Scores read from the
+ * winner's side, as a result is usually told.
+ */
+export function resultSummary(match: Match, players: Player[]): string {
+    const winner = match.winning_side ?? 1
+    const loser: Side = winner === 1 ? 2 : 1
+    const games = (side: Side) => (side === 1 ? match.side1_games : match.side2_games)
+    const points = (g: Game, side: Side) => (side === 1 ? g.side1_points : g.side2_points)
+    const scores = match.games
+        .filter((g) => g.winning_side !== null)
+        .map((g) => `${points(g, winner)}-${points(g, loser)}`)
+        .join(", ")
+    const verb = match.winning_side === null ? "drew with" : "beat"
+    const sides = `${sideNames(match, winner, players)} ${verb} ${sideNames(match, loser, players)}`
+    const line = `${sides} ${games(winner)}-${games(loser)}`
+    return scores ? `${line} (${scores})` : line
+}
+
 export function formatWhen(value: string | null): string {
     if (!value) {
         return "No date set"
@@ -130,6 +196,11 @@ export function fromLocalInput(value: string): string | null {
 
 export function winRate(value: number | null): string {
     return value === null ? EM_DASH : `${Math.round(value * 100)}%`
+}
+
+// "+12", "−8" (a true minus sign) or "0"
+export function signed(value: number): string {
+    return value > 0 ? `+${value}` : value < 0 ? `−${-value}` : "0"
 }
 
 // "4-2", or "4-2-1" with draws

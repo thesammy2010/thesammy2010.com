@@ -219,6 +219,16 @@
     color: #2c3e50;
 }
 
+/* A consequence to read before confirming, on its own line */
+.squash-warning {
+    flex-basis: 100%;
+    padding: 8px 10px;
+    border-left: 3px solid #d97706;
+    border-radius: 6px;
+    background: #fffbeb;
+    color: #78350f;
+}
+
 /* Inputs. ExerciseForm.css styles every select on the site with a top
    margin and full width, which these undo. */
 .squash-input {
@@ -271,7 +281,7 @@ select.squash-input {
     gap: 12px;
 }
 
-/* Two-way toggle */
+/* Segmented toggle */
 .squash-segmented {
     display: inline-flex;
     padding: 3px;
@@ -385,16 +395,52 @@ select.squash-input {
     gap: 6px;
 }
 
+/* Each side's colours, for rows that pick out a winner */
+.squash-row-side-1 {
+    --side: var(--squash-side-1);
+    --side-soft: var(--squash-side-1-soft);
+}
+
+.squash-row-side-2 {
+    --side: var(--squash-side-2);
+    --side-soft: var(--squash-side-2-soft);
+}
+
 .squash-scoreline-row {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 6px 8px;
+    border-left: 4px solid transparent;
+    border-radius: 8px;
     color: #4a5568;
 }
 
-.squash-scoreline-row.winner {
+.squash-scoreline-row.winner,
+.squash-scoreboard-side.winner {
+    background: var(--side-soft);
+    border-left-color: var(--side);
     color: #1a202c;
     font-weight: 700;
+}
+
+.squash-scoreline-row.loser,
+.squash-scoreboard-side.loser {
+    color: #a0aec0;
+}
+
+.squash-won-badge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: white;
+    box-shadow: inset 0 0 0 2px var(--side);
+    color: #1a202c;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .squash-scoreline-names {
@@ -419,7 +465,16 @@ select.squash-input {
     font-weight: 400;
 }
 
-.squash-scoreline-games span.won {
+.squash-scoreline-games span {
+    padding: 1px 2px;
+    border-radius: 6px;
+}
+
+/* A game's winning score, boxed in the winner's colour */
+.squash-scoreline-games span.won,
+.squash-games-table td.won {
+    background: var(--side-soft);
+    box-shadow: inset 0 0 0 2px var(--side);
     color: #1a202c;
     font-weight: 700;
 }
@@ -453,9 +508,11 @@ select.squash-input {
     color: #4a5568;
 }
 
-.squash-scoreboard-side.winner {
-    color: #1a202c;
-    font-weight: 700;
+
+.squash-scoreboard-side {
+    padding: 8px 10px;
+    border-left: 4px solid transparent;
+    border-radius: 10px;
 }
 
 .squash-scoreboard-names {
@@ -586,6 +643,39 @@ select.squash-input {
     font-size: 0.875rem;
 }
 
+.squash-scorer-appeals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.squash-appeal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.squash-appeal-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.squash-appeal-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.squash-appeal-buttons button {
+    min-height: 40px;
+    padding: 6px 10px;
+}
+
 .squash-scorer-actions {
     display: flex;
     flex-wrap: wrap;
@@ -634,11 +724,6 @@ select.squash-input {
 
 .squash-games-table td {
     color: #a0aec0;
-}
-
-.squash-games-table td.won {
-    color: #1a202c;
-    font-weight: 700;
 }
 
 .squash-games-table td.open {
@@ -724,6 +809,153 @@ select.squash-input {
 }
 
 /* Point by point */
+/* Momentum chart */
+.squash-momentum {
+    margin: 0 0 20px 0;
+}
+
+.squash-momentum-caption .squash-card-title {
+    margin-bottom: 2px;
+}
+
+.squash-momentum-key {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #718096;
+}
+
+.squash-momentum-key-top {
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.squash-momentum-key:not(.squash-momentum-key-top) {
+    margin-top: 4px;
+}
+
+.squash-momentum-plot {
+    position: relative;
+    touch-action: pan-y;
+    cursor: crosshair;
+    outline: none;
+}
+
+.squash-momentum-plot:focus-visible {
+    box-shadow: 0 0 0 2px #a3bffa;
+    border-radius: 4px;
+}
+
+.squash-momentum-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.squash-momentum-svg line,
+.squash-momentum-svg path {
+    vector-effect: non-scaling-stroke;
+}
+
+.squash-momentum-zero {
+    stroke: #cbd5e0;
+    stroke-width: 1;
+}
+
+.squash-momentum-divider {
+    stroke: #edf2f7;
+    stroke-width: 1;
+}
+
+.squash-momentum-crosshair {
+    stroke: #a0aec0;
+    stroke-width: 1;
+}
+
+.squash-momentum-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.squash-momentum-line.squash-side-1 {
+    stroke: var(--squash-side-1);
+}
+
+.squash-momentum-line.squash-side-2 {
+    stroke: var(--squash-side-2);
+}
+
+.squash-momentum-area {
+    stroke: none;
+    opacity: 0.1;
+}
+
+.squash-momentum-area.squash-side-1 {
+    fill: var(--squash-side-1);
+}
+
+.squash-momentum-area.squash-side-2 {
+    fill: var(--squash-side-2);
+}
+
+.squash-momentum-game {
+    position: absolute;
+    top: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #a0aec0;
+    pointer-events: none;
+}
+
+.squash-momentum-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px white;
+    pointer-events: none;
+}
+
+.squash-momentum-dot.squash-side-1 {
+    background: var(--squash-side-1);
+}
+
+.squash-momentum-dot.squash-side-2 {
+    background: var(--squash-side-2);
+}
+
+.squash-momentum-tooltip {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    transform: translateX(8px);
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.8125rem;
+    color: #2c3e50;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.squash-momentum-tooltip.flip {
+    transform: translateX(calc(-100% - 8px));
+}
+
+.squash-momentum-tooltip strong {
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+}
+
 .squash-rally-row {
     display: flex;
     align-items: center;
@@ -751,11 +983,175 @@ select.squash-input {
     border-radius: 50%;
 }
 
+/* A let, which no one won: a dash rather than a dot */
+.squash-rally-dot.squash-rally-let {
+    align-self: center;
+    height: 2px;
+    border-radius: 1px;
+    background: #94a3b8;
+}
+
+/* A point given on a stroke or no let: a ring in the winner's colour */
+.squash-rally-dot.squash-rally-call {
+    background: transparent;
+}
+
+.squash-rally-dot.squash-rally-call.squash-side-1 {
+    box-shadow: inset 0 0 0 3px var(--squash-side-1);
+}
+
+.squash-rally-dot.squash-rally-call.squash-side-2 {
+    box-shadow: inset 0 0 0 3px var(--squash-side-2);
+}
+
 .squash-manage {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+}
+
+/* Merging matches */
+.squash-merge-list {
+    list-style: none;
+    margin: 12px 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.squash-merge-option {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    font: inherit;
+    color: #2c3e50;
+    text-align: left;
+    cursor: pointer;
+}
+
+.squash-merge-option:hover {
+    border-color: #a3bffa;
+}
+
+.squash-merge-option.active {
+    border-color: #1e40af;
+    background: #edf2ff;
+}
+
+/* Elo ladder */
+.squash-rank {
+    display: inline-block;
+    min-width: 1.75em;
+    color: #a0aec0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-table td.squash-rating {
+    font-weight: 700;
+    color: #1a202c;
+}
+
+/* Rating history chart */
+.squash-rating-chart {
+    margin: 12px 0 20px 0;
+}
+
+.squash-rating-frame {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-right: 44px;
+}
+
+.squash-rating-axis {
+    position: relative;
+    flex: 0 0 36px;
+}
+
+.squash-rating-axis span {
+    position: absolute;
+    right: 0;
+    transform: translateY(-50%);
+    font-size: 0.6875rem;
+    color: #a0aec0;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-rating-plot {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.squash-rating-grid {
+    stroke: #edf2f7;
+    stroke-width: 1;
+}
+
+.squash-rating-line {
+    fill: none;
+    stroke: #1e40af;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.squash-rating-dot {
+    background: #1e40af;
+}
+
+.squash-rating-end {
+    position: absolute;
+    left: calc(100% + 10px);
+    transform: translateY(-50%);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #2c3e50;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+/* Insights */
+.squash-card-title-inline {
+    margin: 0;
+}
+
+.squash-refreshing {
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.squash-insights-table td {
+    white-space: nowrap;
+}
+
+.squash-insights-notes {
+    margin: 12px 0 0 0;
+    padding-left: 20px;
+    color: #2c3e50;
+    font-size: 0.9375rem;
+}
+
+.squash-insights-notes li + li {
+    margin-top: 4px;
+}
+
+.squash-insights-grid {
+    margin-top: 12px;
+}
+
+/* Venues */
+.squash-venues {
+    margin-bottom: 12px;
 }
 
 /* Players */
@@ -838,6 +1234,56 @@ select.squash-input {
     gap: 12px;
 }
 
+/* Stats */
+.squash-results {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.squash-result {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: white;
+}
+
+.squash-result:hover {
+    filter: brightness(1.1);
+}
+
+.squash-result-W {
+    background: #2f855a;
+}
+
+.squash-result-L {
+    background: #c53030;
+}
+
+.squash-result-D {
+    background: #a0aec0;
+}
+
+.squash-stats-records tbody th {
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.squash-table td.squash-stats-record {
+    text-align: left;
+}
+
+.squash-stats-record .squash-muted {
+    display: block;
+    margin-top: 2px;
+}
+
 @media (max-width: 767px) {
     .squash-page {
         padding: 16px;
@@ -870,4 +1316,308 @@ select.squash-input {
     .squash-rally-label {
         width: 80px;
     }
+}
+
+/* A game's own page */
+.squash-game-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.squash-game-steps {
+    display: flex;
+    gap: 16px;
+}
+
+.squash-game-link {
+    display: inline-block;
+    min-width: 28px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    color: #1e40af;
+    text-decoration: underline;
+}
+
+.squash-game-link:hover {
+    background: #eef2ff;
+}
+
+.squash-rally-table td,
+.squash-rally-table th {
+    text-align: left;
+}
+
+.squash-rally-table .squash-rally-score {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-rally-table thead th:last-child {
+    text-align: right;
+}
+
+/* The matches list's date range */
+.squash-date-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+/* Sharing a finished match */
+.squash-share-row {
+    display: flex;
+    justify-content: flex-end;
+    margin: -4px 0 12px;
+}
+
+.squash-share {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* Home */
+.squash-home-ratings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-bottom: 12px;
+}
+
+.squash-home-rating {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.squash-home-rating-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: #1a202c;
+}
+
+.squash-home-rating-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.squash-home-section {
+    margin-bottom: 20px;
+}
+
+.squash-home-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 4px 0 24px;
+}
+
+/* The home page's month of matches */
+.squash-calendar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.squash-calendar-head .squash-card-title {
+    margin: 0;
+}
+
+.squash-calendar-head .squash-text-button {
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 1.25rem;
+}
+
+.squash-calendar-grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 8px;
+}
+
+.squash-calendar-grid th {
+    padding: 4px 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+}
+
+.squash-calendar-grid td {
+    padding: 2px;
+    text-align: center;
+}
+
+.squash-calendar-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 100%;
+    min-height: 44px;
+    padding: 4px 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: none;
+    color: #2c3e50;
+    font: inherit;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.squash-calendar-day:disabled {
+    color: #a0aec0;
+    cursor: default;
+}
+
+.squash-calendar-day:hover:not(:disabled) {
+    background: #eef2ff;
+}
+
+.squash-calendar-day.today {
+    border-color: #cbd5e0;
+    font-weight: 700;
+}
+
+.squash-calendar-day.chosen {
+    border-color: #1e40af;
+    background: #eef2ff;
+}
+
+.squash-calendar-marks {
+    display: flex;
+    gap: 2px;
+    min-height: 8px;
+}
+
+.squash-calendar-mark {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.squash-calendar-mark.mark-W {
+    background: #2f855a;
+}
+
+.squash-calendar-mark.mark-L {
+    background: #c53030;
+}
+
+.squash-calendar-mark.mark-D,
+.squash-calendar-mark.mark-played {
+    background: #a0aec0;
+}
+
+.squash-calendar-mark.mark-live {
+    background: #38a169;
+    box-shadow: 0 0 0 2px #c6f6d5;
+}
+
+.squash-calendar-mark.mark-upcoming {
+    box-sizing: border-box;
+    border: 2px solid #718096;
+}
+
+.squash-calendar-key {
+    margin-top: 8px;
+    font-size: 0.8125rem;
+}
+
+/* How it works */
+.squash-howto {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.squash-howto li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    line-height: 1.45;
+}
+
+.squash-howto-icon {
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+
+/* Who's serving and from which box, above the point buttons */
+.squash-serve-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 0.9375rem;
+    color: #2c3e50;
+}
+
+/* Asking to join, for someone signed in who isn't a player */
+.squash-request-access {
+    max-width: 560px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.squash-request-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.squash-request-form textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
+.squash-request-message {
+    margin: 0;
+    padding: 8px 12px;
+    border-left: 3px solid #e0e0e0;
+    color: #4a5568;
+    white-space: pre-wrap;
+}
+
+.squash-request-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* A private match: only its players and admins see the score */
+.squash-private-badge {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4a5568;
+    background: #edf2f7;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
 }

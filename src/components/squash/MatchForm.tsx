@@ -1,7 +1,8 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 
-import { Match, MatchFormat, MatchInput, Player, Side, squashApi } from "./api"
+import { Match, MatchFormat, MatchInput, Player, Side, squashApi, Venue } from "./api"
 import { fromLocalInput, toLocalInput } from "./format"
+import { useCanAccess } from "../../roles"
 import "../go_heavier/LocationForm.css"
 import "./Squash.css"
 
@@ -10,14 +11,20 @@ interface Props {
     me: Player | null
     // Set to edit a match; left out to arrange a new one.
     match?: Match
+    // A new match's format before it's chosen, such as the list's filter
+    defaultFormat?: MatchFormat
     onClose: () => void
     onSaved: (match: Match) => void
 }
 
+// The venue picker's choice that adds a venue rather than picking one
+const NEW_VENUE = "new"
+
+// Open-ended first, as most matches are played until people stop
 const BEST_OF_OPTIONS: { value: string; label: string }[] = [
+    { value: "", label: "Open-ended: play until we stop" },
     { value: "3", label: "Best of 3" },
-    { value: "5", label: "Best of 5" },
-    { value: "", label: "Open-ended: play until we stop" }
+    { value: "5", label: "Best of 5" }
 ]
 
 // One slot per player a side: [side 1 slots, side 2 slots].
@@ -32,16 +39,34 @@ function slotsFor(format: MatchFormat, match: Match | undefined, me: Player | nu
     return [fill(1, me ? [me.id] : []), fill(2, [])]
 }
 
-export default function MatchForm({ players, me, match, onClose, onSaved }: Props) {
-    const [format, setFormat] = useState<MatchFormat>(match?.format ?? "singles")
-    const [slots, setSlots] = useState<Slots>(slotsFor(match?.format ?? "singles", match, me))
-    const [bestOf, setBestOf] = useState(match ? (match.best_of === null ? "" : String(match.best_of)) : "5")
+export default function MatchForm({ players, me, match, defaultFormat, onClose, onSaved }: Props) {
+    const [format, setFormat] = useState<MatchFormat>(match?.format ?? defaultFormat ?? "singles")
+    const [slots, setSlots] = useState<Slots>(slotsFor(match?.format ?? defaultFormat ?? "singles", match, me))
+    const [bestOf, setBestOf] = useState(match?.best_of ? String(match.best_of) : "")
     const [pointsTo, setPointsTo] = useState(String(match?.points_to ?? 11))
     const [playedAt, setPlayedAt] = useState(toLocalInput(match ? match.played_at : new Date()))
-    const [venue, setVenue] = useState(match?.venue ?? "")
+    const [venueId, setVenueId] = useState(match?.venue_id ?? "")
+    const [venues, setVenues] = useState<Venue[] | null>(null)
+    const [newVenue, setNewVenue] = useState("")
+    const canAddVenue = useCanAccess("POST", "/squash/venues")
     const [notes, setNotes] = useState(match?.notes ?? "")
+    const [isPrivate, setIsPrivate] = useState(match?.is_private ?? false)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    // Every venue, so a match at one the group has stopped using keeps it;
+    // only the active ones are offered otherwise.
+    useEffect(() => {
+        let cancelled = false
+        squashApi.venues(true).then(
+            (all) => !cancelled && setVenues(all),
+            () => !cancelled && setVenues([])
+        )
+        return () => {
+            cancelled = true
+        }
+    }, [])
+    const venueOptions = (venues ?? []).filter((v) => v.is_active || v.id === match?.venue_id)
 
     // Someone already in a match can't be picked twice, so each slot only
     // offers the players not chosen in another one.
@@ -50,9 +75,7 @@ export default function MatchForm({ players, me, match, onClose, onSaved }: Prop
     const changeFormat = (next: MatchFormat) => {
         setFormat(next)
         const size = next === "singles" ? 1 : 2
-        setSlots(
-            slots.map((side) => Array.from({ length: size }, (_, i) => side[i] ?? "")) as Slots
-        )
+        setSlots(slots.map((side) => Array.from({ length: size }, (_, i) => side[i] ?? "")) as Slots)
     }
 
     const setSlot = (side: number, index: number, playerId: string) => {
@@ -65,19 +88,34 @@ export default function MatchForm({ players, me, match, onClose, onSaved }: Prop
         e.preventDefault()
         setSaving(true)
         setError(null)
-        const body: MatchInput = {
-            format,
-            status: match?.status ?? "scheduled",
-            played_at: fromLocalInput(playedAt),
-            venue: venue.trim() || null,
-            points_to: Number(pointsTo),
-            best_of: bestOf === "" ? null : Number(bestOf),
-            notes: notes.trim() || null,
-            players: slots.flatMap((side, i) =>
-                side.map((playerId) => ({ player_id: playerId, side: (i + 1) as Side }))
-            )
-        }
         try {
+            // A venue typed in is added first, so the match can be saved there
+            const venue =
+                venueId === NEW_VENUE
+                    ? await squashApi.createVenue({
+                          name: newVenue.trim(),
+                          address: null,
+                          notes: null,
+                          is_active: true
+                      })
+                    : null
+            if (venue) {
+                setVenues([...(venues ?? []), venue])
+                setVenueId(venue.id)
+            }
+            const body: MatchInput = {
+                format,
+                status: match?.status ?? "scheduled",
+                played_at: fromLocalInput(playedAt),
+                venue_id: venue ? venue.id : venueId || null,
+                points_to: Number(pointsTo),
+                best_of: bestOf === "" ? null : Number(bestOf),
+                notes: notes.trim() || null,
+                is_private: isPrivate,
+                players: slots.flatMap((side, i) =>
+                    side.map((playerId) => ({ player_id: playerId, side: (i + 1) as Side }))
+                )
+            }
             onSaved(match ? await squashApi.updateMatch(match.id, body) : await squashApi.createMatch(body))
         } catch (err) {
             setError((err as Error).message)
@@ -164,23 +202,63 @@ export default function MatchForm({ players, me, match, onClose, onSaved }: Prop
                     <div className="squash-form-row">
                         <label>
                             <span>When</span>
-                            <input type="datetime-local" value={playedAt} onChange={(e) => setPlayedAt(e.target.value)} />
+                            <input
+                                type="datetime-local"
+                                value={playedAt}
+                                onChange={(e) => setPlayedAt(e.target.value)}
+                                required
+                            />
                         </label>
                         <label>
                             <span>Where</span>
-                            <input
-                                type="text"
-                                value={venue}
-                                onChange={(e) => setVenue(e.target.value)}
-                                maxLength={255}
-                                placeholder="e.g. the club"
-                            />
+                            <select
+                                value={venueId}
+                                onChange={(e) => setVenueId(e.target.value)}
+                                disabled={venues === null}
+                            >
+                                <option value="">
+                                    {venues === null
+                                        ? "Loading venues..."
+                                        : venueOptions.length === 0 && !canAddVenue
+                                        ? "No venues yet"
+                                        : "Not set"}
+                                </option>
+                                {venueOptions.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                        {v.name}
+                                        {v.is_active ? "" : " (no longer used)"}
+                                    </option>
+                                ))}
+                                {canAddVenue && <option value={NEW_VENUE}>+ New venue...</option>}
+                            </select>
                         </label>
                     </div>
+                    {venueId === NEW_VENUE && (
+                        <label>
+                            <span>New venue</span>
+                            <input
+                                type="text"
+                                value={newVenue}
+                                onChange={(e) => setNewVenue(e.target.value)}
+                                maxLength={255}
+                                placeholder="Such as the club's name"
+                                required
+                                autoFocus
+                            />
+                        </label>
+                    )}
+                    {venues !== null && venueOptions.length === 0 && !canAddVenue && (
+                        <p className="squash-muted">An admin adds venues on the Players page.</p>
+                    )}
 
                     <label>
                         <span>Notes</span>
                         <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={512} />
+                    </label>
+
+                    <label className="squash-checkbox">
+                        <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+                        <span>Private: only its players and admins see the score</span>
                     </label>
 
                     {error && <p className="error-message">{error}</p>}

@@ -5,7 +5,8 @@ import "./NavBar.css"
 const LINKS = [
     { to: "/admin", label: "🏠 Dashboard" },
     { to: "/admin/provision", label: "➕ Provision" },
-    { to: "/admin/users", label: "👥 Users" }
+    { to: "/admin/users", label: "👥 Users" },
+    { to: "/admin/squash-requests", label: "🎾 Squash requests" }
 ]
 
 export default function AdminNavBar() {

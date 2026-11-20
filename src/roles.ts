@@ -7,13 +7,16 @@ import { useEffect, useState } from "react"
 import { API_URL } from "./configs"
 import { apiFetch, getToken, subscribeToken } from "./auth"
 
-export type UserRole = "guest" | "viewer" | "editor" | "admin"
+export type UserRole = "guest" | "squash" | "viewer" | "editor" | "admin"
 
+// Matches the API's ROLE_RANK: squash only reaches /squash, so it sits
+// just above guest
 const ROLE_RANK: Record<UserRole, number> = {
     guest: 0,
-    viewer: 1,
-    editor: 2,
-    admin: 3
+    squash: 1,
+    viewer: 2,
+    editor: 3,
+    admin: 4
 }
 
 // Keyed by path template as FastAPI declares it (e.g.

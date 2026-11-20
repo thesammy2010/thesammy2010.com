@@ -44,6 +44,13 @@ export default function Admin() {
                                     </div>
                                 </Link>
                             )}
+                            <Link to="/admin/squash-requests" className="admin-card">
+                                <div className="admin-card-icon">🎾</div>
+                                <div className="admin-card-content">
+                                    <div className="admin-card-title">Squash requests</div>
+                                    <p className="admin-card-caption">Let in people who've asked to join squash</p>
+                                </div>
+                            </Link>
                         </div>
                     </div>
                 ) : !isSignedIn() ? (

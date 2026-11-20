@@ -1,5 +1,17 @@
 import type { Game, Match, Player } from "./api"
-import { ballFor, currentGame, gameScores, gameWinner, nextEnteredGame, record, sideNames, winRate } from "./format"
+import {
+    ballFor,
+    canMerge,
+    currentGame,
+    gameScores,
+    gameWinner,
+    nextEnteredGame,
+    record,
+    resultSummary,
+    sideNames,
+    signed,
+    winRate
+} from "./format"
 
 function game(number: number, side1: number, side2: number, rallies = side1 + side2): Game {
     return { number, side1_points: side1, side2_points: side2, winning_side: gameWinner(side1, side2, 11), rallies }
@@ -13,9 +25,12 @@ function match(games: Game[], overrides: Partial<Match> = {}): Match {
         status: "in_progress",
         played_at: null,
         venue: null,
+        venue_id: null,
         points_to: 11,
         best_of: 5,
         notes: null,
+        is_private: false,
+        hidden: false,
         players: [
             { player_id: "a", side: 1 },
             { player_id: "b", side: 2 }
@@ -129,5 +144,108 @@ describe("labels", () => {
         expect(record(4, 2, 1)).toBe("4-2-1")
         expect(winRate(0.666)).toBe("67%")
         expect(winRate(null)).toBe("—")
+    })
+})
+
+describe("canMerge", () => {
+    const other = (overrides: Partial<Match> = {}) => match([game(1, 11, 4)], { id: "n", ...overrides })
+
+    it("takes the same players on the same or swapped sides", () => {
+        expect(canMerge(match([]), other())).toBe(true)
+        expect(
+            canMerge(
+                match([]),
+                other({
+                    players: [
+                        { player_id: "b", side: 1 },
+                        { player_id: "a", side: 2 }
+                    ]
+                })
+            )
+        ).toBe(true)
+    })
+
+    it("refuses itself, other players, other formats, points and cancelled matches", () => {
+        expect(canMerge(match([]), match([]))).toBe(false)
+        expect(
+            canMerge(
+                match([]),
+                other({
+                    players: [
+                        { player_id: "a", side: 1 },
+                        { player_id: "c", side: 2 }
+                    ]
+                })
+            )
+        ).toBe(false)
+        expect(canMerge(match([]), other({ points_to: 15 }))).toBe(false)
+        expect(canMerge(match([]), other({ status: "cancelled" }))).toBe(false)
+    })
+
+    it("refuses doubles pairs split up differently", () => {
+        const doubles = (pairs: string[][]) => ({
+            format: "doubles" as const,
+            players: pairs.flatMap((ids, i) => ids.map((player_id) => ({ player_id, side: (i + 1) as 1 | 2 })))
+        })
+        const base = match(
+            [],
+            doubles([
+                ["a", "b"],
+                ["c", "d"]
+            ])
+        )
+        expect(
+            canMerge(
+                base,
+                other(
+                    doubles([
+                        ["c", "d"],
+                        ["a", "b"]
+                    ])
+                )
+            )
+        ).toBe(true)
+        expect(
+            canMerge(
+                base,
+                other(
+                    doubles([
+                        ["a", "c"],
+                        ["b", "d"]
+                    ])
+                )
+            )
+        ).toBe(false)
+    })
+})
+
+describe("signed", () => {
+    it("marks a rise and a fall, and leaves no change bare", () => {
+        expect(signed(12)).toBe("+12")
+        expect(signed(-8)).toBe("\u22128")
+        expect(signed(0)).toBe("0")
+    })
+})
+
+describe("resultSummary", () => {
+    const players = [
+        { id: "a", name: "Leo" },
+        { id: "b", name: "Alex" }
+    ] as Player[]
+
+    it("tells it from the winner's side", () => {
+        const won = match([game(1, 7, 11), game(2, 11, 9), game(3, 4, 11), game(4, 8, 11)], {
+            status: "completed",
+            winning_side: 2
+        })
+        expect(resultSummary(won, players)).toBe("Alex beat Leo 3-1 (11-7, 9-11, 11-4, 11-8)")
+    })
+
+    it("tells a draw, leaving out an unfinished game", () => {
+        const drawn = match([game(1, 11, 5), game(2, 6, 11), game(3, 3, 2)], {
+            status: "completed",
+            winning_side: null
+        })
+        expect(resultSummary(drawn, players)).toBe("Leo drew with Alex 1-1 (11-5, 6-11)")
     })
 })

@@ -17,8 +17,10 @@ export default function NavBar() {
     // link only shows for someone who can open it.
     const canSeeFinance = useCanAccess("GET", "/finance/transactions")
     // Squash is for the group's players whatever their role, so it's shown
-    // from membership rather than from the access map.
-    const canSeeSquash = useSquashAccess().status === "member"
+    // from membership rather than from the access map, and to anyone signed
+    // in who isn't a player, since that's where they ask to join.
+    const squashAccess = useSquashAccess().status
+    const canSeeSquash = squashAccess === "member" || squashAccess === "denied"
     const [menuOpen, setMenuOpen] = useState(false)
 
     // A link tap should close the mobile menu rather than leave it open over
