@@ -83,6 +83,16 @@ describe("canAccess", () => {
         expect(roles.canAccess("POST", "/go-heavier/locations")).toBe(false)
     })
 
+    it("ranks squash above guest but below viewer", async () => {
+        const roles = await loadRoles({
+            role: "squash",
+            endpoints: { "/squash/matches": { GET: "squash" }, "/go-heavier/locations": { GET: "viewer" } }
+        })
+
+        expect(roles.canAccess("GET", "/squash/matches")).toBe(true)
+        expect(roles.canAccess("GET", "/go-heavier/locations")).toBe(false)
+    })
+
     it("allows a null-role (public) endpoint regardless of the caller's role", async () => {
         const roles = await loadRoles({
             role: "guest",

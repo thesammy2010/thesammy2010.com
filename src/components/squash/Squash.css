@@ -219,6 +219,16 @@
     color: #2c3e50;
 }
 
+/* A consequence to read before confirming, on its own line */
+.squash-warning {
+    flex-basis: 100%;
+    padding: 8px 10px;
+    border-left: 3px solid #d97706;
+    border-radius: 6px;
+    background: #fffbeb;
+    color: #78350f;
+}
+
 /* Inputs. ExerciseForm.css styles every select on the site with a top
    margin and full width, which these undo. */
 .squash-input {
@@ -385,16 +395,52 @@ select.squash-input {
     gap: 6px;
 }
 
+/* Each side's colours, for rows that pick out a winner */
+.squash-row-side-1 {
+    --side: var(--squash-side-1);
+    --side-soft: var(--squash-side-1-soft);
+}
+
+.squash-row-side-2 {
+    --side: var(--squash-side-2);
+    --side-soft: var(--squash-side-2-soft);
+}
+
 .squash-scoreline-row {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 6px 8px;
+    border-left: 4px solid transparent;
+    border-radius: 8px;
     color: #4a5568;
 }
 
-.squash-scoreline-row.winner {
+.squash-scoreline-row.winner,
+.squash-scoreboard-side.winner {
+    background: var(--side-soft);
+    border-left-color: var(--side);
     color: #1a202c;
     font-weight: 700;
+}
+
+.squash-scoreline-row.loser,
+.squash-scoreboard-side.loser {
+    color: #a0aec0;
+}
+
+.squash-won-badge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: white;
+    box-shadow: inset 0 0 0 2px var(--side);
+    color: #1a202c;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .squash-scoreline-names {
@@ -419,7 +465,16 @@ select.squash-input {
     font-weight: 400;
 }
 
-.squash-scoreline-games span.won {
+.squash-scoreline-games span {
+    padding: 1px 2px;
+    border-radius: 6px;
+}
+
+/* A game's winning score, boxed in the winner's colour */
+.squash-scoreline-games span.won,
+.squash-games-table td.won {
+    background: var(--side-soft);
+    box-shadow: inset 0 0 0 2px var(--side);
     color: #1a202c;
     font-weight: 700;
 }
@@ -453,9 +508,11 @@ select.squash-input {
     color: #4a5568;
 }
 
-.squash-scoreboard-side.winner {
-    color: #1a202c;
-    font-weight: 700;
+
+.squash-scoreboard-side {
+    padding: 8px 10px;
+    border-left: 4px solid transparent;
+    border-radius: 10px;
 }
 
 .squash-scoreboard-names {
@@ -667,11 +724,6 @@ select.squash-input {
 
 .squash-games-table td {
     color: #a0aec0;
-}
-
-.squash-games-table td.won {
-    color: #1a202c;
-    font-weight: 700;
 }
 
 .squash-games-table td.open {
@@ -1248,4 +1300,44 @@ select.squash-input {
     .squash-rally-label {
         width: 80px;
     }
+}
+
+/* A game's own page */
+.squash-game-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.squash-game-steps {
+    display: flex;
+    gap: 16px;
+}
+
+.squash-game-link {
+    display: inline-block;
+    min-width: 28px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    color: #1e40af;
+    text-decoration: underline;
+}
+
+.squash-game-link:hover {
+    background: #eef2ff;
+}
+
+.squash-rally-table td,
+.squash-rally-table th {
+    text-align: left;
+}
+
+.squash-rally-table .squash-rally-score {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-rally-table thead th:last-child {
+    text-align: right;
 }

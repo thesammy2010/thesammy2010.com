@@ -1,6 +1,6 @@
 import React from "react"
 
-import { Match, MatchInsights, Player, PlayerInsights, RallyInsights, Side } from "./api"
+import { GameInsights, Match, MatchInsights, Player, PlayerInsights, RallyInsights, Side } from "./api"
 import { SIDES, sideNames, winRate } from "./format"
 
 // "23/40 · 58%", or a dash with nothing to count
@@ -26,10 +26,61 @@ const APPEAL_ROWS: { label: string; value: (s: RallyInsights) => string }[] = [
 
 const appeals = (s: RallyInsights) => s.strokes + s.lets + s.no_lets
 
+/** What's worth a mention about a game: "Leo came back from 4 down", "went to deuce". */
+export function gameNotes(match: Match, game: GameInsights, players: Player[]): string[] {
+    const lines: string[] = []
+    if (game.comeback_by_side !== null) {
+        const deficit = game.deepest_deficit ? ` from ${game.deepest_deficit} down` : ""
+        lines.push(`${sideNames(match, game.comeback_by_side, players)} came back${deficit}`)
+    }
+    if (game.went_to_deuce) {
+        lines.push("went to deuce")
+    }
+    if (game.lets > 0) {
+        lines.push(`had ${game.lets} ${game.lets === 1 ? "let" : "lets"}`)
+    }
+    return lines
+}
+
+/**
+ * Each side's rally figures side by side, with their appeals once anyone
+ * has appealed: over a match, or one game.
+ */
+export function SidesTable({ match, sides, players }: { match: Match; sides: RallyInsights[]; players: Player[] }) {
+    const bySide = (side: Side) => sides.find((s) => s.side === side)
+    const rows = sides.some((s) => appeals(s) > 0) ? [...ROWS, ...APPEAL_ROWS] : ROWS
+    return (
+        <table className="squash-table squash-insights-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {SIDES.map((side) => (
+                        <th key={side} scope="col">
+                            <span className={`squash-side-dot squash-side-${side}`} aria-hidden="true" />{" "}
+                            {sideNames(match, side, players)}
+                        </th>
+                    ))}
+                </tr>
+            </thead>
+            <tbody>
+                {rows.map((row) => (
+                    <tr key={row.label}>
+                        <th scope="row">{row.label}</th>
+                        {SIDES.map((side) => {
+                            const s = bySide(side)
+                            return <td key={side}>{s ? row.value(s) : "—"}</td>
+                        })}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    )
+}
+
 /**
  * What the rallies of a match's live-scored games show, side by side, and
- * the games worth a mention: comebacks, deuce games and lets. Nothing when no game
- * was scored live or went to deuce.
+ * the games worth a mention: comebacks, deuce games and lets. Nothing when
+ * no game was scored live or went to deuce.
  */
 export function MatchInsightsCard({
     match,
@@ -40,21 +91,9 @@ export function MatchInsightsCard({
     insights: MatchInsights
     players: Player[]
 }) {
-    const bySide = (side: Side) => insights.sides.find((s) => s.side === side)
     const live = insights.sides.some((s) => s.rallies_played > 0)
-    const rows = insights.sides.some((s) => appeals(s) > 0) ? [...ROWS, ...APPEAL_ROWS] : ROWS
     const notes = insights.games.flatMap((game) => {
-        const lines: string[] = []
-        if (game.comeback_by_side !== null) {
-            const deficit = game.deepest_deficit ? ` from ${game.deepest_deficit} down` : ""
-            lines.push(`${sideNames(match, game.comeback_by_side, players)} came back${deficit}`)
-        }
-        if (game.went_to_deuce) {
-            lines.push("went to deuce")
-        }
-        if (game.lets > 0) {
-            lines.push(`had ${game.lets} ${game.lets === 1 ? "let" : "lets"}`)
-        }
+        const lines = gameNotes(match, game, players)
         return lines.length ? [{ number: game.number, text: lines.join(", and ") }] : []
     })
     if (!live && notes.length === 0) {
@@ -67,30 +106,7 @@ export function MatchInsightsCard({
             {live && (
                 <>
                     <p className="squash-muted">From the games scored point by point.</p>
-                    <table className="squash-table squash-insights-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                {SIDES.map((side) => (
-                                    <th key={side} scope="col">
-                                        <span className={`squash-side-dot squash-side-${side}`} aria-hidden="true" />{" "}
-                                        {sideNames(match, side, players)}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map((row) => (
-                                <tr key={row.label}>
-                                    <th scope="row">{row.label}</th>
-                                    {SIDES.map((side) => {
-                                        const s = bySide(side)
-                                        return <td key={side}>{s ? row.value(s) : "—"}</td>
-                                    })}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <SidesTable match={match} sides={insights.sides} players={players} />
                 </>
             )}
             {notes.length > 0 && (

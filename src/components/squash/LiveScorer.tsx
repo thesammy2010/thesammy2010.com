@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import { Match, Player, RallyInput, Side, squashApi, StaleMatchError } from "./api"
-import { ballFor, currentGame, SIDES, sideNames } from "./format"
+import { ballFor, currentGame, SIDES, sideNames, toInput } from "./format"
 
 interface Props {
     match: Match
@@ -24,9 +24,11 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
     const ball = ballFor(match)
     const finishedGames = match.games.filter((g) => g.winning_side !== null).length
     const canUndo = match.games.some((g) => g.rallies > 0)
-    // A best-of match ends itself on its deciding point; an open-ended one
-    // ends when the players say so, once at least one game counts.
-    const canEnd = match.best_of === null && finishedGames > 0
+    // A match can be ended where it stands once a game counts. A best-of
+    // match ends itself on its deciding point, so ending one sooner makes it
+    // open-ended first, as the API only ends those early.
+    const canEnd = finishedGames > 0
+    const endingEarly = match.best_of !== null
 
     const run = async (action: () => Promise<Match>, staleMessage: string) => {
         setBusy(true)
@@ -58,7 +60,12 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
 
     const end = () => {
         setConfirmingEnd(false)
-        return run(() => squashApi.completeMatch(match.id, match.version), "The score changed just now. Check it and end the match again.")
+        return run(async () => {
+            const current = endingEarly
+                ? await squashApi.updateMatch(match.id, toInput(match, { best_of: null }))
+                : match
+            return squashApi.completeMatch(current.id, current.version)
+        }, "The score changed just now. Check it and end the match again.")
     }
 
     return (
@@ -152,6 +159,12 @@ export default function LiveScorer({ match, players, onMatch }: Props) {
                         <span className="squash-confirm">
                             End it at {match.side1_games}-{match.side2_games}
                             {game.rallies > 0 ? " and drop the unfinished game" : ""}?
+                            {endingEarly && (
+                                <span className="squash-warning">
+                                    It's best of {match.best_of} and not yet won, so it'll be changed to open-ended to
+                                    end it now. It won't show as best of {match.best_of} afterwards.
+                                </span>
+                            )}
                             <button type="button" className="squash-secondary-button" onClick={() => setConfirmingEnd(false)}>
                                 No
                             </button>

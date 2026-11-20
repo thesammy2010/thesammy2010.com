@@ -29,6 +29,12 @@
     color: #fff;
 }
 
+.role-pill-squash.selected {
+    background: #10b981;
+    border-color: #10b981;
+    color: #fff;
+}
+
 .role-pill-viewer.selected {
     background: #3b82f6;
     border-color: #3b82f6;
