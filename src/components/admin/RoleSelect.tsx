@@ -1,7 +1,7 @@
 import { UserRole } from "../../roles"
 import "./RoleSelect.css"
 
-const ROLE_OPTIONS: UserRole[] = ["guest", "viewer", "editor", "admin"]
+const ROLE_OPTIONS: UserRole[] = ["guest", "squash", "viewer", "editor", "admin"]
 
 interface Props {
     value: UserRole
