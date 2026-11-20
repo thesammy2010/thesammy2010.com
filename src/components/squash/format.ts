@@ -14,6 +14,7 @@ export function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchI
         points_to: match.points_to,
         best_of: match.best_of,
         notes: match.notes,
+        is_private: match.is_private,
         players: match.players,
         ...changes
     }
@@ -105,7 +106,7 @@ export function ballFor(match: Match): { side: Side; kind: "game" | "match" } | 
             side === 1 ? [game.side1_points, game.side2_points] : [game.side2_points, game.side1_points]
         if (gameWinner(mine + 1, theirs, match.points_to) === 1) {
             const gamesNeeded = match.best_of === null ? null : (match.best_of + 1) / 2
-            const won = side === 1 ? match.side1_games : match.side2_games
+            const won = (side === 1 ? match.side1_games : match.side2_games) ?? 0
             return { side, kind: gamesNeeded !== null && won + 1 >= gamesNeeded ? "match" : "game" }
         }
     }

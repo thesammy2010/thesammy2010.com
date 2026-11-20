@@ -50,6 +50,7 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
     const [newVenue, setNewVenue] = useState("")
     const canAddVenue = useCanAccess("POST", "/squash/venues")
     const [notes, setNotes] = useState(match?.notes ?? "")
+    const [isPrivate, setIsPrivate] = useState(match?.is_private ?? false)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -110,6 +111,7 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                 points_to: Number(pointsTo),
                 best_of: bestOf === "" ? null : Number(bestOf),
                 notes: notes.trim() || null,
+                is_private: isPrivate,
                 players: slots.flatMap((side, i) =>
                     side.map((playerId) => ({ player_id: playerId, side: (i + 1) as Side }))
                 )
@@ -252,6 +254,11 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                     <label>
                         <span>Notes</span>
                         <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={512} />
+                    </label>
+
+                    <label className="squash-checkbox">
+                        <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+                        <span>Private: only its players and admins see the score</span>
                     </label>
 
                     {error && <p className="error-message">{error}</p>}

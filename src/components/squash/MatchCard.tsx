@@ -24,6 +24,7 @@ export default function MatchCard({ match, players, me }: Props) {
                     {formatWhen(match.played_at)}
                     {match.venue && <span className="squash-muted"> · {match.venue}</span>}
                 </span>
+                {match.is_private && <span className="squash-private-badge">🔒 Private</span>}
                 <span className={`squash-status squash-status-${match.status}`}>{STATUS_LABELS[match.status]}</span>
             </div>
 
@@ -66,7 +67,8 @@ export default function MatchCard({ match, players, me }: Props) {
             <div className="squash-card-foot squash-muted">
                 {formatLabel(match)}
                 {live && game.rallies > 0 && ` · game ${game.number} in play`}
-                {match.status === "completed" && match.winning_side === null && " · drawn"}
+                {!match.hidden && match.status === "completed" && match.winning_side === null && " · drawn"}
+                {match.hidden && " · score private"}
             </div>
         </Link>
     )

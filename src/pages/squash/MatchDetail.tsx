@@ -8,6 +8,7 @@ import {
     Rally,
     squashApi,
     StaleMatchError,
+    unlessPrivate,
     useSquashLoad
 } from "../../components/squash/api"
 import { MatchInsightsCard } from "../../components/squash/Insights"
@@ -35,7 +36,8 @@ interface MatchData {
     match: Match
     players: Player[]
     rallies: Rally[]
-    insights: MatchInsights
+    // Null for a private match the caller isn't in, which the API refuses
+    insights: MatchInsights | null
 }
 
 // Long enough not to hammer the API, short enough that a point scored on
@@ -50,6 +52,7 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
                     {formatWhen(match.played_at)}
                     {match.venue && <span className="squash-muted"> · {match.venue}</span>}
                 </span>
+                {match.is_private && <span className="squash-private-badge">🔒 Private</span>}
                 <span className={`squash-status squash-status-${match.status}`}>{STATUS_LABELS[match.status]}</span>
             </div>
             <div className="squash-scoreboard-sides">
@@ -73,8 +76,9 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
             </div>
             <p className="squash-muted">
                 {formatLabel(match)}
-                {match.status === "completed" && match.winning_side === null && " · drawn"}
+                {!match.hidden && match.status === "completed" && match.winning_side === null && " · drawn"}
             </p>
+            {match.hidden && <p className="squash-muted">Only its players and admins can see how this match went.</p>}
             {match.notes && <p className="squash-notes">{match.notes}</p>}
         </div>
     )
@@ -210,10 +214,10 @@ export default function MatchDetail() {
         const [match, players, rallies, insights] = await Promise.all([
             squashApi.match(id),
             squashApi.players(true),
-            squashApi.rallies(id),
-            squashApi.matchInsights(id)
+            unlessPrivate(squashApi.rallies(id)),
+            unlessPrivate(squashApi.matchInsights(id))
         ])
-        return { match, players, rallies, insights }
+        return { match, players, rallies: rallies ?? [], insights }
     }, [id])
 
     useEffect(() => setUnlocked(false), [id])
@@ -232,6 +236,9 @@ export default function MatchDetail() {
         setState((prev) =>
             prev.status === "ready" ? { ...prev, data: { ...prev.data, match: next } } : prev
         )
+        if (next.hidden) {
+            return
+        }
         Promise.all([squashApi.rallies(next.id), squashApi.matchInsights(next.id)]).then(
             ([rallies, insights]) =>
                 setState((prev) =>
@@ -283,10 +290,24 @@ export default function MatchDetail() {
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Match">
             {({ match, players, rallies, insights }, me) => {
+                // Whoever arranged a private match can't change it unless they play in it
                 const canChange =
                     isAdmin ||
-                    (ownUserId !== null && match.created_by_id === ownUserId) ||
+                    (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
                     (me !== null && match.players.some((p) => p.player_id === me.id))
+
+                if (match.hidden) {
+                    return (
+                        <>
+                            <div className="squash-header">
+                                <Link className="squash-link" to="/squash/matches">
+                                    ← All matches
+                                </Link>
+                            </div>
+                            <Scoreboard match={match} players={players} />
+                        </>
+                    )
+                }
                 // Once it's over, the controls that change it wait behind Edit
                 const finished = match.status === "completed" || match.status === "cancelled"
                 const editable = canChange && (!finished || unlocked)
@@ -403,7 +424,7 @@ export default function MatchDetail() {
 
                         <PointByPoint match={match} rallies={rallies} players={players} />
 
-                        <MatchInsightsCard match={match} insights={insights} players={players} />
+                        {insights && <MatchInsightsCard match={match} insights={insights} players={players} />}
 
                         {canChange && finished && !unlocked && (
                             <div className="squash-card squash-manage">

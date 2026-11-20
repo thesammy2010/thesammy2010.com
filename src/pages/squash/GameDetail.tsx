@@ -1,7 +1,15 @@
 import React from "react"
 import { Link, useParams } from "react-router-dom"
 
-import { Match, MatchInsights, Player, Rally, squashApi, useSquashLoad } from "../../components/squash/api"
+import {
+    Match,
+    MatchInsights,
+    Player,
+    Rally,
+    squashApi,
+    unlessPrivate,
+    useSquashLoad
+} from "../../components/squash/api"
 import { gameNotes, SidesTable } from "../../components/squash/Insights"
 import MomentumChart from "../../components/squash/MomentumChart"
 import SquashPage from "../../components/squash/SquashPage"
@@ -11,7 +19,8 @@ interface GameData {
     match: Match
     players: Player[]
     rallies: Rally[]
-    insights: MatchInsights
+    // Null for a private match the caller isn't in
+    insights: MatchInsights | null
 }
 
 // One game of a match: its score, how it went, each side's figures and
@@ -24,10 +33,10 @@ export default function GameDetail() {
         const [match, players, rallies, insights] = await Promise.all([
             squashApi.match(id),
             squashApi.players(true),
-            squashApi.rallies(id),
-            squashApi.matchInsights(id)
+            unlessPrivate(squashApi.rallies(id)),
+            unlessPrivate(squashApi.matchInsights(id))
         ])
-        return { match, players, rallies, insights }
+        return { match, players, rallies: rallies ?? [], insights }
     }, [id])
 
     return (
@@ -56,6 +65,14 @@ export default function GameDetail() {
                         )}
                     </div>
                 )
+                if (match.hidden) {
+                    return (
+                        <>
+                            {header}
+                            <p className="squash-muted">Only its players and admins can see this match's games.</p>
+                        </>
+                    )
+                }
                 if (!game) {
                     return (
                         <>
@@ -66,7 +83,7 @@ export default function GameDetail() {
                 }
 
                 const gameRallies = rallies.filter((r) => r.game === gameNumber).sort((a, b) => a.number - b.number)
-                const gameInsights = insights.games.find((g) => g.number === gameNumber)
+                const gameInsights = insights?.games.find((g) => g.number === gameNumber)
                 const notes = gameInsights ? gameNotes(match, gameInsights, players) : []
                 const nameOf = (playerId: string | null) => players.find((p) => p.id === playerId)?.name ?? null
                 const showServer = gameRallies.some((r) => r.server_id !== null)
