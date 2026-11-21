@@ -10,6 +10,7 @@ import {
     unlessPrivate,
     useSquashLoad
 } from "../../components/squash/api"
+import Comments from "../../components/squash/Comments"
 import { gameNotes, SidesTable } from "../../components/squash/Insights"
 import MomentumChart from "../../components/squash/MomentumChart"
 import SquashPage from "../../components/squash/SquashPage"
@@ -212,6 +213,8 @@ export default function GameDetail() {
                                 </table>
                             </div>
                         )}
+
+                        <Comments match={match} game={game.number} />
                     </>
                 )
             }}

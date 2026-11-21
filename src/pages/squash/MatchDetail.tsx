@@ -11,6 +11,7 @@ import {
     unlessPrivate,
     useSquashLoad
 } from "../../components/squash/api"
+import Comments from "../../components/squash/Comments"
 import { MatchInsightsCard } from "../../components/squash/Insights"
 import LiveScorer from "../../components/squash/LiveScorer"
 import MatchForm from "../../components/squash/MatchForm"
@@ -487,6 +488,8 @@ export default function MatchDetail() {
                         <PointByPoint match={match} rallies={rallies} players={players} />
 
                         {insights && <MatchInsightsCard match={match} insights={insights} players={players} />}
+
+                        <Comments match={match} />
 
                         {canChange && finished && !unlocked && (
                             <div className="squash-card squash-manage">

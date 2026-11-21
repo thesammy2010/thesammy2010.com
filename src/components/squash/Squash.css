@@ -2267,3 +2267,63 @@ select.squash-pill,
 .squash-serve-preference {
     margin: 0;
 }
+
+/* Comments on a match and its games */
+.squash-comments {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.squash-comment {
+    padding-bottom: 14px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.squash-comment-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: 0.875rem;
+}
+
+.squash-comment-head strong {
+    color: #2c3e50;
+}
+
+.squash-comment-head .squash-game-tag {
+    text-decoration: none;
+}
+
+.squash-comment-body {
+    margin: 6px 0 0;
+    color: #2c3e50;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.squash-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.squash-comment-form textarea {
+    width: 100%;
+    height: auto;
+    font: inherit;
+    resize: vertical;
+}
+
+.squash-comment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
