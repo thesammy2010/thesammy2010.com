@@ -17,4 +17,11 @@ describe("Privacy", () => {
             "mailto:contact@mail.thesammy2010.com?subject=Privacy"
         )
     })
+
+    it("covers signing in with Apple and Hide My Email", () => {
+        render(<Privacy />)
+
+        expect(screen.getByText(/You sign in with Google or with Apple/)).toBeInTheDocument()
+        expect(screen.getByText(/Hide My Email/)).toBeInTheDocument()
+    })
 })

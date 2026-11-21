@@ -2,7 +2,6 @@ import React from "react"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import "./App.css"
 
-import Footer from "./components/Footer"
 import NavBar from "./components/NavBar"
 import Home from "./pages/Home"
 import About from "./pages/About"
@@ -85,7 +84,6 @@ const App: React.FC = () => {
                 </BrowserRouter>
             </div>
             <div>
-                <Footer />
             </div>
         </GoogleOAuthProvider>
     )

@@ -100,6 +100,18 @@ export default function About() {
                     .
                 </p>
             </section>
+
+            <section className="about-section">
+                <h2>Privacy and contact</h2>
+                <p className="about-note">
+                    What's kept about you when you sign in, here or in How2Squash, and how to have it removed, is in the{" "}
+                    <Link to="/privacy">privacy policy</Link>. For anything else, email{" "}
+                    <a href="mailto:contact@mail.thesammy2010.com?subject=Hey, I saw your website">
+                        contact@mail.thesammy2010.com
+                    </a>
+                    .
+                </p>
+            </section>
         </div>
     )
 }

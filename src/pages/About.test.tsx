@@ -71,4 +71,10 @@ describe("About", () => {
             expect(source).toHaveAttribute("rel", expect.stringContaining("noreferrer"))
         }
     })
+
+    it("links to the privacy policy", () => {
+        renderAbout()
+
+        expect(screen.getByRole("link", { name: "privacy policy" })).toHaveAttribute("href", "/privacy")
+    })
 })

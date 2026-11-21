@@ -3,11 +3,11 @@ import React from "react"
 import "./Privacy.css"
 
 const CONTACT = "contact@mail.thesammy2010.com"
-const UPDATED = "20 November 2026"
+const UPDATED = "21 November 2026"
 
 // What's kept about someone who signs in, here or in How2Squash, and how to
-// have it removed. Linked from the footer, and from TestFlight and the App
-// Store as How2Squash's privacy policy, so it's open to anyone.
+// have it removed. Given to TestFlight and the App Store as How2Squash's
+// privacy policy, at /privacy, so it's open to anyone.
 export default function Privacy() {
     return (
         <div className="privacy-page">
@@ -19,17 +19,25 @@ export default function Privacy() {
             <section className="privacy-section">
                 <h2>What's kept</h2>
                 <p>
-                    You sign in with Google. From that, only your email address is kept, along with the name and account
-                    ID Google shares with it, so you're recognised next time. Nothing's kept about you if you only look
-                    around without signing in.
+                    You sign in with Google or with Apple. From Google, your email address is kept, along with the name
+                    and account ID Google shares with it, so you're recognised next time. From Apple, the account ID
+                    Apple gives this site is kept, with your email address and name if you choose to share them. If you
+                    choose Hide My Email, only Apple's private relay address is kept, never your real one.
                 </p>
+                <p>Nothing's kept about you if you only look around without signing in.</p>
                 <p>
                     If you play squash with the group, the matches you're in are kept too: who played, the scores, and
-                    when and where. Everyone in the group can see them, as they can see their own.
+                    when and where. Everyone in the group can see them, as they can see their own, apart from private
+                    matches, whose scores only their players and the group's admins see. If you ask to join the group,
+                    your request and any message with it are kept for the admins to answer.
                 </p>
                 <p>
                     How2Squash's Apple Watch workouts go to Apple Health on your own phone. Heart rate, calories and
                     other health data never leave your devices.
+                </p>
+                <p>
+                    Your browser keeps you signed in, along with copies of some lists so pages open quickly. Signing out
+                    clears them. There's no analytics or tracking.
                 </p>
                 <p>Nothing's sold, shared with anyone else, or used for advertising.</p>
             </section>
@@ -38,6 +46,8 @@ export default function Privacy() {
                 <h2>Deleting your account</h2>
                 <p>
                     You can delete your account yourself once signed in, from the Delete account option on this site.
+                    That removes your sign-in details and any request to join. If you signed in with Apple, you can also
+                    stop this site using your Apple ID in your Apple Account settings, under Sign in with Apple.
                 </p>
                 <p>
                     Matches you played in aren't deleted with it. They're part of other players' records and ratings
