@@ -14,6 +14,8 @@ import {
     useSquashLoad
 } from "../components/squash/api"
 import MatchCard from "../components/squash/MatchCard"
+import DateRangeFilter, { useDateRangeParams } from "../components/squash/DateRangeFilter"
+import { dayBound } from "../components/squash/dateRange"
 import MatchForm from "../components/squash/MatchForm"
 import SquashPage from "../components/squash/SquashPage"
 import { STATUS_LABELS } from "../components/squash/format"
@@ -40,18 +42,6 @@ export function liveFirst(matches: Match[]): Match[] {
     return [...matches.filter((m) => m.status === "in_progress"), ...matches.filter((m) => m.status !== "in_progress")]
 }
 
-// A day picked in a date input ("2026-11-20"), as the start or end of that
-// day where the browser is, for the API's played-at bounds.
-export function dayBound(day: string, end: boolean): string | undefined {
-    if (!day) {
-        return undefined
-    }
-    const [year, month, date] = day.split("-").map(Number)
-    return end
-        ? new Date(year, month - 1, date, 23, 59, 59, 999).toISOString()
-        : new Date(year, month - 1, date).toISOString()
-}
-
 export default function Squash() {
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -63,8 +53,7 @@ export default function Squash() {
     const access = useSquashAccess()
     const me = access.status === "member" ? access.me : null
     const venueId = searchParams.get("venue") ?? ""
-    const from = searchParams.get("from") ?? ""
-    const to = searchParams.get("to") ?? ""
+    const [{ from, to }, setRange] = useDateRangeParams()
     const filters = (): MatchFilters => ({
         status,
         format,
@@ -181,7 +170,7 @@ export default function Squash() {
                                 ))}
                             </div>
                             <select
-                                className="squash-input"
+                                className={`squash-pill ${status ? "squash-pill-set" : ""}`}
                                 value={status ?? ""}
                                 onChange={(e) => setParam("status", e.target.value)}
                                 aria-label="Status"
@@ -195,7 +184,7 @@ export default function Squash() {
                             </select>
                             {venues.length > 0 && (
                                 <select
-                                    className="squash-input"
+                                    className={`squash-pill ${venueId ? "squash-pill-set" : ""}`}
                                     value={venueId}
                                     onChange={(e) => setParam("venue", e.target.value)}
                                     aria-label="Venue"
@@ -208,26 +197,7 @@ export default function Squash() {
                                     ))}
                                 </select>
                             )}
-                            <label className="squash-date-filter">
-                                <span>From</span>
-                                <input
-                                    className="squash-input"
-                                    type="date"
-                                    value={from}
-                                    max={to || undefined}
-                                    onChange={(e) => setParam("from", e.target.value)}
-                                />
-                            </label>
-                            <label className="squash-date-filter">
-                                <span>To</span>
-                                <input
-                                    className="squash-input"
-                                    type="date"
-                                    value={to}
-                                    min={from || undefined}
-                                    onChange={(e) => setParam("to", e.target.value)}
-                                />
-                            </label>
+                            <DateRangeFilter range={{ from, to }} onChange={setRange} />
                             {(venueId || from || to || status) && (
                                 <button
                                     type="button"
