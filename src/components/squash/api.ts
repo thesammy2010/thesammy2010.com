@@ -118,6 +118,8 @@ export interface Rally {
     decision: RallyDecision | null
     appealed_by_side: Side | null
     server_id: string | null
+    // The box it was served from, null when the scorer didn't say
+    box?: Box | null
     side1_points: number
     side2_points: number
 }
@@ -128,7 +130,7 @@ export interface Rally {
 export type RallyInput = (
     | { won_by_side: Side; decision?: "stroke" | "no_let" }
     | { decision: "let"; appealed_by_side: Side }
-) & { server_id?: string | null }
+) & { server_id?: string | null; box?: Box | null }
 
 // A player's results over some set of matches
 export interface PlayerRecord {
