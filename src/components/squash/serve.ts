@@ -1,10 +1,12 @@
 // Which box the server serves from. The server picks a box at the start of
-// each hand, the right unless they choose otherwise, and moves across after
+// each hand, the one they prefer or else the right, and moves across after
 // each point they win. A let is replayed from the same box.
-import type { Match, Rally, Side } from "./api"
+import type { Box, Match, Rally, Side } from "./api"
 import { currentGame, sideOf } from "./format"
 
-export type Box = "right" | "left"
+export type { Box }
+
+const across = (box: Box): Box => (box === "right" ? "left" : "right")
 
 export interface ServiceBox {
     box: Box
@@ -16,13 +18,15 @@ export interface ServiceBox {
  * The box to serve from next, or null when it can't be told: who served
  * first in the match isn't known, or the rallies on hand are behind the
  * match. `firstServer` is the side picked to serve before the first rally.
- * `switched` holds the hands whose server chose the left box to start.
+ * `startBox` is the box a side's server likes to start a hand in, and
+ * `switched` holds the hands whose server chose the other box to start.
  */
 export function serviceBox(
     match: Match,
     rallies: Rally[],
     firstServer: Side | null,
-    switched: Set<string> = new Set()
+    switched: Set<string> = new Set(),
+    startBox: (side: Side) => Box = () => "right"
 ): ServiceBox | null {
     const serving = match.serving_side ?? firstServer
     if (serving === null) {
@@ -58,6 +62,6 @@ export function serviceBox(
     }
 
     const hand = `${game.number}:${won.length - run}`
-    const fromRight = served % 2 === 0
-    return { box: fromRight !== switched.has(hand) ? "right" : "left", hand }
+    const start = switched.has(hand) ? across(startBox(serving)) : startBox(serving)
+    return { box: served % 2 === 0 ? start : across(start), hand }
 }

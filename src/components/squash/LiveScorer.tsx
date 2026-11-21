@@ -23,6 +23,8 @@ interface Props {
 // asked before the first rally; after that the API works it out from who
 // won the last point. Each rally is sent with its server, so the game's page
 // can show who served it. In doubles, which partner serves is picked here.
+// A hand starts in the box its server prefers, which they choose on their
+// own player page, and Switch box changes it for that hand.
 export default function LiveScorer({ match, rallies, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
     const [firstServer, setFirstServer] = useState<Side | null>(null)
@@ -37,10 +39,18 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const ball = ballFor(match)
     const started = match.games.some((g) => g.rallies > 0)
     const serving = match.serving_side ?? (started ? null : firstServer)
-    const box = serviceBox(match, rallies, started ? null : firstServer, switched)
     const onSide = (side: Side) => match.players.filter((p) => p.side === side).map((p) => p.player_id)
     const serverId = (side: Side) => partners[side] ?? onSide(side)[0] ?? null
-    const nameOf = (playerId: string | null) => players.find((p) => p.id === playerId)?.name ?? "Unknown player"
+    const playerOf = (playerId: string | null) => players.find((p) => p.id === playerId)
+    const nameOf = (playerId: string | null) => playerOf(playerId)?.name ?? "Unknown player"
+    // Each hand starts in the box its server prefers, or else the right
+    const box = serviceBox(
+        match,
+        rallies,
+        started ? null : firstServer,
+        switched,
+        (side) => playerOf(serverId(side))?.preferred_box ?? "right"
+    )
     const finishedGames = match.games.filter((g) => g.winning_side !== null).length
     const canUndo = match.games.some((g) => g.rallies > 0)
     // A match can be ended where it stands once a game counts. A best-of

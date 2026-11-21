@@ -13,6 +13,8 @@ import { apiFetch, getToken, subscribeToken } from "../../auth"
 export type MatchFormat = "singles" | "doubles"
 export type MatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled"
 export type Side = 1 | 2
+// The service boxes, as the server faces the front wall
+export type Box = "right" | "left"
 
 export interface Player {
     id: string
@@ -20,6 +22,15 @@ export interface Player {
     user_id: string | null
     email: string | null
     is_active: boolean
+    // The box they like to start a hand serving from; null, or missing from
+    // an API that hasn't got it yet, for no preference
+    preferred_box?: Box | null
+}
+
+// What a player chooses for themselves. A field left out stays as it is,
+// and null clears it.
+export interface PlayerPreferences {
+    preferred_box?: Box | null
 }
 
 export interface PlayerInput {
@@ -433,6 +444,9 @@ export const squashApi = {
     createPlayer: (body: PlayerInput) => request<Player>("POST", "/players", "Failed to add the player", { body }),
     updatePlayer: (id: string, body: PlayerInput) =>
         request<Player>("PUT", `/players/${id}`, "Failed to save the player", { body }),
+    // The caller's own; an admin who isn't a player gets a 404
+    setMyPreferences: (body: PlayerPreferences) =>
+        request<Player>("PATCH", "/players/me", "Failed to save your preference", { body }),
     playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),
     headToHead: (id: string, opponentId: string) =>
         request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head"),
