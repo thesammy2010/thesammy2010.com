@@ -19,14 +19,16 @@ interface Props {
 // are the calls on that side's appeals: a let, replayed with no point, a
 // stroke to them, or a no let, the point to their opponent.
 //
-// Above the buttons is who's serving and from which box. Who serves first is
-// asked before the first rally; after that the API works it out from who
-// won the last point. Each rally is sent with its server, so the game's page
+// Above the buttons is who's serving and from which box. Who serves first
+// comes from the API's spin of the racket, which Change swaps before the first
+// rally (or is asked, from an API that doesn't spin); after that the API works
+// it out from who won the last point. Each rally is sent with its server, so the game's page
 // can show who served it. In doubles, which partner serves is picked here.
 // A hand starts in the box its server prefers, which they choose on their
 // own player page, and Switch box changes it for that hand.
 export default function LiveScorer({ match, rallies, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
+    // Chosen here before the first rally, over the API's spin
     const [firstServer, setFirstServer] = useState<Side | null>(null)
     // The partner serving for each side in doubles, while it's not the first
     const [partners, setPartners] = useState<Partial<Record<Side, string>>>({})
@@ -38,7 +40,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const game = currentGame(match)
     const ball = ballFor(match)
     const started = match.games.some((g) => g.rallies > 0)
-    const serving = match.serving_side ?? (started ? null : firstServer)
+    const serving = (started ? null : firstServer) ?? match.serving_side
     const onSide = (side: Side) => match.players.filter((p) => p.side === side).map((p) => p.player_id)
     const serverId = (side: Side) => partners[side] ?? onSide(side)[0] ?? null
     const playerOf = (playerId: string | null) => players.find((p) => p.id === playerId)
@@ -88,7 +90,10 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
         )
 
     const undo = () =>
-        run(() => squashApi.undoRally(match.id, match.version), "The score changed before the undo went through. Check it and try again.")
+        run(
+            () => squashApi.undoRally(match.id, match.version),
+            "The score changed before the undo went through. Check it and try again."
+        )
 
     const other = (side: Side): Side => (side === 1 ? 2 : 1)
 
@@ -170,7 +175,11 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                         </button>
                     )}
                     {!started && (
-                        <button type="button" className="squash-text-button" onClick={() => setFirstServer(null)}>
+                        <button
+                            type="button"
+                            className="squash-text-button"
+                            onClick={() => setFirstServer(other(serving))}
+                        >
                             Change
                         </button>
                     )}
@@ -263,7 +272,11 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                                     end it now. It won't show as best of {match.best_of} afterwards.
                                 </span>
                             )}
-                            <button type="button" className="squash-secondary-button" onClick={() => setConfirmingEnd(false)}>
+                            <button
+                                type="button"
+                                className="squash-secondary-button"
+                                onClick={() => setConfirmingEnd(false)}
+                            >
                                 No
                             </button>
                             <button type="button" className="squash-primary-button" onClick={end} disabled={busy}>
@@ -271,7 +284,12 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                             </button>
                         </span>
                     ) : (
-                        <button type="button" className="squash-secondary-button" onClick={() => setConfirmingEnd(true)} disabled={busy}>
+                        <button
+                            type="button"
+                            className="squash-secondary-button"
+                            onClick={() => setConfirmingEnd(true)}
+                            disabled={busy}
+                        >
                             🏁 End match
                         </button>
                     ))}
