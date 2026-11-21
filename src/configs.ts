@@ -8,6 +8,11 @@ export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000"
 // secret - it identifies the app to Google, it doesn't authenticate anything.
 export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || ""
 
+// The Services ID that Sign in with Apple knows the website by, which the
+// API must accept too (APPLE_CLIENT_IDS there). Left out, the website only
+// offers Google. Not a secret either.
+export const APPLE_CLIENT_ID = process.env.REACT_APP_APPLE_CLIENT_ID || ""
+
 // Keys for the cached Go Heavier lists, all read and written through
 // src/cache.ts. The suffix is bumped whenever the cached shape changes so an
 // entry from an older build is ignored rather than rendered; all four moved

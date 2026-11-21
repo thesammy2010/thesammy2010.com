@@ -2,7 +2,16 @@ import { useEffect, useState } from "react"
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
 
 import { API_URL } from "../configs"
-import { apiFetch, decodeProfile, GoogleProfile, setToken, signOut, useAuthToken } from "../auth"
+import {
+    apiFetch,
+    decodeProfile,
+    GoogleProfile,
+    refreshSessionIfDue,
+    setToken,
+    signOut,
+    useAuthToken
+} from "../auth"
+import AppleSignIn from "./AppleSignIn"
 import "./SignIn.css"
 
 // A signed-in caller defaults to the "guest" role in the API until an admin
@@ -35,6 +44,12 @@ export default function SignIn() {
         }
     }, [token])
 
+    // Someone signed in with Apple stays signed in by renewing the API's
+    // session token as it nears its end
+    useEffect(() => {
+        void refreshSessionIfDue(API_URL)
+    }, [])
+
     const handleDeleteAccount = async () => {
         setDeleting(true)
         try {
@@ -54,7 +69,14 @@ export default function SignIn() {
         return (
             <div className="site-signin">
                 <div className="site-signin-profile">
-                    <img src={profile.picture} alt={profile.name} referrerPolicy="no-referrer" />
+                    {profile.picture ? (
+                        <img src={profile.picture} alt={profile.name} referrerPolicy="no-referrer" />
+                    ) : (
+                        // Apple shares no picture, so their initial stands in
+                        <span className="site-signin-initial" aria-hidden="true">
+                            {profile.name.charAt(0).toUpperCase()}
+                        </span>
+                    )}
                     <span className="site-signin-name">{profile.name}</span>
                 </div>
                 {!confirmingDelete ? (
@@ -92,6 +114,7 @@ export default function SignIn() {
                 onError={() => console.error("Google sign-in failed")}
                 useOneTap
             />
+            <AppleSignIn />
         </div>
     )
 }
