@@ -13,16 +13,21 @@ import {
 } from "../../components/squash/api"
 import MatchCalendar from "../../components/squash/MatchCalendar"
 import MatchCard from "../../components/squash/MatchCard"
+import { Ladder } from "../../components/squash/EloLadder"
 import MatchForm from "../../components/squash/MatchForm"
 import PendingRequests from "../../components/squash/PendingRequests"
+import Sparkline from "../../components/squash/Sparkline"
 import SquashPage from "../../components/squash/SquashPage"
 import { signed, winRate } from "../../components/squash/format"
 import { changedSince, latestChange, soonestFirst } from "../../components/squash/home"
 import { formFor } from "../../components/squash/stats"
+import { ratingPoints } from "../../components/squash/ratingScale"
 
 interface HomeData {
     players: Player[]
-    ratings: Record<MatchFormat, Rating[]>
+    ratings: Record<Ladder, Rating[]>
+    // The caller's overall rating after each match, oldest first
+    trend: number[]
     live: Match[]
     upcoming: Match[]
     // The caller's own, most recent first; empty for an admin who doesn't play
@@ -55,30 +60,93 @@ function Tile({ value, label }: { value: string; label: string }) {
     )
 }
 
-// The caller's place on each ladder they're on.
-function Ratings({ ratings, me }: { ratings: HomeData["ratings"]; me: Player }) {
-    const rows = (["singles", "doubles"] as MatchFormat[]).flatMap((format) => {
-        const rating = ratings[format].find((r) => r.player_id === me.id)
-        return rating ? [{ format, rating, of: ratings[format].length }] : []
-    })
-    if (rows.length === 0) {
+// "▲ +12" for a rise, "▼ −8" for a fall, from the last match rated
+function Change({ rating }: { rating: Rating }) {
+    if (rating.matches_rated === 0) {
+        return null
+    }
+    const change = rating.last_change
+    const tone = change > 0 ? "up" : change < 0 ? "down" : "level"
+    return (
+        <span className={`squash-elo-change ${tone}`} title="Last match">
+            <span aria-hidden="true">{change > 0 ? "▲" : change < 0 ? "▼" : "•"}</span> {signed(change)}
+        </span>
+    )
+}
+
+// The caller's Elo: overall, where every match counts, as the headline with
+// its recent path, and singles and doubles beside it.
+function Ratings({ ratings, trend, me }: { ratings: HomeData["ratings"]; trend: number[]; me: Player }) {
+    const mine = (ladder: Ladder) => ratings[ladder].find((r) => r.player_id === me.id)
+    const overall = mine("overall")
+    if (!overall) {
         return <p className="squash-muted">Not on the ladder yet. Finish a match to get a rating.</p>
     }
+    const recent = trend.slice(-20)
+
     return (
-        <div className="squash-home-ratings">
-            {rows.map(({ format, rating, of }) => (
-                <Link key={format} className="squash-home-rating" to={`/squash/stats?format=${format}`}>
-                    <span className="squash-home-rating-value">{rating.rating}</span>
-                    <span className="squash-home-rating-label">
-                        {format === "singles" ? "Singles" : "Doubles"} Elo · #{rating.rank} of {of}
+        <>
+            <div className="squash-elo">
+                <Link className="squash-elo-hero" to={`/squash/players/${me.id}`}>
+                    <span className="squash-elo-eyebrow">Overall Elo</span>
+                    <span className="squash-elo-main">
+                        <span className="squash-elo-value">{overall.rating}</span>
+                        <Sparkline
+                            points={recent}
+                            label={`Your overall rating over your last ${recent.length - 1} matches`}
+                        />
                     </span>
-                    <span className="squash-muted">
-                        {rating.matches_rated > 0 && `${signed(rating.last_change)} last match`}
-                        {rating.provisional && " · provisional"}
+                    <span className="squash-elo-meta">
+                        <span className="squash-elo-rank">
+                            #{overall.rank} of {ratings.overall.length}
+                        </span>
+                        <Change rating={overall} />
+                        {overall.provisional && (
+                            <span className="squash-elo-tag" title="Too few matches to mean much yet">
+                                provisional
+                            </span>
+                        )}
                     </span>
                 </Link>
-            ))}
-        </div>
+                <div className="squash-elo-formats">
+                    {(["singles", "doubles"] as MatchFormat[]).map((format) => {
+                        const rating = mine(format)
+                        return (
+                            <Link key={format} className="squash-elo-format" to={`/squash/stats?format=${format}`}>
+                                <span className="squash-elo-eyebrow">
+                                    {format === "singles" ? "Singles" : "Doubles"}
+                                </span>
+                                {rating ? (
+                                    <>
+                                        <span className="squash-elo-format-value">{rating.rating}</span>
+                                        <span className="squash-elo-meta">
+                                            <span className="squash-elo-rank">
+                                                #{rating.rank} of {ratings[format].length}
+                                            </span>
+                                            <Change rating={rating} />
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="squash-muted">Not played yet</span>
+                                )}
+                            </Link>
+                        )
+                    })}
+                </div>
+            </div>
+            <Link className="squash-elo-explain" to="/squash/elo">
+                <span className="squash-elo-explain-icon" aria-hidden="true">
+                    🧮
+                </span>
+                <span className="squash-elo-explain-text">
+                    <strong>How is your Elo worked out?</strong>
+                    <span>The maths, worked examples, and a calculator to try your next match.</span>
+                </span>
+                <span className="squash-elo-explain-arrow" aria-hidden="true">
+                    →
+                </span>
+            </Link>
+        </>
     )
 }
 
@@ -97,16 +165,27 @@ export default function SquashHome() {
     }
 
     const { state, refreshing, reload } = useSquashLoad<HomeData>(async () => {
-        const [players, singles, doubles, live, upcoming, mine, stats] = await Promise.all([
+        const [players, overall, singles, doubles, history, live, upcoming, mine, stats] = await Promise.all([
             squashApi.players(true),
+            squashApi.ratings(),
             squashApi.ratings("singles"),
             squashApi.ratings("doubles"),
+            // Only for the trend line, so it's fine without one
+            meId ? squashApi.ratingHistory(meId).catch(() => []) : Promise.resolve([]),
             squashApi.matches({ status: "in_progress" }, 1),
             squashApi.matches({ status: "scheduled" }, 1),
             meId ? squashApi.matches({ player_id: meId }, 1) : Promise.resolve([]),
             meId ? squashApi.playerStats(meId) : Promise.resolve(null)
         ])
-        return { players, ratings: { singles, doubles }, live, upcoming, mine, stats }
+        return {
+            players,
+            ratings: { overall, singles, doubles },
+            trend: ratingPoints(history),
+            live,
+            upcoming,
+            mine,
+            stats
+        }
     }, [meId])
 
     // Remember this look, so next time only what's changed since shows
@@ -124,7 +203,7 @@ export default function SquashHome() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Squash">
-            {({ players, ratings, live, upcoming, mine, stats }, me) => {
+            {({ players, ratings, trend, live, upcoming, mine, stats }, me) => {
                 const form = me
                     ? formFor(
                           mine.filter((m) => m.status === "completed"),
@@ -154,7 +233,7 @@ export default function SquashHome() {
 
                         {me && (
                             <div className="squash-card">
-                                <Ratings ratings={ratings} me={me} />
+                                <Ratings ratings={ratings} trend={trend} me={me} />
                                 {stats && (
                                     <div className="stats-grid squash-home-tiles">
                                         <Tile value={String(stats.matches_played)} label="Played" />

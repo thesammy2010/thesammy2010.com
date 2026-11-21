@@ -1416,34 +1416,168 @@ select.squash-input {
     gap: 8px;
 }
 
-/* Home */
-.squash-home-ratings {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-    margin-bottom: 12px;
+/* Home: the caller's Elo, overall as the headline and each format beside */
+.squash-elo {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
-.squash-home-rating {
+.squash-elo-hero,
+.squash-elo-format {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
+    padding: 16px 18px;
+    border-radius: 12px;
     color: inherit;
     text-decoration: none;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.squash-home-rating-value {
-    font-size: 2.25rem;
+.squash-elo-hero:hover,
+.squash-elo-format:hover {
+    box-shadow: 0 6px 18px rgba(30, 64, 175, 0.12);
+    transform: translateY(-1px);
+}
+
+.squash-elo-hero {
+    justify-content: center;
+    background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+    border: 1px solid #c7d2fe;
+    color: #1e40af;
+}
+
+.squash-elo-formats {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+}
+
+.squash-elo-format {
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+
+.squash-elo-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.squash-elo-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.squash-elo-value {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    color: #1a202c;
+}
+
+.squash-elo-format-value {
+    font-size: 1.75rem;
     font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
     color: #1a202c;
 }
 
-.squash-home-rating-label {
+.squash-elo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
     font-size: 0.875rem;
+}
+
+.squash-elo-rank {
     font-weight: 600;
     color: #2c3e50;
+}
+
+.squash-elo-change {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.squash-elo-change.up {
+    background: #e6f4ea;
+    color: #1e6b41;
+}
+
+.squash-elo-change.down {
+    background: #fdecec;
+    color: #a12727;
+}
+
+.squash-elo-change.level {
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.squash-elo-tag {
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* The trend's line takes the hero's blue */
+.squash-sparkline {
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+@media (max-width: 640px) {
+    .squash-elo {
+        grid-template-columns: 1fr;
+    }
+
+    .squash-elo-formats {
+        grid-template-rows: none;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .squash-elo-value {
+        font-size: 2.5rem;
+    }
+}
+
+/* Ladder: tabs beside the title, medals for the top three, and the
+   caller's own row picked out */
+.squash-ladder-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-bottom: 8px;
+}
+
+.squash-ladder-head .squash-card-title {
+    margin: 0;
+}
+
+.squash-ladder-head .squash-segmented {
+    margin-left: auto;
+}
+
+.squash-ladder-me th,
+.squash-ladder-me td {
+    background: #eef2ff;
 }
 
 .squash-home-section {
@@ -1784,4 +1918,274 @@ select.squash-input {
 .squash-feedback-meta {
     margin: 0 0 8px;
     font-size: 0.8125rem;
+}
+
+/* How Elo works */
+/* Leads to how Elo works: a panel under the home rating card */
+.squash-elo-explain {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border: 1px dashed #a5b4fc;
+    border-radius: 12px;
+    background: #f8faff;
+    color: #1e40af;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.squash-elo-explain:hover {
+    background: #eef2ff;
+    border-color: #1e40af;
+    border-style: solid;
+}
+
+.squash-elo-explain-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.squash-elo-explain-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.squash-elo-explain-text span {
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.squash-elo-explain-arrow {
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: transform 0.2s ease;
+}
+
+.squash-elo-explain:hover .squash-elo-explain-arrow {
+    transform: translateX(3px);
+}
+
+/* ...and a pill beside the ladder's title */
+.squash-elo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #1e40af;
+    color: white;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.squash-elo-pill:hover {
+    background: #1e3a8a;
+}
+
+/* The page as a column with room between each part */
+.squash-elo-page {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-bottom: 32px;
+}
+
+.squash-elo-page .squash-header {
+    margin-bottom: -12px;
+}
+
+.squash-elo-page .stats-grid {
+    margin-bottom: 0;
+}
+
+/* Each card's title clear of what's under it */
+.squash-elo-page .squash-card-title {
+    margin: 0 0 16px;
+}
+
+.squash-elo-page .squash-card > .squash-muted {
+    margin: -6px 0 16px;
+}
+
+.squash-elo-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.squash-elo-intro .squash-title {
+    font-size: 2rem;
+}
+
+.squash-elo-lead {
+    max-width: 620px;
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: #4a5568;
+}
+
+.squash-formulas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.squash-formula {
+    margin: 0;
+    padding: 16px 18px;
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+}
+
+.squash-formula-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #1e40af;
+}
+
+.squash-formula-math {
+    margin: 10px 0;
+    font-size: 1.15rem;
+    color: #1a202c;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* The plain version, should typesetting fail */
+.squash-formula-plain {
+    font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.squash-formula-explanation {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: #4a5568;
+}
+
+.squash-elo-try {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+}
+
+.squash-elo-try label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8125rem;
+    color: #4a5568;
+}
+
+.squash-elo-try input {
+    width: 120px;
+    font-variant-numeric: tabular-nums;
+}
+
+.squash-elo-try-result {
+    margin: 20px 0 0;
+    line-height: 2;
+    color: #2c3e50;
+}
+
+.squash-elo-examples {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.squash-elo-example {
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.squash-elo-example-title {
+    margin: 0 0 10px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.squash-elo-example-sides {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.squash-elo-example-side {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.squash-elo-example-ratings {
+    display: flex;
+    flex-direction: column;
+    font-variant-numeric: tabular-nums;
+    color: #4a5568;
+}
+
+.squash-elo-example-ratings strong {
+    color: #1a202c;
+}
+
+.squash-elo-rules {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 1.55;
+    color: #2c3e50;
+}
+
+.squash-elo-changes {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.squash-elo-changes li {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.squash-elo-change-version {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #1e40af;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .squash-elo-changes li {
+        grid-template-columns: auto 1fr;
+    }
+
+    .squash-elo-changes li > span:last-child {
+        grid-column: 1 / -1;
+    }
 }

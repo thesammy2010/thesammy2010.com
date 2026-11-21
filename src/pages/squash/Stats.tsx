@@ -190,9 +190,7 @@ export default function Stats() {
                             <Tile value={formatCount(sum.scoredLive)} label="Scored live" />
                         </div>
 
-                        {ratings[format].length > 0 && (
-                            <EloLadder ratings={ratings[format]} format={format} players={players} me={me} />
-                        )}
+                        <EloLadder ratings={ratings[format]} format={format} players={players} me={me} />
 
                         {months.length > 0 && (
                             <div className="squash-card">
