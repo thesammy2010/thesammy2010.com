@@ -231,6 +231,30 @@ export interface MatchInsights {
     games: GameInsights[]
 }
 
+// A bug, an idea or anything else, sent to the admins
+export type FeedbackKind = "bug" | "idea" | "other"
+export type FeedbackStatus = "new" | "resolved"
+
+export interface Feedback {
+    id: string
+    kind: FeedbackKind
+    message: string
+    // Where it was sent from, such as "thesammy2010.com (Safari)"
+    client: string | null
+    status: FeedbackStatus
+    resolved_at: string | null
+    created_at: string
+}
+
+// Feedback with who sent it, for an admin
+export interface AdminFeedback extends Feedback {
+    user_id: string
+    player_id: string | null
+    name: string | null
+    email: string | null
+    resolved_by_id: string | null
+}
+
 // Matches the API's DEFAULT_DB_PAGE_SIZE: a shorter page is the last one.
 export const MATCHES_PAGE_SIZE = 50
 
@@ -426,6 +450,15 @@ export const squashApi = {
         request<Match>("POST", `/matches/${id}/rallies`, "Failed to score the point", {
             body: { ...rally, version }
         }),
+    sendFeedback: (body: { kind: FeedbackKind; message: string; client: string | null }) =>
+        request<Feedback>("POST", "/feedback", "Failed to send your feedback", { body }),
+    // What the caller's sent, newest first
+    myFeedback: () => request<Feedback[]>("GET", "/feedback/me", "Failed to load your feedback"),
+    // Everyone's, newest first, for an admin
+    allFeedback: (filters: { status?: FeedbackStatus; kind?: FeedbackKind } = {}) =>
+        request<AdminFeedback[]>("GET", "/feedback", "Failed to load the feedback", { query: filters }),
+    resolveFeedback: (id: string) =>
+        request<AdminFeedback>("POST", `/feedback/${id}/resolve`, "Failed to resolve the feedback"),
     undoRally: (id: string, version: number) =>
         request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })
 }

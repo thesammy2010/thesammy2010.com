@@ -33,6 +33,7 @@ import Squash from "./pages/Squash"
 import MatchDetail from "./pages/squash/MatchDetail"
 import GameDetail from "./pages/squash/GameDetail"
 import SquashGames from "./pages/squash/Games"
+import SquashFeedback from "./pages/squash/Feedback"
 import SquashHome from "./pages/squash/Home"
 import SquashHowItWorks from "./pages/squash/HowItWorks"
 import SquashPlayers from "./pages/squash/Players"
@@ -67,6 +68,7 @@ const App: React.FC = () => {
                         <Route path="/squash" element={<SquashHome />} />
                         <Route path="/squash/matches" element={<Squash />} />
                         <Route path="/squash/games" element={<SquashGames />} />
+                        <Route path="/squash/feedback" element={<SquashFeedback />} />
                         <Route path="/squash/how" element={<SquashHowItWorks />} />
                         <Route path="/squash/matches/:id" element={<MatchDetail />} />
                         <Route path="/squash/matches/:id/games/:number" element={<GameDetail />} />

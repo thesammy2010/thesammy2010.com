@@ -1691,3 +1691,97 @@ select.squash-input {
     font-weight: 600;
     white-space: nowrap;
 }
+
+/* Feedback */
+.squash-feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.squash-feedback-form .squash-segmented {
+    align-self: flex-start;
+}
+
+.squash-feedback-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.squash-feedback-form textarea {
+    font: inherit;
+    resize: vertical;
+}
+
+.squash-feedback-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.squash-feedback-sent {
+    color: #2f855a;
+    font-weight: 600;
+}
+
+.squash-feedback-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.squash-feedback-item {
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #1e40af;
+    border-radius: 10px;
+    background: white;
+}
+
+.squash-feedback-item.resolved {
+    border-left-color: #cbd5e0;
+}
+
+.squash-feedback-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.squash-feedback-sender {
+    color: #2c3e50;
+}
+
+.squash-feedback-status {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #1e40af;
+}
+
+.squash-feedback-status.resolved {
+    color: #2f855a;
+}
+
+.squash-feedback-message {
+    margin: 10px 0 6px;
+    color: #2c3e50;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.squash-feedback-meta {
+    margin: 0 0 8px;
+    font-size: 0.8125rem;
+}
