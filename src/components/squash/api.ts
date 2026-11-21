@@ -87,6 +87,24 @@ export interface Match extends MatchInput {
     updated_at?: string | null
 }
 
+// What someone said about a match, or with `game`, one of its games
+export interface Comment {
+    id: string
+    match_id: string
+    game: number | null
+    body: string
+    user_id: string
+    // Null for an admin who doesn't play
+    player_id: string | null
+    // Their name as a player, else their account's
+    author: string | null
+    created_at: string
+    edited_at: string | null
+}
+
+// The longest a comment can be
+export const COMMENT_MAX = 1000
+
 // The referee's call on an appeal. A let is replayed with no point and the
 // same server; a stroke is the point to whoever appealed, and a no let the
 // point to their opponent.
@@ -482,6 +500,19 @@ export const squashApi = {
     createMatch: (body: MatchInput) => request<Match>("POST", "/matches", "Failed to create the match", { body }),
     updateMatch: (id: string, body: MatchInput) =>
         request<Match>("PUT", `/matches/${id}`, "Failed to save the match", { body }),
+    // Oldest first
+    comments: (matchId: string) =>
+        request<Comment[]>("GET", `/matches/${matchId}/comments`, "Failed to load the comments"),
+    addComment: (matchId: string, body: string, game: number | null) =>
+        request<Comment>("POST", `/matches/${matchId}/comments`, "Failed to add the comment", {
+            body: { body, game }
+        }),
+    editComment: (matchId: string, id: string, body: string) =>
+        request<Comment>("PATCH", `/matches/${matchId}/comments/${id}`, "Failed to save the comment", {
+            body: { body }
+        }),
+    deleteComment: (matchId: string, id: string) =>
+        request<void>("DELETE", `/matches/${matchId}/comments/${id}`, "Failed to delete the comment"),
     deleteMatch: (id: string) => request<void>("DELETE", `/matches/${id}`, "Failed to delete the match"),
     // Answers with whichever of the two was played first, which is kept; the
     // other is deleted.

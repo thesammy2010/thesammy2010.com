@@ -11,8 +11,10 @@ import {
     useSquashAccess,
     useSquashLoad
 } from "../../components/squash/api"
+import DateRangeFilter, { useDateRangeParams } from "../../components/squash/DateRangeFilter"
 import SquashPage from "../../components/squash/SquashPage"
 import { formatWhen, SIDES, sideNames } from "../../components/squash/format"
+import { dayBound } from "../../components/squash/dateRange"
 import { GameEntry, gamesOf } from "../../components/squash/games"
 import { dedupeById } from "../../components/go_heavier/pagination"
 
@@ -95,12 +97,18 @@ export default function Games() {
     const liveOnly = searchParams.get("live") === "1"
     const access = useSquashAccess()
     const me = access.status === "member" ? access.me : null
-    const filters = (): MatchFilters => ({ format, player_id: mine && me ? me.id : undefined })
+    const [{ from, to }, setRange] = useDateRangeParams()
+    const filters = (): MatchFilters => ({
+        format,
+        player_id: mine && me ? me.id : undefined,
+        after: dayBound(from, false),
+        before: dayBound(to, true)
+    })
 
     const { state, refreshing, reload } = useSquashLoad<GamesData>(async () => {
         const [players, firstPage] = await Promise.all([squashApi.players(true), squashApi.matches(filters(), 1)])
         return { players, firstPage }
-    }, [mine, format])
+    }, [mine, format, from, to])
 
     const [more, setMore] = useState<Match[]>([])
     const [nextPage, setNextPage] = useState(2)
@@ -187,6 +195,7 @@ export default function Games() {
                                     </button>
                                 ))}
                             </div>
+                            <DateRangeFilter range={{ from, to }} onChange={setRange} />
                             <label className="squash-checkbox">
                                 <input
                                     type="checkbox"
@@ -208,7 +217,7 @@ export default function Games() {
                         {games.length === 0 ? (
                             <div className="squash-card squash-empty">
                                 <p>
-                                    {deuceOnly || liveOnly
+                                    {deuceOnly || liveOnly || from || to
                                         ? done
                                             ? "No games fit these filters."
                                             : "No games fit these filters in the latest matches. Load more to look further back."

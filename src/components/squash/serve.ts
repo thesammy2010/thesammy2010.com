@@ -17,7 +17,8 @@ export interface ServiceBox {
 /**
  * The box to serve from next, or null when it can't be told: who served
  * first in the match isn't known, or the rallies on hand are behind the
- * match. `firstServer` is the side picked to serve before the first rally.
+ * match. `firstServer` is the side picked to serve before the first rally,
+ * over the one the API spun, and null once it's begun.
  * `startBox` is the box a side's server likes to start a hand in, and
  * `switched` holds the hands whose server chose the other box to start.
  */
@@ -28,7 +29,8 @@ export function serviceBox(
     switched: Set<string> = new Set(),
     startBox: (side: Side) => Box = () => "right"
 ): ServiceBox | null {
-    const serving = match.serving_side ?? firstServer
+    // Before the first rally, the side picked here goes over the API's spin
+    const serving = firstServer ?? match.serving_side
     if (serving === null) {
         return null
     }

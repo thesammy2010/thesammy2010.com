@@ -1393,7 +1393,80 @@ select.squash-input {
 }
 
 /* The matches list's date range */
-.squash-date-filter {
+/* Filters drawn like the segmented toggles beside them: grey until one's
+   chosen, then blue. Selects lose Safari's own look for a chevron. */
+.squash-pill {
+    height: 36px;
+    margin: 0;
+    padding: 0 14px;
+    border: none;
+    border-radius: 10px;
+    background-color: #edf2f7;
+    color: #4a5568;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 36px;
+    white-space: nowrap;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.squash-pill:hover {
+    background-color: #e2e8f0;
+}
+
+.squash-pill:focus-visible {
+    outline: 2px solid #1e40af;
+    outline-offset: 2px;
+}
+
+.squash-pill.squash-pill-set {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+select.squash-pill,
+.squash-pill-select {
+    width: auto;
+    /* A select is as wide as its longest option, such as a venue's name */
+    max-width: 180px;
+    text-overflow: ellipsis;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234a5568' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* The toggles in a row of filters, as tall as the pills */
+.squash-filters .squash-segmented button {
+    padding: 0 16px;
+    line-height: 30px;
+}
+
+/* The date range's presets and dates, on their own line under the filters */
+.squash-date-range {
+    flex-basis: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.squash-date-range-presets,
+.squash-date-range-custom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.squash-date-range-custom label {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -2193,4 +2266,64 @@ select.squash-input {
 /* A player's preferred service box */
 .squash-serve-preference {
     margin: 0;
+}
+
+/* Comments on a match and its games */
+.squash-comments {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.squash-comment {
+    padding-bottom: 14px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.squash-comment-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: 0.875rem;
+}
+
+.squash-comment-head strong {
+    color: #2c3e50;
+}
+
+.squash-comment-head .squash-game-tag {
+    text-decoration: none;
+}
+
+.squash-comment-body {
+    margin: 6px 0 0;
+    color: #2c3e50;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.squash-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.squash-comment-form textarea {
+    width: 100%;
+    height: auto;
+    font: inherit;
+    resize: vertical;
+}
+
+.squash-comment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
 }

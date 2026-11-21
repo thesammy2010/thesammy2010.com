@@ -126,6 +126,14 @@ describe("serviceBox", () => {
         expect(serviceBox(match, rallies, 1, new Set([hand]), () => "left")?.box).toBe("right")
     })
 
+    it("serves first from the side picked over the API's spin", () => {
+        const { match, rallies } = play("", null)
+        const spun = { ...match, serving_side: 2 as Side }
+        const sides = (side: Side) => (side === 1 ? "left" : "right")
+        expect(serviceBox(spun, rallies, null, new Set(), sides)?.box).toBe("right")
+        expect(serviceBox(spun, rallies, 1, new Set(), sides)?.box).toBe("left")
+    })
+
     it("gives up while the rallies are behind the match", () => {
         const { match, rallies } = play("11", 1)
         expect(serviceBox(match, rallies.slice(0, 1), null)).toBeNull()
