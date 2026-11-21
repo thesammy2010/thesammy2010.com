@@ -7,7 +7,7 @@ import { setAppleSession } from "../auth"
 const APPLE_SCRIPT = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
 
 interface AppleSignInResponse {
-    authorization: { id_token: string }
+    authorization: { id_token: string; code?: string }
     // Only on the first sign-in, and only what the person chose to share
     user?: { name?: { firstName?: string; lastName?: string }; email?: string }
 }
@@ -75,7 +75,13 @@ export default function AppleSignIn() {
             const response = await fetch(`${API_URL}/auth/apple`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ identity_token: apple.authorization.id_token, name })
+                // The code's swapped by the API for a token it can revoke
+                // when the account's deleted
+                body: JSON.stringify({
+                    identity_token: apple.authorization.id_token,
+                    name,
+                    authorization_code: apple.authorization.code ?? null
+                })
             })
             if (!response.ok) {
                 throw new Error("Apple sign-in didn't work. Try again, or sign in with Google.")
