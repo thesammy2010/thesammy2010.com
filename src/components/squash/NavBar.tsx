@@ -8,7 +8,8 @@ const LINKS = [
     { to: "/squash/matches", label: "🏆 Matches" },
     { to: "/squash/games", label: "🎯 Games" },
     { to: "/squash/players", label: "👥 Players" },
-    { to: "/squash/stats", label: "📊 Stats" }
+    { to: "/squash/stats", label: "📊 Stats" },
+    { to: "/squash/feedback", label: "💬 Feedback" }
 ]
 
 // The Go Heavier nav bar's layout under its own colours.
