@@ -169,7 +169,14 @@ export default function GameDetail() {
                                         {gameRallies.map((rally) => (
                                             <tr key={rally.number}>
                                                 <th scope="row">{rally.number}</th>
-                                                {showServer && <td>{nameOf(rally.server_id) ?? "—"}</td>}
+                                                {showServer && (
+                                                    <td>
+                                                        {nameOf(rally.server_id) ?? "—"}
+                                                        {rally.box && (
+                                                            <span className="squash-muted"> · {rally.box} box</span>
+                                                        )}
+                                                    </td>
+                                                )}
                                                 <td>
                                                     {rally.won_by_side === null ? (
                                                         <span className="squash-muted">Replayed</span>

@@ -83,7 +83,12 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
             () =>
                 squashApi.addRally(
                     match.id,
-                    { ...rally, server_id: serving === null ? null : serverId(serving) },
+                    {
+                        ...rally,
+                        server_id: serving === null ? null : serverId(serving),
+                        // Kept with the rally, as the scorer follows it
+                        box: box?.box ?? null
+                    },
                     match.version
                 ),
             "Someone else scored that rally first, so it's shown as they scored it. Tap again if it was another point."
