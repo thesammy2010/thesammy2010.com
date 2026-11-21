@@ -30,13 +30,14 @@ function parse(day: string): Date {
     return new Date(year, month - 1, date)
 }
 
-// The ranges most looked for, ending today or covering the whole month or
+// The ranges most looked for: today, ending today, or covering the whole month or
 // year, so arranged matches later on are in them too
 export function presets(today: Date): (DateRange & { label: string })[] {
     const y = today.getFullYear()
     const m = today.getMonth()
     const daysAgo = (n: number) => isoDay(new Date(y, m, today.getDate() - n))
     return [
+        { label: "Today", from: daysAgo(0), to: daysAgo(0) },
         { label: "Last 7 days", from: daysAgo(6), to: "" },
         { label: "Last 30 days", from: daysAgo(29), to: "" },
         { label: "This month", from: isoDay(new Date(y, m, 1)), to: isoDay(new Date(y, m + 1, 0)) },

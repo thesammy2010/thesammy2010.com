@@ -7,6 +7,7 @@ const label = (from: string, to: string) => rangeLabel({ from, to }, today)
 describe("rangeLabel", () => {
     it("names an open range and the presets", () => {
         expect(label("", "")).toBe("Any time")
+        expect(label("2026-11-21", "2026-11-21")).toBe("Today")
         expect(label("2026-11-15", "")).toBe("Last 7 days")
         expect(label("2026-10-23", "")).toBe("Last 30 days")
         expect(label("2026-11-01", "2026-11-30")).toBe("This month")
