@@ -255,6 +255,42 @@ export interface AdminFeedback extends Feedback {
     resolved_by_id: string | null
 }
 
+// How the Elo ratings are worked out, as the API does it
+export interface RatingFormula {
+    name: string
+    // To show as it is, in any font
+    plain: string
+    // To typeset
+    latex: string
+    explanation: string
+}
+
+export interface RatingExampleSide {
+    // Each player's, one in singles
+    ratings_before: number[]
+    // What the side plays as: in doubles, the pair's average
+    rating: number
+    // The score it was expected to take, 0 to 1
+    expected: number
+    // 1 for a win, the draw score, or 0 for a loss
+    score: number
+    // What each of its players moved by
+    change: number
+    ratings_after: number[]
+}
+
+export interface RatingMethod {
+    // Goes up whenever how ratings are worked out changes
+    version: number
+    updated: string
+    constants: { start: number; k: number; scale: number; draw: number; provisional_matches: number }
+    formulas: RatingFormula[]
+    rules: string[]
+    examples: { description: string; side1: RatingExampleSide; side2: RatingExampleSide }[]
+    // Newest first
+    changes: { version: number; date: string; summary: string }[]
+}
+
 // Matches the API's DEFAULT_DB_PAGE_SIZE: a shorter page is the last one.
 export const MATCHES_PAGE_SIZE = 50
 
@@ -405,6 +441,7 @@ export const squashApi = {
         request<Rating[]>("GET", "/ratings", "Failed to load the ratings", {
             query: { format, include_inactive: includeInactive }
         }),
+    ratingMethod: () => request<RatingMethod>("GET", "/ratings/method", "Failed to load how ratings work"),
     // Oldest first
     ratingHistory: (id: string, format?: MatchFormat) =>
         request<RatingChange[]>("GET", `/players/${id}/ratings`, "Failed to load the rating history", {

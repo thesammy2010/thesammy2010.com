@@ -1,4 +1,4 @@
-import React from "react"
+import React, { lazy, Suspense } from "react"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import "./App.css"
 
@@ -41,6 +41,10 @@ import PlayerDetail from "./pages/squash/PlayerDetail"
 import SquashStats from "./pages/squash/Stats"
 import { GOOGLE_CLIENT_ID } from "./configs"
 
+// Loaded when it's opened: its formulas need KaTeX, too big to make every
+// visitor download
+const HowEloWorks = lazy(() => import("./pages/squash/HowEloWorks"))
+
 const App: React.FC = () => {
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -69,6 +73,14 @@ const App: React.FC = () => {
                         <Route path="/squash/matches" element={<Squash />} />
                         <Route path="/squash/games" element={<SquashGames />} />
                         <Route path="/squash/feedback" element={<SquashFeedback />} />
+                        <Route
+                            path="/squash/elo"
+                            element={
+                                <Suspense fallback={null}>
+                                    <HowEloWorks />
+                                </Suspense>
+                            }
+                        />
                         <Route path="/squash/how" element={<SquashHowItWorks />} />
                         <Route path="/squash/matches/:id" element={<MatchDetail />} />
                         <Route path="/squash/matches/:id/games/:number" element={<GameDetail />} />

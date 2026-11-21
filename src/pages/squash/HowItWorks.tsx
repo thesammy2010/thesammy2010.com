@@ -51,7 +51,8 @@ const SECTIONS: { title: string; tips: { icon: string; text: React.ReactNode }[]
                 text: (
                     <>
                         Everyone starts on 1000 Elo, singles and doubles apart. Beating someone rated higher moves you
-                        further. See the ladder on <Link to="/squash/stats">Stats</Link>.
+                        further. See the ladder on <Link to="/squash/stats">Stats</Link>, and{" "}
+                        <Link to="/squash/elo">how Elo works</Link>.
                     </>
                 )
             },
