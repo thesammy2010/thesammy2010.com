@@ -88,3 +88,45 @@
         display: none;
     }
 }
+
+/* Sign in with Apple, styled to Apple's guidelines: black, with its logo */
+.site-signin-apple {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 40px;
+    padding: 0 0.9rem;
+    border: none;
+    border-radius: 6px;
+    background: #000;
+    color: #fff;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.site-signin-apple:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.site-signin-error {
+    font-size: 0.8rem;
+    color: #c53030;
+}
+
+/* Stands in for a picture, which Apple doesn't share */
+.site-signin-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #2c3e50;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
