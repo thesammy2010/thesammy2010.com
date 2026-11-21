@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google"
 import "./App.css"
 
 import NavBar from "./components/NavBar"
+import PageHead from "./components/PageHead"
 import Home from "./pages/Home"
 import About from "./pages/About"
 import NotFound from "./pages/NotFound"
@@ -50,6 +51,7 @@ const App: React.FC = () => {
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <div>
                 <BrowserRouter>
+                    <PageHead />
                     <NavBar />
                     <Routes>
                         <Route path="/" element={<Home />} />

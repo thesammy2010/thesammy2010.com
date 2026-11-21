@@ -2344,3 +2344,17 @@ select.squash-pill,
     gap: 10px;
     margin-top: 6px;
 }
+
+/* How2Squash's app icon beside its name in the nav bar */
+.squash-navbar .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.squash-brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}

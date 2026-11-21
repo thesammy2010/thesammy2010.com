@@ -31,7 +31,10 @@ export default function SquashNavBar() {
     return (
         <div className="go-heavier-navbar squash-navbar">
             <div className="navbar-content">
-                <h1 className="navbar-brand">🎾 Squash</h1>
+                <h1 className="navbar-brand">
+                    <img className="squash-brand-logo" src="/icons/how2squash-180.png" alt="" />
+                    How2Squash
+                </h1>
                 <button
                     type="button"
                     className="navbar-menu-toggle"
