@@ -2189,3 +2189,8 @@ select.squash-input {
         grid-column: 1 / -1;
     }
 }
+
+/* A player's preferred service box */
+.squash-serve-preference {
+    margin: 0;
+}

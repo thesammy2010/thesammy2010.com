@@ -107,6 +107,25 @@ describe("serviceBox", () => {
         expect(serviceBox(next.match, next.rallies, null, new Set([hand]))?.box).toBe("right")
     })
 
+    it("starts each hand in the box the server prefers", () => {
+        const left = (side: Side) => (side === 1 ? "left" : "right")
+        const { match, rallies } = play("1", 1)
+        expect(serviceBox(match, rallies, null, new Set(), left)?.box).toBe("right")
+        const start = play("", null)
+        expect(serviceBox(start.match, start.rallies, 1, new Set(), left)?.box).toBe("left")
+        // Side 2 prefers the right, and side 1 begins a new hand on the left
+        const back = play("12", 1)
+        expect(serviceBox(back.match, back.rallies, null, new Set(), left)?.box).toBe("right")
+        const again = play("121", 1)
+        expect(serviceBox(again.match, again.rallies, null, new Set(), left)?.box).toBe("left")
+    })
+
+    it("switches a preferred box to the other one for that hand", () => {
+        const { match, rallies } = play("", null)
+        const hand = serviceBox(match, rallies, 1, new Set(), () => "left")!.hand
+        expect(serviceBox(match, rallies, 1, new Set([hand]), () => "left")?.box).toBe("right")
+    })
+
     it("gives up while the rallies are behind the match", () => {
         const { match, rallies } = play("11", 1)
         expect(serviceBox(match, rallies.slice(0, 1), null)).toBeNull()
