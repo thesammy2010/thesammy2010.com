@@ -1501,6 +1501,9 @@ select.squash-pill,
 .squash-elo-format {
     display: flex;
     flex-direction: column;
+    /* Each tile's label, number and rank centred in it */
+    align-items: center;
+    text-align: center;
     gap: 6px;
     padding: 16px 18px;
     border-radius: 12px;
@@ -1542,10 +1545,12 @@ select.squash-pill,
     color: #64748b;
 }
 
+/* The number, with its trend under it so the number stays centred */
 .squash-elo-main {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
 }
 
 .squash-elo-value {
@@ -1569,6 +1574,7 @@ select.squash-pill,
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 6px 10px;
     font-size: 0.875rem;
 }
