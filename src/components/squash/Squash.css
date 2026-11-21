@@ -1475,17 +1475,28 @@ select.squash-pill,
 }
 
 /* Sharing a finished match */
-.squash-share-row {
+/* Under a finished match's scoreboard: sharing it, and taking back the
+   point that won it, as buttons side by side in the middle */
+.squash-result-actions {
     display: flex;
-    justify-content: flex-end;
-    margin: -4px 0 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 12px;
+    margin: 0 0 16px;
+}
+
+.squash-result-actions .squash-inline-error {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: center;
 }
 
 .squash-share {
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 8px;
 }
 

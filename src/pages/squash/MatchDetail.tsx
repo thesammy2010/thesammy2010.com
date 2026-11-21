@@ -238,6 +238,7 @@ export default function MatchDetail() {
     const [editingGame, setEditingGame] = useState<number | null>(null)
     const [confirming, setConfirming] = useState<"cancel" | "delete" | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
+    const [undoError, setUndoError] = useState<string | null>(null)
     const [busy, setBusy] = useState(false)
 
     const { state, setState, refreshing, reload } = useSquashLoad<MatchData>(async () => {
@@ -317,6 +318,29 @@ export default function MatchDetail() {
         }
     }
 
+    // Takes back the point that finished the match. A best-of match reopens
+    // itself when it is; an open-ended one was ended by hand and stays ended,
+    // so it's reopened first, as the API won't leave a finished match with an
+    // unfinished game.
+    const undoWinner = async (match: Match) => {
+        setBusy(true)
+        setUndoError(null)
+        try {
+            const current =
+                match.best_of === null
+                    ? await squashApi.updateMatch(match.id, toInput(match, { status: "in_progress" }))
+                    : match
+            applyMatch(await squashApi.undoRally(current.id, current.version))
+        } catch (error) {
+            if (error instanceof StaleMatchError) {
+                applyMatch(error.match)
+            }
+            setUndoError((error as Error).message)
+        } finally {
+            setBusy(false)
+        }
+    }
+
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Match">
             {({ match, players, rallies, insights }, me) => {
@@ -363,8 +387,19 @@ export default function MatchDetail() {
                         <Scoreboard match={match} players={players} />
 
                         {match.status === "completed" && (
-                            <div className="squash-share-row">
+                            <div className="squash-result-actions">
                                 <ShareResult match={match} players={players} />
+                                {canUndoWinner && (
+                                    <button
+                                        type="button"
+                                        className="squash-secondary-button"
+                                        disabled={busy}
+                                        onClick={() => void undoWinner(match)}
+                                    >
+                                        ↶ {match.best_of === null ? "Reopen and undo the last point" : "Undo the winning point"}
+                                    </button>
+                                )}
+                                {undoError && <p className="error-message squash-inline-error">{undoError}</p>}
                             </div>
                         )}
 
@@ -443,32 +478,16 @@ export default function MatchDetail() {
                                         onCancel={() => setEditingGame(null)}
                                     />
                                 )}
-                                {(canRemoveLastGame || canUndoWinner) && (
+                                {canRemoveLastGame && (
                                     <div className="squash-row-actions">
-                                        {canRemoveLastGame && (
-                                            <button
-                                                type="button"
-                                                className="squash-text-button"
-                                                disabled={busy}
-                                                onClick={() =>
-                                                    act(async () => applyMatch(await squashApi.deleteLastGame(match.id)))
-                                                }
-                                            >
-                                                Remove game {lastGame.number}
-                                            </button>
-                                        )}
-                                        {canUndoWinner && (
-                                            <button
-                                                type="button"
-                                                className="squash-text-button"
-                                                disabled={busy}
-                                                onClick={() =>
-                                                    act(async () => applyMatch(await squashApi.undoRally(match.id, match.version)))
-                                                }
-                                            >
-                                                Undo the winning point
-                                            </button>
-                                        )}
+                                        <button
+                                            type="button"
+                                            className="squash-text-button"
+                                            disabled={busy}
+                                            onClick={() => act(async () => applyMatch(await squashApi.deleteLastGame(match.id)))}
+                                        >
+                                            Remove game {lastGame.number}
+                                        </button>
                                     </div>
                                 )}
                             </div>
