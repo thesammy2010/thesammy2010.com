@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { Match, Player, Rally, RallyInput, Side, squashApi, StaleMatchError } from "./api"
+import { Box, Match, Player, Rally, RallyInput, Side, squashApi, StaleMatchError } from "./api"
 import { ballFor, currentGame, SIDES, sideNames, toInput } from "./format"
 import { serviceBox } from "./serve"
 
@@ -26,8 +26,10 @@ interface Props {
 // works it out from who won the last point. Each rally is sent with its server, so the game's page
 // can show who served it. In doubles, which partner serves is picked here.
 // A hand starts in the box its server prefers, which they choose on their
-// own player page, and Switch box changes it for that hand. A match set not
-// to track the boxes shows none of that, and sends no box.
+// own player page, and Switch box changes it for that hand, until they've won
+// a point in it. The API says which box, and keeps a switch, so every phone,
+// watch and page scoring the match shows the same one. A match set not to
+// track the boxes shows none of that, and sends no box.
 export default function LiveScorer({ match, rallies, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
     // Chosen here as a game starts, over the side the API gives
@@ -49,11 +51,36 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const serverId = (side: Side) => partners[side] ?? onSide(side)[0] ?? null
     const playerOf = (playerId: string | null) => players.find((p) => p.id === playerId)
     const nameOf = (playerId: string | null) => playerOf(playerId)?.name ?? "Unknown player"
-    // Each hand starts in the box its server prefers, or else the right
-    const box =
-        match.tracks_box === false
+    // The API's box, unless it's from before it gave one, or the side
+    // picked here to serve first isn't the one it has serving
+    const boxFromApi = match.can_choose_box !== undefined && (picked === null || picked === match.serving_side)
+    // Worked out here otherwise: each hand starts in the box its server
+    // prefers, or else the right
+    const localBox =
+        match.tracks_box === false || boxFromApi
             ? null
             : serviceBox(match, rallies, picked, switched, (side) => playerOf(serverId(side))?.preferred_box ?? "right")
+    const box: Box | null =
+        match.tracks_box === false ? null : boxFromApi ? match.serving_box ?? null : localBox?.box ?? null
+    const canSwitchBox = boxFromApi ? match.can_choose_box === true && box !== null : localBox !== null
+    const across = (side: Box): Box => (side === "right" ? "left" : "right")
+    const switchBox = () => {
+        if (box === null) {
+            return
+        }
+        if (boxFromApi) {
+            void run(
+                () => squashApi.chooseBox(match.id, across(box), match.version),
+                "The score changed before the box was switched. Check it and switch again."
+            )
+        } else if (localBox) {
+            const next = new Set(switched)
+            if (!next.delete(localBox.hand)) {
+                next.add(localBox.hand)
+            }
+            setSwitched(next)
+        }
+    }
     const finishedGames = match.games.filter((g) => g.winning_side !== null).length
     const canUndo = match.games.some((g) => g.rallies > 0)
     // A match can be ended where it stands once a game counts. A best-of
@@ -88,7 +115,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                         ...rally,
                         server_id: serving === null ? null : serverId(serving),
                         // Kept with the rally, as the scorer follows it
-                        box: box?.box ?? null
+                        box
                     },
                     match.version
                 ),
@@ -147,22 +174,12 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                         {box && (
                             <>
                                 {" "}
-                                from the <strong>{box.box}</strong> box
+                                from the <strong>{box}</strong> box
                             </>
                         )}
                     </span>
-                    {box && (
-                        <button
-                            type="button"
-                            className="squash-text-button"
-                            onClick={() => {
-                                const next = new Set(switched)
-                                if (!next.delete(box.hand)) {
-                                    next.add(box.hand)
-                                }
-                                setSwitched(next)
-                            }}
-                        >
+                    {canSwitchBox && (
+                        <button type="button" className="squash-text-button" disabled={busy} onClick={switchBox}>
                             Switch box
                         </button>
                     )}

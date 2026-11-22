@@ -34,10 +34,15 @@ squash group's pages under `/squash`. All of them talk to
   roles. Squash is for players, plus admins who don't play.
 - Scoring live (`LiveScorer.tsx`) sends each rally against the match's
   `version`. A 409 comes back as `StaleMatchError` carrying the current match.
-- Service boxes (`serve.ts`) and game/match rules (`format.ts`) mirror the
-  API's `src/resolvers/squash/scoring.py` and `matches.py`, and the app's
-  `SquashServiceBox.swift`. Change them together. Sides take turns to serve
-  first in each game, from the API's spin of the racket.
+- Game/match rules (`format.ts`) mirror the API's
+  `src/resolvers/squash/scoring.py` and `matches.py`. Change them together.
+  Sides take turns to serve first in each game, from the API's spin of the
+  racket.
+- The service box comes from the API (`serving_box`, `can_choose_box`), so
+  the website, phone and watch show the same one, and Switch box sends
+  `PUT .../box` (`squashApi.chooseBox`). `serve.ts` works it out locally only
+  for an API from before, or a side picked here to serve first that the API
+  doesn't have serving, and mirrors the app's `SquashServiceBox.swift`.
 
 ## Conventions
 

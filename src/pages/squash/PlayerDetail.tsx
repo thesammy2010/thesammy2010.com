@@ -19,7 +19,8 @@ import RatingChart from "../../components/squash/RatingChart"
 import DisplayName from "../../components/squash/DisplayName"
 import ServePreference from "../../components/squash/ServePreference"
 import SquashPage from "../../components/squash/SquashPage"
-import { record, winRate } from "../../components/squash/format"
+import { winRate } from "../../components/squash/format"
+import MatchRecord from "../../components/squash/MatchRecord"
 
 interface PlayerData {
     player: Player
@@ -141,16 +142,12 @@ function HeadToHeadCard({ id, opponents, players }: { id: string; opponents: str
                                         </Link>
                                     </th>
                                     <td>{h.matches_played}</td>
-                                    <td
-                                        className={
-                                            h.matches_won > h.matches_lost
-                                                ? "squash-ahead"
-                                                : h.matches_won < h.matches_lost
-                                                ? "squash-behind"
-                                                : ""
-                                        }
-                                    >
-                                        {record(h.matches_won, h.matches_lost, h.matches_drawn)}
+                                    <td>
+                                        <MatchRecord
+                                            won={h.matches_won}
+                                            lost={h.matches_lost}
+                                            drawn={h.matches_drawn}
+                                        />
                                     </td>
                                     <td>
                                         {h.games_won}-{h.games_lost}
@@ -164,7 +161,7 @@ function HeadToHeadCard({ id, opponents, players }: { id: string; opponents: str
     )
 }
 
-function Tile({ value, label }: { value: string; label: string }) {
+function Tile({ value, label }: { value: React.ReactNode; label: string }) {
     return (
         <div className="stat-tile">
             <div className="stat-tile-value">{value}</div>
@@ -206,7 +203,9 @@ function RecordByFormat({ stats }: { stats: PlayerStats }) {
                         <tr key={label}>
                             <th scope="row">{label}</th>
                             <td>{r.matches_played}</td>
-                            <td>{record(r.matches_won, r.matches_lost, r.matches_drawn)}</td>
+                            <td>
+                                <MatchRecord won={r.matches_won} lost={r.matches_lost} drawn={r.matches_drawn} />
+                            </td>
                             <td>{winRate(r.win_rate)}</td>
                             <td className="squash-hide-narrow">
                                 {r.games_won}-{r.games_lost}
@@ -262,8 +261,14 @@ export default function PlayerDetail() {
                     <div className="stats-grid">
                         <Tile value={String(stats.matches_played)} label="Matches" />
                         <Tile
-                            value={record(stats.matches_won, stats.matches_lost, stats.matches_drawn)}
-                            label="Won-lost"
+                            value={
+                                <MatchRecord
+                                    won={stats.matches_won}
+                                    lost={stats.matches_lost}
+                                    drawn={stats.matches_drawn}
+                                />
+                            }
+                            label="Record"
                         />
                         <Tile value={winRate(stats.win_rate)} label="Win rate" />
                         <Tile value={`${stats.games_won}-${stats.games_lost}`} label="Games" />

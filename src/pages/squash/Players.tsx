@@ -5,7 +5,8 @@ import { Player, PlayerInput, PlayerStats, squashApi, useSquashLoad } from "../.
 import PendingRequests from "../../components/squash/PendingRequests"
 import SquashPage from "../../components/squash/SquashPage"
 import Venues from "../../components/squash/Venues"
-import { record, winRate } from "../../components/squash/format"
+import { winRate } from "../../components/squash/format"
+import MatchRecord from "../../components/squash/MatchRecord"
 import { matchesSearch } from "../../components/squash/search"
 import { useCanAccess } from "../../roles"
 
@@ -27,15 +28,7 @@ export function ladder(players: Player[], stats: Record<string, PlayerStats>): P
     })
 }
 
-function PlayerEditor({
-    player,
-    onSaved,
-    onCancel
-}: {
-    player?: Player
-    onSaved: () => void
-    onCancel?: () => void
-}) {
+function PlayerEditor({ player, onSaved, onCancel }: { player?: Player; onSaved: () => void; onCancel?: () => void }) {
     const [name, setName] = useState(player?.name ?? "")
     const [email, setEmail] = useState(player?.email ?? "")
     const [active, setActive] = useState(player?.is_active ?? true)
@@ -86,7 +79,7 @@ function PlayerEditor({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Google email, so they can sign in"
+                placeholder="Email, so they can sign in"
                 maxLength={255}
                 aria-label="Email"
             />
@@ -134,7 +127,11 @@ export default function Players() {
                         <h2 className="squash-title">Players</h2>
                         {canManage && (
                             <label className="squash-checkbox">
-                                <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
+                                <input
+                                    type="checkbox"
+                                    checked={showInactive}
+                                    onChange={(e) => setShowInactive(e.target.checked)}
+                                />
                                 <span>Show people who've left</span>
                             </label>
                         )}
@@ -198,19 +195,40 @@ export default function Players() {
                                                 </Link>
                                                 {player.id === me?.id && <span className="squash-you">you</span>}
                                                 {canManage && !player.user_id && (
-                                                    <span className="squash-muted squash-pending" title={player.email ?? undefined}>
+                                                    <span
+                                                        className="squash-muted squash-pending"
+                                                        title={player.email ?? undefined}
+                                                    >
                                                         {player.email ? "hasn't signed in" : "no sign-in"}
                                                     </span>
                                                 )}
                                             </th>
                                             <td>{s?.matches_played ?? 0}</td>
-                                            <td>{s ? record(s.matches_won, s.matches_lost, s.matches_drawn) : "0-0"}</td>
+                                            <td>
+                                                {s ? (
+                                                    <MatchRecord
+                                                        won={s.matches_won}
+                                                        lost={s.matches_lost}
+                                                        drawn={s.matches_drawn}
+                                                    />
+                                                ) : (
+                                                    <MatchRecord won={0} lost={0} />
+                                                )}
+                                            </td>
                                             <td>{winRate(s?.win_rate ?? null)}</td>
-                                            <td className="squash-hide-narrow">{s ? `${s.games_won}-${s.games_lost}` : "0-0"}</td>
-                                            <td className="squash-hide-narrow">{s ? `${s.points_won}-${s.points_lost}` : "0-0"}</td>
+                                            <td className="squash-hide-narrow">
+                                                {s ? `${s.games_won}-${s.games_lost}` : "0-0"}
+                                            </td>
+                                            <td className="squash-hide-narrow">
+                                                {s ? `${s.points_won}-${s.points_lost}` : "0-0"}
+                                            </td>
                                             {canManage && (
                                                 <td>
-                                                    <button type="button" className="squash-text-button" onClick={() => setEditingId(player.id)}>
+                                                    <button
+                                                        type="button"
+                                                        className="squash-text-button"
+                                                        onClick={() => setEditingId(player.id)}
+                                                    >
                                                         Edit
                                                     </button>
                                                 </td>
@@ -226,8 +244,8 @@ export default function Players() {
                         <div className="squash-card">
                             <h4 className="squash-card-title">Add someone to the group</h4>
                             <p className="squash-muted">
-                                With their Google email they can sign in and score their own matches; they're linked
-                                the first time they do. Without one they can still be put in matches.
+                                Given their email, they can sign in with Google or Apple and score their own matches;
+                                they're linked the first time they do. Without one they can still be put in matches.
                             </p>
                             <PlayerEditor onSaved={reload} />
                         </div>

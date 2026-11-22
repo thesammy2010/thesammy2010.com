@@ -2377,3 +2377,29 @@ select.squash-pill,
 .squash-sort select.squash-input {
     width: auto;
 }
+
+/* A record: each number in its colour, with its letter smaller beside it */
+.squash-record {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.squash-record small {
+    font-size: 0.7em;
+    font-weight: 700;
+    margin-left: 1px;
+    opacity: 0.85;
+}
+
+.squash-record-won {
+    color: #2f855a;
+}
+
+.squash-record-lost {
+    color: #c53030;
+}
+
+.squash-record-drawn {
+    color: #718096;
+}

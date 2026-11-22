@@ -13,7 +13,7 @@ function formatDate(value: string): string {
 }
 
 // One request waiting for an answer. Approving adds them as a new player,
-// named after their Google account unless renamed, or makes them a player
+// named after their account unless renamed, or makes them a player
 // already recorded in matches who hasn't signed in.
 function PendingRequest({
     request,
@@ -63,7 +63,7 @@ function PendingRequest({
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             maxLength={255}
-                            placeholder="Their Google name"
+                            placeholder="Their account's name"
                             disabled={busy}
                         />
                     </label>
