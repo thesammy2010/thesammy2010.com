@@ -61,7 +61,7 @@ function Tile({ value, label }: { value: string; label: string }) {
     )
 }
 
-// "▲ +12" for a rise, "▼ −8" for a fall, from the last match rated
+// "▲ +12" for a rise, "▼ −8" for a fall, from the last game rated
 function Change({ rating }: { rating: Rating }) {
     if (rating.matches_rated === 0) {
         return null
@@ -69,7 +69,7 @@ function Change({ rating }: { rating: Rating }) {
     const change = rating.last_change
     const tone = change > 0 ? "up" : change < 0 ? "down" : "level"
     return (
-        <span className={`squash-elo-change ${tone}`} title="Last match">
+        <span className={`squash-elo-change ${tone}`} title="Last game">
             <span aria-hidden="true">{change > 0 ? "▲" : change < 0 ? "▼" : "•"}</span> {signed(change)}
         </span>
     )

@@ -195,16 +195,20 @@ export interface Rating {
     name: string
     rating: number
     matches_rated: number
-    // Too few matches for the rating to mean much yet
+    // Each finished game moves a rating; missing from an API from before
+    games_rated?: number
+    // Too few games for the rating to mean much yet
     provisional: boolean
     peak: number
     last_change: number
 }
 
-// What one completed match did to a player's rating
+// What one game of a completed match did to a player's rating
 export interface RatingChange {
     match_id: string
     played_at: string | null
+    // Its number in the match; missing from an API that rated whole matches
+    game?: number
     rating_before: number
     rating_after: number
     change: number
@@ -319,7 +323,17 @@ export interface RatingMethod {
     // Goes up whenever how ratings are worked out changes
     version: number
     updated: string
-    constants: { start: number; k: number; scale: number; draw: number; provisional_matches: number }
+    constants: {
+        start: number
+        // The most one game moves a rating
+        k: number
+        scale: number
+        // No longer used, as a game always has a winner
+        draw: number
+        provisional_matches: number
+        // Missing from an API that rated whole matches
+        provisional_games?: number
+    }
     formulas: RatingFormula[]
     rules: string[]
     examples: { description: string; side1: RatingExampleSide; side2: RatingExampleSide }[]
