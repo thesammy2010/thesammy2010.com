@@ -15,10 +15,35 @@ export interface ServiceBox {
 }
 
 /**
+ * The side that served first in game `number`, as the API's _first_server
+ * has it: whoever's named serving it before its first point, or else the
+ * other side to the game before's, the first game's from the spin of the
+ * racket. Null when that isn't known.
+ */
+export function firstServerOf(match: Match, rallies: Rally[], number: number): Side | null {
+    let named: Side | null = null
+    const gameRallies = rallies.filter((r) => r.game === number).sort((a, b) => a.number - b.number)
+    for (const rally of gameRallies) {
+        named = (rally.server_id ? sideOf(match, rally.server_id) : null) ?? named
+        if (rally.won_by_side !== null) {
+            break
+        }
+    }
+    if (named !== null) {
+        return named
+    }
+    if (number <= 1) {
+        return match.first_serving_side ?? null
+    }
+    const before = firstServerOf(match, rallies, number - 1)
+    return before === null ? null : before === 1 ? 2 : 1
+}
+
+/**
  * The box to serve from next, or null when it can't be told: who served
- * first in the match isn't known, or the rallies on hand are behind the
- * match. `firstServer` is the side picked to serve before the first rally,
- * over the one the API spun, and null once it's begun.
+ * first in the game isn't known, or the rallies on hand are behind the
+ * match. `firstServer` is the side picked to serve first in the game about
+ * to start, over the one the API gives, and null once a point's been won.
  * `startBox` is the box a side's server likes to start a hand in, and
  * `switched` holds the hands whose server chose the other box to start.
  */
@@ -29,7 +54,7 @@ export function serviceBox(
     switched: Set<string> = new Set(),
     startBox: (side: Side) => Box = () => "right"
 ): ServiceBox | null {
-    // Before the first rally, the side picked here goes over the API's spin
+    // As a game starts, the side picked here goes over the API's say
     const serving = firstServer ?? match.serving_side
     if (serving === null) {
         return null
@@ -46,14 +71,13 @@ export function serviceBox(
     }
 
     let served: number
-    if (run === won.length) {
+    if (won.length === 0) {
+        // Nothing won yet, so whoever's serving is starting the game's first hand
+        served = 0
+    } else if (run === won.length) {
         // Every point this game is theirs: the hand began with the game if
         // they served first, or with the first point if they won it back
-        const previous = match.games.find((g) => g.number === game.number - 1)
-        const starter =
-            (gameRallies[0]?.server_id ? sideOf(match, gameRallies[0].server_id) : null) ??
-            (previous ? previous.winning_side : null) ??
-            (won.length === 0 ? serving : firstServer)
+        const starter = firstServerOf(match, rallies, game.number)
         if (starter === null) {
             return null
         }
