@@ -25,6 +25,9 @@ export interface Player {
     // The box they like to start a hand serving from; null, or missing from
     // an API that hasn't got it yet, for no preference
     preferred_box?: Box | null
+    // Their Google profile picture, once they've signed in with Google; null
+    // otherwise, or missing from an API from before
+    picture_url?: string | null
 }
 
 // What a player chooses for themselves. A field left out stays as it is,
@@ -93,6 +96,12 @@ export interface Match extends MatchInput {
     // Who serves first, from the racket the API spins as the match is
     // arranged. Null for a match arranged before then, or when hidden
     first_serving_side?: Side | null
+    // The box the next serve is from, for every scorer alike, and whether
+    // the server can still choose it: before they've won a point in their
+    // hand. Missing from an API from before it said, so the scorer works the
+    // box out itself.
+    serving_box?: Box | null
+    can_choose_box?: boolean
     version: number
     created_by_id: string
     created_at: string
@@ -454,7 +463,7 @@ export interface AdminAccessRequest extends AccessRequest {
 }
 
 // Approving makes them the player given, or else a new one with this name
-// (their Google name when left out)
+// (their account's name when left out)
 export interface Approval {
     player_id?: string | null
     name?: string | null
@@ -585,6 +594,10 @@ export const squashApi = {
         request<AdminFeedback[]>("GET", "/feedback", "Failed to load the feedback", { query: filters }),
     resolveFeedback: (id: string) =>
         request<AdminFeedback>("POST", `/feedback/${id}/resolve`, "Failed to resolve the feedback"),
+    // The box the server chose to start their hand from, for every scorer
+    // to show. 409 against an old version, like a rally.
+    chooseBox: (id: string, box: Box, version: number) =>
+        request<Match>("PUT", `/matches/${id}/box`, "Failed to switch the box", { body: { box, version } }),
     undoRally: (id: string, version: number) =>
         request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })
 }
