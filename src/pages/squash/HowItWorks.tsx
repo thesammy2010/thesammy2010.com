@@ -23,7 +23,7 @@ const SECTIONS: { title: string; tips: { icon: string; text: React.ReactNode }[]
             { icon: "👆", text: "Open the match and tap the side that won each rally. Undo takes back the last one." },
             {
                 icon: "🎾",
-                text: "Before the first rally, pick who serves first. The serving side shows which box to serve from: the right to start each hand, then across after each point won. Tap Switch box if the server chose the other one."
+                text: "The sides take turns to serve first in each game, starting from a spin of the racket. Tap Change before a game's first point if the other side serves first. The serving side shows which box to serve from: their usual box to start each hand, then across after each point won. Tap Switch box if the server chose the other one."
             },
             {
                 icon: "✋",

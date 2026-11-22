@@ -20,16 +20,17 @@ interface Props {
 // stroke to them, or a no let, the point to their opponent.
 //
 // Above the buttons is who's serving and from which box. Who serves first
-// comes from the API's spin of the racket, which Change swaps before the first
-// rally (or is asked, from an API that doesn't spin); after that the API works
-// it out from who won the last point. Each rally is sent with its server, so the game's page
+// comes from the API: the spin of the racket for the first game, then the
+// sides taking turns. Change swaps it as any game starts, before a point's
+// won (or it's asked, from an API that doesn't spin); after that the API
+// works it out from who won the last point. Each rally is sent with its server, so the game's page
 // can show who served it. In doubles, which partner serves is picked here.
 // A hand starts in the box its server prefers, which they choose on their
 // own player page, and Switch box changes it for that hand.
 export default function LiveScorer({ match, rallies, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
-    // Chosen here before the first rally, over the API's spin
-    const [firstServer, setFirstServer] = useState<Side | null>(null)
+    // Chosen here as a game starts, over the side the API gives
+    const [firstServer, setFirstServer] = useState<{ game: number; side: Side } | null>(null)
     // The partner serving for each side in doubles, while it's not the first
     const [partners, setPartners] = useState<Partial<Record<Side, string>>>({})
     // Hands whose server chose the other box to start
@@ -39,8 +40,10 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
 
     const game = currentGame(match)
     const ball = ballFor(match)
-    const started = match.games.some((g) => g.rallies > 0)
-    const serving = (started ? null : firstServer) ?? match.serving_side
+    // Before the game's first point, when either side can still serve first
+    const atGameStart = game.side1_points === 0 && game.side2_points === 0
+    const picked = atGameStart && firstServer?.game === game.number ? firstServer.side : null
+    const serving = picked ?? match.serving_side
     const onSide = (side: Side) => match.players.filter((p) => p.side === side).map((p) => p.player_id)
     const serverId = (side: Side) => partners[side] ?? onSide(side)[0] ?? null
     const playerOf = (playerId: string | null) => players.find((p) => p.id === playerId)
@@ -49,7 +52,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const box = serviceBox(
         match,
         rallies,
-        started ? null : firstServer,
+        picked,
         switched,
         (side) => playerOf(serverId(side))?.preferred_box ?? "right"
     )
@@ -123,7 +126,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                 )}
             </div>
 
-            {serving === null && !started && (
+            {serving === null && atGameStart && (
                 <div className="squash-serve-row" role="group" aria-label="Who serves first">
                     <span>Who serves first?</span>
                     {SIDES.map((side) => (
@@ -131,7 +134,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                             key={side}
                             type="button"
                             className="squash-secondary-button"
-                            onClick={() => setFirstServer(side)}
+                            onClick={() => setFirstServer({ game: game.number, side })}
                         >
                             {sideNames(match, side, players)}
                         </button>
@@ -179,11 +182,11 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                             Other partner serving
                         </button>
                     )}
-                    {!started && (
+                    {atGameStart && (
                         <button
                             type="button"
                             className="squash-text-button"
-                            onClick={() => setFirstServer(other(serving))}
+                            onClick={() => setFirstServer({ game: game.number, side: other(serving) })}
                         >
                             Change
                         </button>
