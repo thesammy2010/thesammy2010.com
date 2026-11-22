@@ -14,7 +14,7 @@ import {
 } from "../../components/squash/api"
 import EloLadder from "../../components/squash/EloLadder"
 import SquashPage from "../../components/squash/SquashPage"
-import { formatWhen, record, sideNames } from "../../components/squash/format"
+import { formatDuration, formatWhen, record, sideNames } from "../../components/squash/format"
 import {
     busierFormat,
     formFor,
@@ -185,6 +185,12 @@ export default function Stats() {
                             <Tile value={formatCount(sum.games)} label="Games" />
                             <Tile value={formatCount(sum.points)} label="Points" />
                             <Tile value={formatCount(sum.scoredLive)} label="Scored live" />
+                            {sum.averageGameSeconds !== null && (
+                                <Tile value={formatDuration(sum.averageGameSeconds)} label="Average game" />
+                            )}
+                            {sum.longestGameSeconds !== null && (
+                                <Tile value={formatDuration(sum.longestGameSeconds)} label="Longest game" />
+                            )}
                         </div>
 
                         <EloLadder ratings={ratings[format]} format={format} players={players} me={me} />

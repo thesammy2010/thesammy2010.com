@@ -3,6 +3,7 @@ import {
     ballFor,
     canMerge,
     currentGame,
+    formatDuration,
     gameScores,
     gameWinner,
     nextEnteredGame,
@@ -247,5 +248,13 @@ describe("resultSummary", () => {
             winning_side: null
         })
         expect(resultSummary(drawn, players)).toBe("Leo drew with Alex 1-1 (11-5, 6-11)")
+    })
+})
+
+describe("formatDuration", () => {
+    it("gives minutes and seconds, and hours past the hour", () => {
+        expect(formatDuration(242)).toBe("4:02")
+        expect(formatDuration(59.6)).toBe("1:00")
+        expect(formatDuration(3733)).toBe("1:02:13")
     })
 })

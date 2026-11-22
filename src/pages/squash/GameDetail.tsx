@@ -14,7 +14,7 @@ import Comments from "../../components/squash/Comments"
 import { gameNotes, SidesTable } from "../../components/squash/Insights"
 import MomentumChart from "../../components/squash/MomentumChart"
 import SquashPage from "../../components/squash/SquashPage"
-import { CALLS, formatWhen, SIDES, sideNames } from "../../components/squash/format"
+import { CALLS, formatDuration, formatWhen, SIDES, sideNames } from "../../components/squash/format"
 
 interface GameData {
     match: Match
@@ -98,6 +98,15 @@ export default function GameDetail() {
                                 <span className="squash-when">
                                     Game {game.number} of {match.games.length}
                                     <span className="squash-muted"> · {formatWhen(match.played_at)}</span>
+                                    {game.duration_seconds != null && (
+                                        <span
+                                            className="squash-muted"
+                                            title="From the first rally to the winning point"
+                                        >
+                                            {" "}
+                                            · ⏱ {formatDuration(game.duration_seconds)}
+                                        </span>
+                                    )}
                                 </span>
                                 {game.winning_side === null && <span className="squash-status">In play</span>}
                             </div>

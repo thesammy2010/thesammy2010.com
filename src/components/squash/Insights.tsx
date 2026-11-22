@@ -1,7 +1,7 @@
 import React from "react"
 
 import { GameInsights, Match, MatchInsights, Player, PlayerInsights, RallyInsights, Side } from "./api"
-import { SIDES, sideNames, winRate } from "./format"
+import { formatDuration, SIDES, sideNames, winRate } from "./format"
 
 // "23/40 · 58%", or a dash with nothing to count
 function ratio(won: number, played: number, rate: number | null): string {
@@ -156,6 +156,13 @@ export function PlayerInsightsCard({ insights }: { insights: PlayerInsights }) {
                 )}
                 <Tile value={String(insights.leads_lost)} label="Leads lost" />
                 <Tile value={`${insights.deuce_games_won}-${insights.deuce_games_lost}`} label="Deuce games" />
+                {insights.times && insights.times.games > 0 && (
+                    <>
+                        <Tile value={formatDuration(insights.times.average_seconds ?? 0)} label="Average game" />
+                        <Tile value={formatDuration(insights.times.longest_seconds ?? 0)} label="Longest game" />
+                        <Tile value={formatDuration(insights.times.total_seconds)} label="Time in games" />
+                    </>
+                )}
                 {appeals(r) > 0 && (
                     <>
                         <Tile value={String(r.strokes)} label="Strokes" />

@@ -21,6 +21,7 @@ import ShareResult from "../../components/squash/ShareResult"
 import SquashPage from "../../components/squash/SquashPage"
 import {
     CALLS,
+    formatDuration,
     formatLabel,
     formatWhen,
     gameWinner,
@@ -447,6 +448,18 @@ export default function MatchDetail() {
                                                 ))}
                                             </tr>
                                         ))}
+                                        {match.games.some((g) => g.duration_seconds != null) && (
+                                            <tr className="squash-games-time">
+                                                <th scope="row" title="From the first rally to the winning point">
+                                                    ⏱ Time
+                                                </th>
+                                                {match.games.map((g) => (
+                                                    <td key={g.number} className="squash-muted">
+                                                        {g.duration_seconds != null ? formatDuration(g.duration_seconds) : "—"}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                                 {canEditGames && (
