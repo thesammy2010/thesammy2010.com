@@ -91,4 +91,17 @@ describe("LiveScorer", () => {
 
         expect(screen.queryByRole("button", { name: "Change" })).not.toBeInTheDocument()
     })
+
+    it("shows and sends no box for a match that doesn't track them", async () => {
+        const untracked: Match = { ...match, tracks_box: false }
+        const addRally = jest.spyOn(squashApi, "addRally").mockResolvedValue(untracked)
+        render(<LiveScorer match={untracked} rallies={[]} players={players} onMatch={jest.fn()} />)
+
+        expect(screen.getByText("Sam", { selector: "strong" })).toBeInTheDocument()
+        expect(screen.queryByText("right", { selector: "strong" })).not.toBeInTheDocument()
+        expect(screen.queryByRole("button", { name: "Switch box" })).not.toBeInTheDocument()
+        await userEvent.click(screen.getByRole("button", { name: /^Point to Sam/ }))
+        expect(addRally).toHaveBeenCalledWith("m", expect.objectContaining({ box: null }), 1)
+        addRally.mockRestore()
+    })
 })

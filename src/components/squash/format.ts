@@ -15,6 +15,7 @@ export function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchI
         best_of: match.best_of,
         notes: match.notes,
         is_private: match.is_private,
+        tracks_box: match.tracks_box ?? true,
         players: match.players,
         ...changes
     }
