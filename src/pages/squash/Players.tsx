@@ -6,6 +6,7 @@ import PendingRequests from "../../components/squash/PendingRequests"
 import SquashPage from "../../components/squash/SquashPage"
 import Venues from "../../components/squash/Venues"
 import { record, winRate } from "../../components/squash/format"
+import { matchesSearch } from "../../components/squash/search"
 import { useCanAccess } from "../../roles"
 
 interface PlayersData {
@@ -113,6 +114,10 @@ export default function Players() {
     const canManage = useCanAccess("POST", "/squash/players")
     const [showInactive, setShowInactive] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
+    const [search, setSearch] = useState("")
+    // Admins can find someone by their email too, as they see it
+    const shown = (players: Player[], stats: PlayersData["stats"]) =>
+        ladder(players, stats).filter((p) => matchesSearch(p, search, canManage))
 
     const { state, refreshing, reload } = useSquashLoad<PlayersData>(async () => {
         const players = await squashApi.players(showInactive)
@@ -137,6 +142,15 @@ export default function Players() {
 
                     <PendingRequests />
 
+                    <input
+                        className="squash-input squash-search"
+                        type="search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder={canManage ? "Search by name or email" : "Search by name"}
+                        aria-label="Search players"
+                    />
+
                     <div className="squash-card squash-ladder">
                         <table className="squash-table">
                             <thead>
@@ -151,7 +165,14 @@ export default function Players() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {ladder(players, stats).map((player) => {
+                                {shown(players, stats).length === 0 && (
+                                    <tr>
+                                        <td colSpan={7} className="squash-muted">
+                                            No one matches "{search.trim()}".
+                                        </td>
+                                    </tr>
+                                )}
+                                {shown(players, stats).map((player) => {
                                     const s = stats[player.id]
                                     if (editingId === player.id) {
                                         return (
