@@ -344,7 +344,8 @@ export default function MatchDetail() {
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Match">
             {({ match, players, rallies, insights }, me) => {
-                // Whoever arranged a private match can't change it unless they play in it
+                // Its players, whoever arranged it and admins can change a match, as
+                // the API allows. Whoever arranged a private one can't unless they play in it
                 const canChange =
                     isAdmin ||
                     (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
@@ -510,11 +511,20 @@ export default function MatchDetail() {
 
                         <Comments match={match} />
 
-                        {canChange && finished && !unlocked && (
+                        {/* Greyed out for anyone else, so they can see why they can't */}
+                        {(!canChange || (finished && !unlocked)) && (
                             <div className="squash-card squash-manage">
-                                <button type="button" className="squash-secondary-button" onClick={() => setUnlocked(true)}>
+                                <button
+                                    type="button"
+                                    className="squash-secondary-button"
+                                    disabled={!canChange}
+                                    onClick={() => setUnlocked(true)}
+                                >
                                     ✏️ Edit
                                 </button>
+                                {!canChange && (
+                                    <span className="squash-muted">Only the match's players, whoever arranged it and admins can edit it.</span>
+                                )}
                             </div>
                         )}
 
