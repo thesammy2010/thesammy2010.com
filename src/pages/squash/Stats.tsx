@@ -14,7 +14,8 @@ import {
 } from "../../components/squash/api"
 import EloLadder from "../../components/squash/EloLadder"
 import SquashPage from "../../components/squash/SquashPage"
-import { formatDuration, formatWhen, record, sideNames } from "../../components/squash/format"
+import { formatDuration, formatWhen, sideNames } from "../../components/squash/format"
+import MatchRecord from "../../components/squash/MatchRecord"
 import {
     busierFormat,
     formFor,
@@ -328,10 +329,7 @@ export default function Stats() {
                                                 </th>
                                                 <td>{played}</td>
                                                 <td>
-                                                    {wins[0]}-{wins[1]}
-                                                    {drawn > 0 && (
-                                                        <span className="squash-muted"> ({drawn} drawn)</span>
-                                                    )}
+                                                    <MatchRecord won={wins[0]} lost={wins[1]} drawn={drawn} />
                                                 </td>
                                             </tr>
                                         ))}
@@ -365,12 +363,8 @@ export default function Stats() {
                                                     </Link>
                                                 </th>
                                                 <td>{played}</td>
-                                                <td
-                                                    className={
-                                                        won > lost ? "squash-ahead" : won < lost ? "squash-behind" : ""
-                                                    }
-                                                >
-                                                    {record(won, lost, drawn)}
+                                                <td>
+                                                    <MatchRecord won={won} lost={lost} drawn={drawn} />
                                                 </td>
                                             </tr>
                                         ))}
