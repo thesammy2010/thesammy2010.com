@@ -1,7 +1,6 @@
 import React from "react"
 import { Link, useSearchParams } from "react-router-dom"
 
-import BarChart from "../../components/go_heavier/BarChart"
 import { formatCount } from "../../components/go_heavier/format"
 import {
     Match,
@@ -19,7 +18,6 @@ import { formatWhen, record, sideNames } from "../../components/squash/format"
 import {
     busierFormat,
     formFor,
-    matchesPerMonth,
     partnerships,
     pointMargin,
     records,
@@ -165,7 +163,6 @@ export default function Stats() {
                 }
 
                 const sum = totals(matches)
-                const months = matchesPerMonth(matches)
                 const { longestGame, closestMatch, biggestWin } = records(matches)
                 const name = (id: string) => players.find((p) => p.id === id)?.name ?? "Unknown player"
                 // Anyone who's finished a match, the most played first.
@@ -191,19 +188,6 @@ export default function Stats() {
                         </div>
 
                         <EloLadder ratings={ratings[format]} format={format} players={players} me={me} />
-
-                        {months.length > 0 && (
-                            <div className="squash-card">
-                                <BarChart
-                                    title="Matches per month"
-                                    subtitle={`Completed ${format} matches with a date`}
-                                    data={months}
-                                    formatValue={formatCount}
-                                    // Thinned out like Go Heavier's, so month labels don't collide.
-                                    labelEvery={months.length > 6 ? 2 : 1}
-                                />
-                            </div>
-                        )}
 
                         <div className="squash-card">
                             <h4 className="squash-card-title">Form</h4>

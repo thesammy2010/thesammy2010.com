@@ -1,6 +1,6 @@
 import type { Game, Match } from "./api"
 import { gameWinner } from "./format"
-import { busierFormat, formFor, matchesPerMonth, partnerships, pointMargin, records, rivalries, totals } from "./stats"
+import { busierFormat, formFor, partnerships, pointMargin, records, rivalries, totals } from "./stats"
 
 function game(number: number, side1: number, side2: number, rallies = 0): Game {
     return { number, side1_points: side1, side2_points: side2, winning_side: gameWinner(side1, side2, 11), rallies }
@@ -131,23 +131,6 @@ describe("rivalries", () => {
             { playerIds: ["a", "b"], played: 3, wins: [1, 1], drawn: 1 },
             { playerIds: ["a", "c"], played: 1, wins: [0, 1], drawn: 0 }
         ])
-    })
-})
-
-describe("matchesPerMonth", () => {
-    it("counts each month from the first match to the last, gaps included", () => {
-        const on = (date: string) => match([], { played_at: date })
-        const months = matchesPerMonth([
-            on("2026-01-10T18:00"),
-            on("2026-03-02T18:00"),
-            on("2026-03-20T18:00"),
-            match([])
-        ])
-        expect(months.map((m) => m.value)).toEqual([1, 0, 2])
-    })
-
-    it("is empty with no dated matches", () => {
-        expect(matchesPerMonth([match([])])).toEqual([])
     })
 })
 
