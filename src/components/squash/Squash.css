@@ -2358,3 +2358,10 @@ select.squash-pill,
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
+
+/* The players page's search, the width of the table below it */
+.squash-search {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+}
