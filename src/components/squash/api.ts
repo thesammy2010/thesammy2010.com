@@ -5,7 +5,7 @@
 // seeing anything else. /endpoints reports every squash route as GUEST, which
 // canAccess() can't tell apart from "any signed-in user", so membership is
 // read from GET /squash/players/me instead (see useSquashAccess).
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 
 import { API_URL, ApiError } from "../../configs"
 import { apiFetch, getToken, subscribeToken } from "../../auth"
@@ -28,6 +28,8 @@ export interface Player {
     // Their Google profile picture, once they've signed in with Google; null
     // otherwise, or missing from an API from before
     picture_url?: string | null
+    // When they were added, which orders their colours
+    created_at?: string
 }
 
 // What a player chooses for themselves. A field left out stays as it is,
@@ -513,6 +515,21 @@ export const squashApi = {
     updatePlayer: (id: string, body: PlayerInput) =>
         request<Player>("PUT", `/players/${id}`, "Failed to save the player", { body }),
     // The caller's own; an admin who isn't a player gets a 404
+    // The caller's own picture, already made small, kept by the API as a
+    // JPEG of at most 1MB.
+    setPicture: async (picture: Blob): Promise<Player> => {
+        const response = await apiFetch(url("/players/me/picture"), {
+            method: "PUT",
+            headers: { "Content-Type": picture.type || "image/jpeg" },
+            body: picture
+        })
+        if (!response.ok) {
+            throw await toError(response, "Failed to save your picture")
+        }
+        return response.json()
+    },
+    // Back to their Google picture, if they have one
+    removePicture: () => request<Player>("DELETE", "/players/me/picture", "Failed to remove your picture"),
     setMyPreferences: (body: PlayerPreferences) =>
         request<Player>("PATCH", "/players/me", "Failed to save your preference", { body }),
     playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),
@@ -689,21 +706,23 @@ export function recheckSquashAccess(): void {
 
 // The first caller starts the check; later ones share it. It runs again
 // whenever the signed-in user changes.
+function subscribeAccess(listener: () => void): () => void {
+    listeners.add(listener)
+    if (!started) {
+        started = true
+        subscribeToken(() => void checkAccess())
+        void checkAccess()
+    }
+    return () => {
+        listeners.delete(listener)
+    }
+}
+
+// Read through React's store hook, so a component always has the answer as
+// it is now: one subscribing after another's check has finished, such as a
+// page after the nav bar signed out, would otherwise wait on it forever.
 export function useSquashAccess(): SquashAccess {
-    const [, forceRender] = useState(0)
-    useEffect(() => {
-        const listener = () => forceRender((n) => n + 1)
-        listeners.add(listener)
-        if (!started) {
-            started = true
-            subscribeToken(() => void checkAccess())
-            void checkAccess()
-        }
-        return () => {
-            listeners.delete(listener)
-        }
-    }, [])
-    return access
+    return useSyncExternalStore(subscribeAccess, () => access)
 }
 
 export type LoadState<T> =

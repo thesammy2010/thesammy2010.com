@@ -406,10 +406,13 @@ select.squash-input {
     --side-soft: var(--squash-side-2-soft);
 }
 
+/* With more games than fit beside the names, as on a phone, they go on a
+   line of their own beneath, wrapping there, rather than out of the card */
 .squash-scoreline-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 6px 10px;
     padding: 6px 8px;
     border-left: 4px solid transparent;
     border-radius: 8px;
@@ -444,16 +447,27 @@ select.squash-input {
 }
 
 .squash-scoreline-names {
-    flex: 1;
+    flex: 1 1 8rem;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.squash-scoreline-scores {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    margin-left: auto;
+}
+
 .squash-scoreline-games {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 4px;
+    min-width: 0;
     font-variant-numeric: tabular-nums;
 }
 
@@ -683,6 +697,22 @@ select.squash-input {
     gap: 8px;
 }
 
+/* A table wider than the card, such as a long match's games on a phone,
+   scrolls across inside it, its first column kept in view */
+.squash-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.squash-table-scroll .squash-games-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--theme-bg-ffffff);
+    white-space: nowrap;
+}
+
 /* Games table */
 .squash-games-table,
 .squash-table {
@@ -759,7 +789,8 @@ select.squash-input {
 
 .squash-row-actions {
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     margin-top: 8px;
 }
 
@@ -2402,4 +2433,70 @@ select.squash-pill,
 
 .squash-record-drawn {
     color: #718096;
+}
+
+/* A player's picture, or their initials in a colour of their own */
+.squash-avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    object-fit: cover;
+    color: #fff;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.squash-player-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* A player's page: their picture over their name, centred */
+.squash-player-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 20px;
+    text-align: center;
+}
+
+.squash-player-head .squash-muted {
+    margin: 0;
+}
+
+.squash-player-head-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.squash-picture-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px 16px;
+}
+
+.squash-picture-actions .squash-inline-error {
+    flex-basis: 100%;
+    text-align: center;
+}
+
+.squash-picture-remove {
+    color: #c53030;
+}
+
+/* In a stat tile, whose numbers are filled with its gradient, a record keeps
+   its own colours: wins green, losses red, draws grey */
+.stat-tile-value .squash-record,
+.stat-tile-value .squash-record * {
+    -webkit-text-fill-color: currentColor;
 }

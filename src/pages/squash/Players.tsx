@@ -7,6 +7,7 @@ import SquashPage from "../../components/squash/SquashPage"
 import Venues from "../../components/squash/Venues"
 import { winRate } from "../../components/squash/format"
 import MatchRecord from "../../components/squash/MatchRecord"
+import PlayerAvatar from "../../components/squash/PlayerAvatar"
 import { matchesSearch } from "../../components/squash/search"
 import { useCanAccess } from "../../roles"
 
@@ -190,7 +191,11 @@ export default function Players() {
                                     return (
                                         <tr key={player.id} className={player.is_active ? "" : "squash-inactive"}>
                                             <th scope="row">
-                                                <Link className="squash-link" to={`/squash/players/${player.id}`}>
+                                                <Link
+                                                    className="squash-link squash-player-link"
+                                                    to={`/squash/players/${player.id}`}
+                                                >
+                                                    <PlayerAvatar player={player} players={players} />
                                                     {player.name}
                                                 </Link>
                                                 {player.id === me?.id && <span className="squash-you">you</span>}
