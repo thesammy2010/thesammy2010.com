@@ -2,8 +2,8 @@
    gradient bar underneath this one, and two loud bars would fight. */
 
 .site-navbar {
-    background: white;
-    border-bottom: 1px solid #e8eaed;
+    background: var(--theme-bg-ffffff);
+    border-bottom: 1px solid var(--theme-line-e8eaed);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
@@ -23,7 +23,7 @@
     align-items: center;
     gap: 10px;
     text-decoration: none;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .site-brand img {
@@ -49,7 +49,7 @@
 }
 
 .site-navbar-links a {
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
     text-decoration: none;
     font-size: 0.9375rem;
     font-weight: 500;
@@ -60,20 +60,20 @@
 
 .site-navbar-links a:hover {
     color: #667eea;
-    background: #f4f5fb;
+    background: var(--theme-bg-f4f5fb);
 }
 
 .site-navbar-links a.active {
     color: #667eea;
-    background: #eef0fb;
+    background: var(--theme-bg-eef0fb);
     font-weight: 600;
 }
 
 .site-navbar-menu-toggle {
     display: none;
     background: none;
-    border: 1px solid #e8eaed;
-    color: #5a6c7d;
+    border: 1px solid var(--theme-line-e8eaed);
+    color: var(--theme-fg-5a6c7d);
     font-size: 1.125rem;
     line-height: 1;
     padding: 8px 12px;
@@ -83,7 +83,7 @@
 
 .site-navbar-menu-toggle:hover {
     color: #667eea;
-    background: #f4f5fb;
+    background: var(--theme-bg-f4f5fb);
 }
 
 @media (max-width: 640px) {
@@ -124,6 +124,33 @@
 @media (max-width: 380px) {
     /* The mark alone still gets home; the name is the first thing to go. */
     .site-brand-name {
+        display: none;
+    }
+}
+
+/* Light, dark, or the device's, round in turn */
+.site-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    padding: 6px 12px;
+    border: 1px solid var(--theme-line-e8eaed);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--theme-text);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.site-theme-toggle:hover {
+    border-color: #667eea;
+}
+
+@media (max-width: 600px) {
+    .site-theme-toggle-name {
         display: none;
     }
 }

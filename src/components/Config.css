@@ -13,7 +13,7 @@
 .dropdowns select {
     padding: 8px;        /* Add padding inside the dropdown */
     border-radius: 4px;  /* Rounded corners */
-    border: 1px solid #ccc; /* Light border */
+    border: 1px solid var(--theme-line-cccccc); /* Light border */
     font-size: 1rem;     /* Adjust font size */
 }
 

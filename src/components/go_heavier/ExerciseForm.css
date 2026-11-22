@@ -4,13 +4,13 @@ select {
     width: 100%;
     margin-top: 6px;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--theme-line-d1d5db);
     border-radius: 6px;
     font-size: 0.95rem;
     font-family: inherit;
     transition: border-color 0.2s ease;
     box-sizing: border-box;
-    background: white;
+    background: var(--theme-bg-ffffff);
 }
 
 select:focus {
@@ -34,5 +34,5 @@ select:focus {
 
 .checkbox-label span {
     font-weight: 500;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }

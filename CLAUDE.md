@@ -46,6 +46,12 @@ squash group's pages under `/squash`. All of them talk to
 
 ## Conventions
 
+- Colours come from `src/theme.css`, with a light and a dark value each,
+  so the site works in dark mode. The page follows the device, or the
+  toggle in the top bar (`src/theme.ts`, kept in localStorage and set as
+  `data-theme` on `<html>`). A new colour needs a token there rather than a
+  hex value in a stylesheet.
+
 - Comments are plain English sentences explaining why, at the density of the
   file around them. Pure logic sits in `.ts` files beside a `.test.ts`.
 - Commit messages and PR titles are short imperative sentences. Work on a

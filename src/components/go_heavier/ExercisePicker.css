@@ -19,8 +19,8 @@
     margin: 0;
     padding: 4px;
     list-style: none;
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     z-index: 20;
@@ -42,11 +42,11 @@
 }
 
 .exercise-picker-option.highlighted {
-    background: #eef0fb;
+    background: var(--theme-bg-eef0fb);
 }
 
 .exercise-picker-name {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     font-size: 0.9375rem;
 }
 

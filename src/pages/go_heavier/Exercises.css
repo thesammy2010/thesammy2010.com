@@ -25,7 +25,7 @@
     max-width: 1400px;
     margin: 0 auto 32px auto;
     padding: 20px 24px;
-    background: white;
+    background: var(--theme-bg-ffffff);
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.06);
@@ -52,7 +52,7 @@
     border-radius: 8px;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #2d3748;
+    color: var(--theme-fg-2d3748);
     cursor: pointer;
     transition: all 0.2s ease;
     width: 100%;
@@ -132,7 +132,7 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .filter-checkboxes {
@@ -165,7 +165,7 @@
 
 .filter-checkbox-label span {
     font-size: 0.95rem;
-    color: #2d3748;
+    color: var(--theme-fg-2d3748);
     text-transform: capitalize;
 }
 

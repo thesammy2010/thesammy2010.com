@@ -8,10 +8,10 @@
     flex: 1;
     min-width: 80px;
     padding: 8px 12px;
-    border: 1.5px solid #d1d5db;
+    border: 1.5px solid var(--theme-line-d1d5db);
     border-radius: 999px;
-    background: #fff;
-    color: #5a6c7d;
+    background: var(--theme-bg-ffffff);
+    color: var(--theme-fg-5a6c7d);
     font-size: 0.85rem;
     font-weight: 600;
     text-transform: capitalize;

@@ -17,13 +17,13 @@
     font-size: 2.25rem;
     font-weight: 700;
     letter-spacing: -0.5px;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .admin-dashboard-hero p {
     margin: 0;
     font-size: 1.0625rem;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .admin-cards {
@@ -36,8 +36,8 @@
     display: flex;
     align-items: flex-start;
     gap: 16px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e5e7eb);
     border-radius: 12px;
     padding: 20px;
     text-decoration: none;
@@ -58,14 +58,14 @@
 
 .admin-card-title {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     margin-bottom: 4px;
 }
 
 .admin-card-caption {
     margin: 0;
     font-size: 0.85rem;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 @media (max-width: 640px) {

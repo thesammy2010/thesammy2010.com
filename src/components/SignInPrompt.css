@@ -6,7 +6,7 @@
 }
 
 .signin-prompt h2 {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     margin-bottom: 12px;
 }
 
@@ -21,5 +21,5 @@
 }
 
 .signin-prompt-action .site-signin {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
