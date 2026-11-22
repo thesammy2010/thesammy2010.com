@@ -9,6 +9,12 @@
    the logo with it - without this, the logo sits flush against the nav. */
 #image {
   padding-top: 40px;
+  /* The spinning logo isn't square, so its corners sweep out past its box,
+     and clip-path doesn't stop them counting towards the page's height. On
+     hover it grows enough for them to reach past the bottom of the window,
+     so a scrollbar came and went with each turn. The ring itself stays
+     inside the box at every angle, so clipping here hides nothing. */
+  overflow: hidden;
 }
 
 .wrapper-logo {
