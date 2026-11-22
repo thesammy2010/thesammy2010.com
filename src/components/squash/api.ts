@@ -28,8 +28,10 @@ export interface Player {
 }
 
 // What a player chooses for themselves. A field left out stays as it is,
-// and null clears it.
+// and null clears it, except the name, which can't be cleared.
 export interface PlayerPreferences {
+    // What the group sees them called, in every match
+    name?: string
     preferred_box?: Box | null
 }
 
@@ -80,6 +82,9 @@ export interface Match extends MatchInput {
     side2_games: number | null
     winning_side: Side | null
     serving_side: Side | null
+    // Who serves first, from the racket the API spins as the match is
+    // arranged. Null for a match arranged before then, or when hidden
+    first_serving_side?: Side | null
     version: number
     created_by_id: string
     created_at: string

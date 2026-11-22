@@ -71,6 +71,34 @@ const box = (winners: string, server: Side | null, firstServer: Side | null = nu
     return serviceBox(match, rallies, firstServer)?.box ?? null
 }
 
+// Several games, each as `play` takes one, with whoever's named serving each
+// game's first rally, and the side the API says serves next.
+function playGames(
+    games: { winners: string; server?: Side | null }[],
+    serving: Side,
+    firstServing: Side | null = null
+): { match: Match; rallies: Rally[] } {
+    const played = games.map(({ winners, server }, i) => {
+        const { match, rallies } = play(winners, server ?? null)
+        return {
+            games: match.games.map((g) => ({ ...g, number: i + 1 })),
+            rallies: rallies.map((r) => ({ ...r, game: i + 1 }))
+        }
+    })
+    const { match } = play("")
+    return {
+        match: {
+            ...match,
+            games: played.flatMap((p) => p.games),
+            serving_side: serving,
+            first_serving_side: firstServing
+        },
+        rallies: played.flatMap((p) => p.rallies)
+    }
+}
+
+const ELEVEN = "11111111111"
+
 describe("serviceBox", () => {
     it("starts on the right and moves across after each point the server wins", () => {
         expect(box("", null, 1)).toBe("right")
@@ -132,6 +160,33 @@ describe("serviceBox", () => {
         const sides = (side: Side) => (side === 1 ? "left" : "right")
         expect(serviceBox(spun, rallies, null, new Set(), sides)?.box).toBe("right")
         expect(serviceBox(spun, rallies, 1, new Set(), sides)?.box).toBe("left")
+    })
+
+    it("starts the next game's first hand in the server's box when the sides take turns", () => {
+        // Side 1 served first and won game 1, so side 2 serves first in game 2
+        const { match, rallies } = playGames([{ winners: ELEVEN, server: 1 }], 2)
+        expect(serviceBox(match, rallies, null)?.box).toBe("right")
+    })
+
+    it("follows the sides taking turns when a game's first server wasn't named", () => {
+        // Side 2 serves first in game 2, and has won its first two points
+        const { match, rallies } = playGames([{ winners: ELEVEN, server: 1 }, { winners: "22" }], 2)
+        expect(serviceBox(match, rallies, null)?.box).toBe("right")
+        // Game 1's first server from the spin of the racket alone
+        const spun = playGames([{ winners: ELEVEN }, { winners: "222" }], 2, 1)
+        expect(serviceBox(spun.match, spun.rallies, null)?.box).toBe("left")
+    })
+
+    it("goes by who was named serving first in a game over taking turns", () => {
+        // Side 1 served game 2 first too, as they chose, and won two points
+        const { match, rallies } = playGames(
+            [
+                { winners: ELEVEN, server: 1 },
+                { winners: "11", server: 1 }
+            ],
+            1
+        )
+        expect(serviceBox(match, rallies, null)?.box).toBe("right")
     })
 
     it("gives up while the rallies are behind the match", () => {

@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
 import LiveScorer from "./LiveScorer"
-import { Match, Player } from "./api"
+import { Match, Player, squashApi } from "./api"
 
 const players: Player[] = [
     { id: "a", name: "Alex", user_id: null, email: null, is_active: true, preferred_box: "left" },
@@ -62,5 +62,33 @@ describe("LiveScorer", () => {
 
         await userEvent.click(screen.getByRole("button", { name: "Alex" }))
         expectServing("Alex", "left")
+    })
+
+    it("lets either side serve first as a later game starts, and sends who did", async () => {
+        // Alex won game 1, so by taking turns Sam serves first in game 2
+        const second: Match = {
+            ...match,
+            games: [{ number: 1, side1_points: 11, side2_points: 3, winning_side: 1, rallies: 14 }],
+            side1_games: 1
+        }
+        const addRally = jest.spyOn(squashApi, "addRally").mockResolvedValue(second)
+        render(<LiveScorer match={second} rallies={[]} players={players} onMatch={jest.fn()} />)
+
+        expectServing("Sam", "right")
+        await userEvent.click(screen.getByRole("button", { name: "Change" }))
+        expectServing("Alex", "left")
+        await userEvent.click(screen.getByRole("button", { name: /^Point to Alex/ }))
+        expect(addRally).toHaveBeenCalledWith("m", expect.objectContaining({ server_id: "a", box: "left" }), 1)
+        addRally.mockRestore()
+    })
+
+    it("can't change who serves first once a point's been won in the game", () => {
+        const playing: Match = {
+            ...match,
+            games: [{ number: 1, side1_points: 0, side2_points: 1, winning_side: null, rallies: 1 }]
+        }
+        render(<LiveScorer match={playing} rallies={[]} players={players} onMatch={jest.fn()} />)
+
+        expect(screen.queryByRole("button", { name: "Change" })).not.toBeInTheDocument()
     })
 })
