@@ -205,6 +205,15 @@ export function signed(value: number): string {
 }
 
 // "4-2", or "4-2-1" with draws
+/** "4:02" for a game, or "1:02:13" past the hour, from seconds. */
+export function formatDuration(seconds: number): string {
+    const whole = Math.round(seconds)
+    const hours = Math.floor(whole / 3600)
+    const minutes = Math.floor((whole % 3600) / 60)
+    const secs = String(whole % 60).padStart(2, "0")
+    return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${secs}` : `${minutes}:${secs}`
+}
+
 export function record(won: number, lost: number, drawn: number): string {
     return drawn > 0 ? `${won}-${lost}-${drawn}` : `${won}-${lost}`
 }

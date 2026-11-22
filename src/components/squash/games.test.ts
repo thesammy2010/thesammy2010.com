@@ -62,3 +62,25 @@ describe("gamesOf", () => {
         expect(gamesOf([newer, older], { liveOnly: true }).map((e) => e.game.number)).toEqual([2])
     })
 })
+
+describe("gamesOf by length", () => {
+    const timed = (number: number, seconds: number | null) => ({
+        ...game(number, 11, 5, 16),
+        duration_seconds: seconds
+    })
+    const matches = [match("m1", [timed(1, 200), timed(2, 300), timed(3, 420), game(4, 11, 9)])]
+    const seconds = (filters: Parameters<typeof gamesOf>[1]) =>
+        gamesOf(matches, filters).map((e) => e.game.duration_seconds ?? null)
+
+    it("narrows to the games timed at a length", () => {
+        expect(seconds({ length: "short" })).toEqual([200])
+        expect(seconds({ length: "medium" })).toEqual([300])
+        expect(seconds({ length: "long" })).toEqual([420])
+    })
+
+    it("sorts by how long they took, untimed games last", () => {
+        expect(seconds({ sort: "longest" })).toEqual([420, 300, 200, null])
+        expect(seconds({ sort: "shortest" })).toEqual([200, 300, 420, null])
+        expect(seconds({})).toEqual([null, 420, 300, 200])
+    })
+})

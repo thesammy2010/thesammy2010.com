@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 
 import { Match, Player } from "./api"
-import { currentGame, formatLabel, formatWhen, SIDES, sideNames, STATUS_LABELS } from "./format"
+import { currentGame, formatDuration, formatLabel, formatWhen, SIDES, sideNames, STATUS_LABELS } from "./format"
 
 interface Props {
     match: Match
@@ -66,6 +66,7 @@ export default function MatchCard({ match, players, me }: Props) {
 
             <div className="squash-card-foot squash-muted">
                 {formatLabel(match)}
+                {match.duration_seconds != null && ` · ⏱ ${formatDuration(match.duration_seconds)}`}
                 {live && game.rallies > 0 && ` · game ${game.number} in play`}
                 {!match.hidden && match.status === "completed" && match.winning_side === null && " · drawn"}
                 {match.hidden && " · score private"}

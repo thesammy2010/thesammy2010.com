@@ -13,15 +13,24 @@ export interface Totals {
     points: number
     // Matches with at least one game scored point by point
     scoredLive: number
+    // Finished games scored live, which are timed, and their seconds on
+    // average and the longest; null with none timed
+    gamesTimed: number
+    averageGameSeconds: number | null
+    longestGameSeconds: number | null
 }
 
 export function totals(matches: Match[]): Totals {
     const games = matches.flatMap((m) => m.games)
+    const timed = games.flatMap((g) => (g.duration_seconds == null ? [] : [g.duration_seconds]))
     return {
         matches: matches.length,
         games: games.length,
         points: games.reduce((total, g) => total + g.side1_points + g.side2_points, 0),
-        scoredLive: matches.filter((m) => m.games.some((g) => g.rallies > 0)).length
+        scoredLive: matches.filter((m) => m.games.some((g) => g.rallies > 0)).length,
+        gamesTimed: timed.length,
+        averageGameSeconds: timed.length ? Math.round(timed.reduce((a, b) => a + b, 0) / timed.length) : null,
+        longestGameSeconds: timed.length ? Math.max(...timed) : null
     }
 }
 

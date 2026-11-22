@@ -2365,3 +2365,15 @@ select.squash-pill,
     box-sizing: border-box;
     margin-bottom: 12px;
 }
+
+/* The games list's sort, a label beside its select */
+.squash-sort {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+.squash-sort select.squash-input {
+    width: auto;
+}

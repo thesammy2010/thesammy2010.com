@@ -47,7 +47,23 @@ const drawn = () => match([game(1, 11, 5), game(2, 5, 11)])
 describe("totals", () => {
     it("adds up matches, games and points, and counts matches scored live", () => {
         const live = match([game(1, 11, 3, 14)])
-        expect(totals([aWins(), live])).toEqual({ matches: 2, games: 4, points: 68, scoredLive: 1 })
+        expect(totals([aWins(), live])).toEqual({
+            matches: 2,
+            games: 4,
+            points: 68,
+            scoredLive: 1,
+            gamesTimed: 0,
+            averageGameSeconds: null,
+            longestGameSeconds: null
+        })
+    })
+
+    it("times the games scored live, on average and the longest", () => {
+        const timed = (number: number, seconds: number) => ({ ...game(number, 11, 3, 14), duration_seconds: seconds })
+        const sum = totals([match([timed(1, 240), timed(2, 360), game(3, 11, 5)])])
+        expect(sum.gamesTimed).toBe(2)
+        expect(sum.averageGameSeconds).toBe(300)
+        expect(sum.longestGameSeconds).toBe(360)
     })
 })
 

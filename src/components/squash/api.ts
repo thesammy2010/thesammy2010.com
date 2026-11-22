@@ -54,6 +54,9 @@ export interface Game {
     winning_side: Side | null
     // 0 for a game whose score was entered rather than scored live
     rallies: number
+    // Seconds from its first rally to its winning point, for a finished game
+    // scored live; null otherwise, or missing from an API from before
+    duration_seconds?: number | null
 }
 
 export interface MatchInput {
@@ -84,6 +87,8 @@ export interface Match extends MatchInput {
     side1_games: number | null
     side2_games: number | null
     winning_side: Side | null
+    // Its timed games' seconds together; null with none timed
+    duration_seconds?: number | null
     serving_side: Side | null
     // Who serves first, from the racket the API spins as the match is
     // arranged. Null for a match arranged before then, or when hidden
@@ -242,6 +247,16 @@ export interface RallyInsights {
     no_lets: number
 }
 
+// How long games scored live took, from their first rally to their winning
+// point
+export interface GameTimes {
+    games: number
+    total_seconds: number
+    average_seconds: number | null
+    longest_seconds: number | null
+    shortest_seconds: number | null
+}
+
 export interface PlayerInsights {
     player_id: string
     games_scored_live: number
@@ -253,6 +268,8 @@ export interface PlayerInsights {
     // Every game that reached one short all, live or not
     deuce_games_won: number
     deuce_games_lost: number
+    // Missing from an API from before games were timed
+    times?: GameTimes | null
 }
 
 export interface GameInsights {
