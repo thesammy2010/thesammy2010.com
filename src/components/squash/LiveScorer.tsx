@@ -26,7 +26,8 @@ interface Props {
 // works it out from who won the last point. Each rally is sent with its server, so the game's page
 // can show who served it. In doubles, which partner serves is picked here.
 // A hand starts in the box its server prefers, which they choose on their
-// own player page, and Switch box changes it for that hand.
+// own player page, and Switch box changes it for that hand. A match set not
+// to track the boxes shows none of that, and sends no box.
 export default function LiveScorer({ match, rallies, players, onMatch }: Props) {
     const [busy, setBusy] = useState(false)
     // Chosen here as a game starts, over the side the API gives
@@ -49,13 +50,10 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const playerOf = (playerId: string | null) => players.find((p) => p.id === playerId)
     const nameOf = (playerId: string | null) => playerOf(playerId)?.name ?? "Unknown player"
     // Each hand starts in the box its server prefers, or else the right
-    const box = serviceBox(
-        match,
-        rallies,
-        picked,
-        switched,
-        (side) => playerOf(serverId(side))?.preferred_box ?? "right"
-    )
+    const box =
+        match.tracks_box === false
+            ? null
+            : serviceBox(match, rallies, picked, switched, (side) => playerOf(serverId(side))?.preferred_box ?? "right")
     const finishedGames = match.games.filter((g) => g.winning_side !== null).length
     const canUndo = match.games.some((g) => g.rallies > 0)
     // A match can be ended where it stands once a game counts. A best-of

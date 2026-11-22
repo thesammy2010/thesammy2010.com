@@ -67,6 +67,9 @@ export interface MatchInput {
     notes: string | null
     // Only admins and its players see how it went
     is_private: boolean
+    // Whether the scorers follow which service box each serve is from;
+    // missing from an API from before it could be turned off
+    tracks_box?: boolean
     players: MatchPlayer[]
 }
 
