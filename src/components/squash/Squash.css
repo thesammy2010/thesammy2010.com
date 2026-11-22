@@ -2434,3 +2434,69 @@ select.squash-pill,
 .squash-record-drawn {
     color: #718096;
 }
+
+/* A player's picture, or their initials in a colour of their own */
+.squash-avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    object-fit: cover;
+    color: #fff;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.squash-player-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* A player's page: their picture over their name, centred */
+.squash-player-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 20px;
+    text-align: center;
+}
+
+.squash-player-head .squash-muted {
+    margin: 0;
+}
+
+.squash-player-head-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.squash-picture-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px 16px;
+}
+
+.squash-picture-actions .squash-inline-error {
+    flex-basis: 100%;
+    text-align: center;
+}
+
+.squash-picture-remove {
+    color: #c53030;
+}
+
+/* In a stat tile, whose numbers are filled with its gradient, a record keeps
+   its own colours: wins green, losses red, draws grey */
+.stat-tile-value .squash-record,
+.stat-tile-value .squash-record * {
+    -webkit-text-fill-color: currentColor;
+}

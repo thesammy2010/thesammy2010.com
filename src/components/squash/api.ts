@@ -28,6 +28,8 @@ export interface Player {
     // Their Google profile picture, once they've signed in with Google; null
     // otherwise, or missing from an API from before
     picture_url?: string | null
+    // When they were added, which orders their colours
+    created_at?: string
 }
 
 // What a player chooses for themselves. A field left out stays as it is,
@@ -513,6 +515,21 @@ export const squashApi = {
     updatePlayer: (id: string, body: PlayerInput) =>
         request<Player>("PUT", `/players/${id}`, "Failed to save the player", { body }),
     // The caller's own; an admin who isn't a player gets a 404
+    // The caller's own picture, already made small, kept by the API as a
+    // JPEG of at most 1MB.
+    setPicture: async (picture: Blob): Promise<Player> => {
+        const response = await apiFetch(url("/players/me/picture"), {
+            method: "PUT",
+            headers: { "Content-Type": picture.type || "image/jpeg" },
+            body: picture
+        })
+        if (!response.ok) {
+            throw await toError(response, "Failed to save your picture")
+        }
+        return response.json()
+    },
+    // Back to their Google picture, if they have one
+    removePicture: () => request<Player>("DELETE", "/players/me/picture", "Failed to remove your picture"),
     setMyPreferences: (body: PlayerPreferences) =>
         request<Player>("PATCH", "/players/me", "Failed to save your preference", { body }),
     playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),

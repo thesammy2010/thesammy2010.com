@@ -17,6 +17,8 @@ import { PlayerInsightsCard } from "../../components/squash/Insights"
 import MatchCard from "../../components/squash/MatchCard"
 import RatingChart from "../../components/squash/RatingChart"
 import DisplayName from "../../components/squash/DisplayName"
+import PlayerAvatar from "../../components/squash/PlayerAvatar"
+import ProfilePicture from "../../components/squash/ProfilePicture"
 import ServePreference from "../../components/squash/ServePreference"
 import SquashPage from "../../components/squash/SquashPage"
 import { winRate } from "../../components/squash/format"
@@ -250,12 +252,22 @@ export default function PlayerDetail() {
                             ← All players
                         </Link>
                     </div>
-                    <h2 className="squash-title">
-                        {player.name}
-                        {player.id === me?.id && <span className="squash-you">you</span>}
-                        {!player.is_active && <span className="squash-muted"> · left the group</span>}
-                    </h2>
-                    {player.id === me?.id && <DisplayName key={player.id} player={player} onSaved={reload} />}
+                    {/* Their picture over their name, centred, with your own
+                        picture and name to change beneath on your page */}
+                    <div className="squash-player-head">
+                        <PlayerAvatar player={player} players={players} size={96} />
+                        <h2 className="squash-title">
+                            {player.name}
+                            {player.id === me?.id && <span className="squash-you">you</span>}
+                        </h2>
+                        {!player.is_active && <p className="squash-muted">Left the group</p>}
+                        {player.id === me?.id && (
+                            <div className="squash-player-head-actions">
+                                <ProfilePicture player={player} onSaved={reload} />
+                                <DisplayName key={player.id} player={player} onSaved={reload} />
+                            </div>
+                        )}
+                    </div>
                     <ServePreference key={player.id} player={player} mine={player.id === me?.id} />
 
                     <div className="stats-grid">
