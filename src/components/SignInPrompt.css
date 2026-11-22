@@ -15,11 +15,8 @@
     margin-bottom: 24px;
 }
 
-.signin-prompt-action {
-    display: flex;
-    justify-content: center;
-}
-
-.signin-prompt-action .site-signin {
+.signin-prompt .signin-prompt-where {
     color: var(--theme-fg-2c3e50);
+    font-weight: 600;
+    margin-bottom: 0;
 }

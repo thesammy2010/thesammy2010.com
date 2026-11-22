@@ -5,7 +5,7 @@
 // seeing anything else. /endpoints reports every squash route as GUEST, which
 // canAccess() can't tell apart from "any signed-in user", so membership is
 // read from GET /squash/players/me instead (see useSquashAccess).
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 
 import { API_URL, ApiError } from "../../configs"
 import { apiFetch, getToken, subscribeToken } from "../../auth"
@@ -689,21 +689,23 @@ export function recheckSquashAccess(): void {
 
 // The first caller starts the check; later ones share it. It runs again
 // whenever the signed-in user changes.
+function subscribeAccess(listener: () => void): () => void {
+    listeners.add(listener)
+    if (!started) {
+        started = true
+        subscribeToken(() => void checkAccess())
+        void checkAccess()
+    }
+    return () => {
+        listeners.delete(listener)
+    }
+}
+
+// Read through React's store hook, so a component always has the answer as
+// it is now: one subscribing after another's check has finished, such as a
+// page after the nav bar signed out, would otherwise wait on it forever.
 export function useSquashAccess(): SquashAccess {
-    const [, forceRender] = useState(0)
-    useEffect(() => {
-        const listener = () => forceRender((n) => n + 1)
-        listeners.add(listener)
-        if (!started) {
-            started = true
-            subscribeToken(() => void checkAccess())
-            void checkAccess()
-        }
-        return () => {
-            listeners.delete(listener)
-        }
-    }, [])
-    return access
+    return useSyncExternalStore(subscribeAccess, () => access)
 }
 
 export type LoadState<T> =
