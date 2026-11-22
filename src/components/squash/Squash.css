@@ -406,10 +406,13 @@ select.squash-input {
     --side-soft: var(--squash-side-2-soft);
 }
 
+/* With more games than fit beside the names, as on a phone, they go on a
+   line of their own beneath, wrapping there, rather than out of the card */
 .squash-scoreline-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 6px 10px;
     padding: 6px 8px;
     border-left: 4px solid transparent;
     border-radius: 8px;
@@ -444,16 +447,27 @@ select.squash-input {
 }
 
 .squash-scoreline-names {
-    flex: 1;
+    flex: 1 1 8rem;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.squash-scoreline-scores {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    margin-left: auto;
+}
+
 .squash-scoreline-games {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 4px;
+    min-width: 0;
     font-variant-numeric: tabular-nums;
 }
 
@@ -683,6 +697,22 @@ select.squash-input {
     gap: 8px;
 }
 
+/* A table wider than the card, such as a long match's games on a phone,
+   scrolls across inside it, its first column kept in view */
+.squash-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.squash-table-scroll .squash-games-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--theme-bg-ffffff);
+    white-space: nowrap;
+}
+
 /* Games table */
 .squash-games-table,
 .squash-table {
@@ -759,7 +789,8 @@ select.squash-input {
 
 .squash-row-actions {
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     margin-top: 8px;
 }
 

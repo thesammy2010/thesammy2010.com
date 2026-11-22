@@ -154,3 +154,40 @@
         display: none;
     }
 }
+
+/* On a phone, three rows: the logo with the theme and menu buttons beside
+   each other on the right, the same size, then the sign-in centred across
+   the width, then the links when the menu's open. */
+@media (max-width: 640px) {
+    .site-theme-toggle,
+    .site-navbar-menu-toggle {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .site-theme-toggle {
+        order: 1;
+        margin: 0 0 0 auto;
+        font-size: 1.125rem;
+    }
+
+    .site-navbar-menu-toggle {
+        display: inline-flex;
+        order: 2;
+    }
+
+    .site-navbar-content > .site-signin {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .site-navbar-links {
+        order: 4;
+    }
+}

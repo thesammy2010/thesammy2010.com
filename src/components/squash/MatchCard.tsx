@@ -47,18 +47,24 @@ export default function MatchCard({ match, players, me }: Props) {
                                 {isMine && <span className="squash-you">you</span>}
                             </span>
                             {isWinner && <span className="squash-won-badge">🏆 Won</span>}
-                            <span className="squash-scoreline-games">
-                                {match.games.map((g) => (
-                                    <span
-                                        key={g.number}
-                                        className={g.winning_side === side ? "won" : g.winning_side === null ? "open" : ""}
-                                        title={g.winning_side === side ? `Won game ${g.number}` : undefined}
-                                    >
-                                        {side === 1 ? g.side1_points : g.side2_points}
-                                    </span>
-                                ))}
+                            {/* The games and the total together, so the total stays at
+                                the end of their line when they wrap beneath the names */}
+                            <span className="squash-scoreline-scores">
+                                <span className="squash-scoreline-games">
+                                    {match.games.map((g) => (
+                                        <span
+                                            key={g.number}
+                                            className={
+                                                g.winning_side === side ? "won" : g.winning_side === null ? "open" : ""
+                                            }
+                                            title={g.winning_side === side ? `Won game ${g.number}` : undefined}
+                                        >
+                                            {side === 1 ? g.side1_points : g.side2_points}
+                                        </span>
+                                    ))}
+                                </span>
+                                <span className="squash-scoreline-total">{match.games.length > 0 ? won : ""}</span>
                             </span>
-                            <span className="squash-scoreline-total">{match.games.length > 0 ? won : ""}</span>
                         </div>
                     )
                 })}
