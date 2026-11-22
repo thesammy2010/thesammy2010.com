@@ -16,6 +16,7 @@ import {
 import { PlayerInsightsCard } from "../../components/squash/Insights"
 import MatchCard from "../../components/squash/MatchCard"
 import RatingChart from "../../components/squash/RatingChart"
+import DisplayName from "../../components/squash/DisplayName"
 import ServePreference from "../../components/squash/ServePreference"
 import SquashPage from "../../components/squash/SquashPage"
 import { record, winRate } from "../../components/squash/format"
@@ -181,6 +182,7 @@ export default function PlayerDetail() {
                         {player.id === me?.id && <span className="squash-you">you</span>}
                         {!player.is_active && <span className="squash-muted"> · left the group</span>}
                     </h2>
+                    {player.id === me?.id && <DisplayName key={player.id} player={player} onSaved={reload} />}
                     <ServePreference key={player.id} player={player} mine={player.id === me?.id} />
 
                     <div className="stats-grid">

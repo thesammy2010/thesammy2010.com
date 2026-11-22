@@ -28,8 +28,10 @@ export interface Player {
 }
 
 // What a player chooses for themselves. A field left out stays as it is,
-// and null clears it.
+// and null clears it, except the name, which can't be cleared.
 export interface PlayerPreferences {
+    // What the group sees them called, in every match
+    name?: string
     preferred_box?: Box | null
 }
 
