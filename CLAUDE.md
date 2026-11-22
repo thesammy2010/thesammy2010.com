@@ -7,9 +7,14 @@ squash group's pages under `/squash`. All of them talk to
 
 ## Commands
 
-- `npm start` runs it locally. It calls `REACT_APP_API_URL`, or
-  `http://localhost:8000` when that isn't set. `.env.production` has the real
-  API.
+- `npm start` runs it locally, calling `REACT_APP_API_URL`.
+  `.env.development` sets that to `http://localhost:8000`, but the gitignored
+  `.env.development.local`, where it exists, overrides it. That file serves
+  the site over https at https://local.thesammy2010.com:3000 (the name Sign in
+  with Apple needs, with mkcert's certificate in `.cert/`) and calls the API
+  at https://local.thesammy2010.com:8443, so run the API there too (see its
+  CLAUDE.md). Plain http://127.0.0.1:3000 then gets an empty reply.
+  `.env.production` has the real API.
 - `CI=true npm test` runs the tests once (Jest via react-scripts).
 - `npx tsc --noEmit` type-checks the code.
 - Husky's pre-commit hook runs lint-staged. Prettier is set to parse
