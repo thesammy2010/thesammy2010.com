@@ -4,8 +4,8 @@ import { Link, useLocation } from "react-router-dom"
 import { useCanAccess, useIsAdmin } from "../roles"
 import { useSquashAccess } from "./squash/api"
 import SignIn from "./SignIn"
+import ThemeToggle from "./ThemeToggle"
 import "./NavBar.css"
-
 
 export default function NavBar() {
     const location = useLocation()
@@ -29,8 +29,7 @@ export default function NavBar() {
         setMenuOpen(false)
     }, [location.pathname])
 
-    const isActive = (to: string) =>
-        location.pathname === to || location.pathname.startsWith(`${to}/`)
+    const isActive = (to: string) => location.pathname === to || location.pathname.startsWith(`${to}/`)
 
     const links = [
         ...(canSeeGoHeavier ? [{ to: "/go-heavier", label: "Go Heavier" }] : []),
@@ -44,10 +43,7 @@ export default function NavBar() {
         <nav className="site-navbar">
             <div className="site-navbar-content">
                 <Link to="/" className="site-brand">
-                    <img
-                        src={process.env.PUBLIC_URL + "/icons/logo.svg"}
-                        alt="TheSammy2010 Logo"
-                    />
+                    <img src={process.env.PUBLIC_URL + "/icons/logo.svg"} alt="TheSammy2010 Logo" />
                     <span className="site-brand-name">TheSammy2010</span>
                 </Link>
 
@@ -62,17 +58,14 @@ export default function NavBar() {
                 </button>
 
                 <div className={`site-navbar-links ${menuOpen ? "open" : ""}`}>
-                    {links.map(link => (
-                        <Link
-                            key={link.to}
-                            to={link.to}
-                            className={isActive(link.to) ? "active" : ""}
-                        >
+                    {links.map((link) => (
+                        <Link key={link.to} to={link.to} className={isActive(link.to) ? "active" : ""}>
                             {link.label}
                         </Link>
                     ))}
                 </div>
 
+                <ThemeToggle />
                 <SignIn />
             </div>
         </nav>

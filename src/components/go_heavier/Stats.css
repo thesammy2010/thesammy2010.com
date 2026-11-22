@@ -12,8 +12,8 @@
 }
 
 .stat-tile {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 12px;
     padding: 20px 16px;
     text-align: center;
@@ -56,7 +56,7 @@
     margin: 0 0 16px 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .top-list {
@@ -78,7 +78,7 @@
 }
 
 .top-list-name {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     font-weight: 600;
     text-decoration: none;
 }
@@ -89,7 +89,7 @@
 }
 
 .top-list-metric {
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
     font-size: 0.875rem;
     flex-shrink: 0;
 }
@@ -97,7 +97,7 @@
 .top-list-bar-track {
     height: 8px;
     border-radius: 4px;
-    background: #f0f0f0;
+    background: var(--theme-bg-f0f0f0);
     overflow: hidden;
 }
 
@@ -123,16 +123,16 @@
     gap: 8px 16px;
     margin-bottom: 16px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--theme-line-f0f0f0);
 }
 
 .latest-workout-date {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .latest-workout-location {
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
     text-decoration: none;
 }
 
@@ -166,14 +166,14 @@
     color: #718096;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--theme-line-e0e0e0);
     white-space: nowrap;
 }
 
 .set-table td {
     padding: 10px 12px;
-    color: #5a6c7d;
-    border-bottom: 1px solid #f0f0f0;
+    color: var(--theme-fg-5a6c7d);
+    border-bottom: 1px solid var(--theme-line-f0f0f0);
     white-space: nowrap;
 }
 
@@ -182,7 +182,7 @@
 }
 
 .set-table tbody tr:hover td {
-    background: #f8f9fa;
+    background: var(--theme-bg-f8f9fa);
 }
 
 .set-table .set-notes {
@@ -212,7 +212,7 @@
 .best-set-reps {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .best-set-meta {
@@ -227,7 +227,7 @@
 .best-set-notes {
     margin: 12px 0 0 0;
     padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--theme-line-f0f0f0);
     color: #718096;
     font-size: 0.875rem;
 }

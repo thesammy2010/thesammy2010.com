@@ -12,27 +12,27 @@
 .import-hero h1 {
     margin: 0 0 8px;
     font-size: 1.75rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .import-hero p {
     margin: 0;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .import-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e5e7eb);
     border-radius: 12px;
     padding: 24px;
 }
 
 .import-tables,
 .import-workout-range {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--theme-line-e5e7eb);
     border-radius: 8px;
     padding: 16px;
     display: flex;
@@ -44,7 +44,7 @@
 .import-workout-range legend {
     padding: 0 6px;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .import-table-checkbox {
@@ -52,7 +52,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.95rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .import-dry-run {
@@ -60,7 +60,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.9rem;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .import-workout-range label {
@@ -68,12 +68,12 @@
     flex-direction: column;
     gap: 4px;
     font-size: 0.85rem;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .import-workout-range input {
     padding: 8px 10px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--theme-line-d1d5db);
     border-radius: 6px;
     font-family: inherit;
 }
@@ -102,13 +102,13 @@
 }
 
 .import-results {
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--theme-line-e5e7eb);
     padding-top: 16px;
 }
 
 .import-results h3 {
     margin: 0 0 12px;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .import-results table {
@@ -120,16 +120,16 @@
 .import-results td {
     text-align: left;
     padding: 8px 10px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--theme-line-f3f4f6);
     font-size: 0.9rem;
 }
 
 .import-results th {
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
     font-weight: 600;
 }
 
 .import-results td {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     text-transform: capitalize;
 }

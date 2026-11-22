@@ -35,7 +35,7 @@
 }
 
 .popup-form {
-    background: #fff;
+    background: var(--theme-bg-ffffff);
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -78,7 +78,7 @@
     margin-top: 0;
     margin-bottom: 24px;
     font-size: 1.5rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     text-align: center;
 }
 
@@ -93,7 +93,7 @@
     flex-direction: column;
     font-weight: 500;
     font-size: 0.9rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .popup-form label .required {
@@ -106,7 +106,7 @@
     width: 100%;
     margin-top: 6px;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--theme-line-d1d5db);
     border-radius: 6px;
     font-size: 0.95rem;
     font-family: inherit;
@@ -155,12 +155,12 @@
 }
 
 .popup-form button[type="button"] {
-    background: #e5e7eb;
-    color: #374151;
+    background: var(--theme-bg-e5e7eb);
+    color: var(--theme-fg-374151);
 }
 
 .popup-form button[type="button"]:hover {
-    background: #d1d5db;
+    background: var(--theme-bg-d1d5db);
 }
 
 .popup-form button:disabled {
@@ -173,6 +173,6 @@
     font-size: 0.85rem;
     margin: -8px 0 0 0;
     padding: 8px;
-    background: #fee;
+    background: var(--theme-bg-ffeeee);
     border-radius: 4px;
 }

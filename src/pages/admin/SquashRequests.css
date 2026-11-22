@@ -1,14 +1,14 @@
 .squash-requests-heading {
     margin: 24px 0 12px;
     font-size: 1.05rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-requests-message {
     margin: 0;
     padding: 8px 12px;
-    border-left: 3px solid #e5e7eb;
-    color: #4a5568;
+    border-left: 3px solid var(--theme-line-e5e7eb);
+    color: var(--theme-fg-4a5568);
     font-size: 0.9rem;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -26,13 +26,13 @@
     gap: 4px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .squash-requests-approve select,
 .squash-requests-approve input {
     padding: 8px 10px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--theme-line-d1d5db);
     border-radius: 6px;
     font-size: 0.9rem;
     font-family: inherit;
@@ -70,8 +70,8 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e5e7eb);
     border-radius: 10px;
 }
 
@@ -81,11 +81,11 @@
     gap: 12px;
     padding: 10px 16px;
     font-size: 0.9rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-requests-reviewed li + li {
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--theme-line-f3f4f6);
 }
 
 .squash-requests-reviewed li > span:first-child {
@@ -105,13 +105,13 @@
 }
 
 .squash-requests-status.approved {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--theme-bg-dcfce7);
+    color: var(--theme-fg-15803d);
 }
 
 .squash-requests-status.declined {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: var(--theme-bg-fee2e2);
+    color: var(--theme-fg-b91c1c);
 }
 
 .squash-requests-date {

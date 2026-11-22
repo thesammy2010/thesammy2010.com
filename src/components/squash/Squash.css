@@ -3,10 +3,10 @@
    side 2 orange everywhere, so a side reads the same on every page. */
 
 :root {
-    --squash-side-1: #3b5bdb;
-    --squash-side-1-soft: #edf2ff;
-    --squash-side-2: #e8590c;
-    --squash-side-2-soft: #fff4e6;
+    --squash-side-1: var(--theme-side-3b5bdb);
+    --squash-side-1-soft: var(--theme-bg-edf2ff);
+    --squash-side-2: var(--theme-side-e8590c);
+    --squash-side-2-soft: var(--theme-bg-fff4e6);
 }
 
 .squash-navbar {
@@ -42,18 +42,18 @@
 .squash-title {
     margin: 0;
     font-size: 1.5rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-section-title {
     margin: 8px 0 -4px 0;
     font-size: 1.125rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-card {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -64,7 +64,7 @@
     margin: 0 0 12px 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-card > .squash-muted + * {
@@ -79,7 +79,7 @@
 }
 
 .squash-link {
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
     text-decoration: none;
 }
 
@@ -92,8 +92,8 @@
     margin-left: 8px;
     padding: 1px 8px;
     border-radius: 999px;
-    background: #e0e7ff;
-    color: #3730a3;
+    background: var(--theme-bg-e0e7ff);
+    color: var(--theme-fg-3730a3);
     font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -159,20 +159,20 @@
 }
 
 .squash-secondary-button {
-    background: white;
-    color: #2c3e50;
-    border-color: #cbd5e0;
+    background: var(--theme-bg-ffffff);
+    color: var(--theme-fg-2c3e50);
+    border-color: var(--theme-line-cbd5e0);
 }
 
 .squash-secondary-button:hover:not(:disabled) {
     border-color: #1e40af;
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
 }
 
 .squash-danger-button {
-    background: white;
-    color: #c53030;
-    border-color: #feb2b2;
+    background: var(--theme-bg-ffffff);
+    color: var(--theme-fg-c53030);
+    border-color: var(--theme-line-feb2b2);
 }
 
 .squash-danger-button:hover:not(:disabled) {
@@ -193,7 +193,7 @@
     padding: 4px 0;
     font: inherit;
     font-size: 0.875rem;
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
     cursor: pointer;
 }
 
@@ -216,7 +216,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.875rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 /* A consequence to read before confirming, on its own line */
@@ -225,8 +225,8 @@
     padding: 8px 10px;
     border-left: 3px solid #d97706;
     border-radius: 6px;
-    background: #fffbeb;
-    color: #78350f;
+    background: var(--theme-bg-fffbeb);
+    color: var(--theme-fg-78350f);
 }
 
 /* Inputs. ExerciseForm.css styles every select on the site with a top
@@ -235,11 +235,11 @@
     height: 38px;
     margin-top: 0;
     padding: 8px 10px;
-    border: 1px solid #cbd5e0;
+    border: 1px solid var(--theme-line-cbd5e0);
     border-radius: 6px;
     font: inherit;
     font-size: 0.875rem;
-    background: white;
+    background: var(--theme-bg-ffffff);
     box-sizing: border-box;
     min-width: 0;
 }
@@ -259,7 +259,7 @@ select.squash-input {
     align-items: center;
     gap: 8px;
     font-size: 0.875rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
     cursor: pointer;
 }
 
@@ -286,7 +286,7 @@ select.squash-input {
     display: inline-flex;
     padding: 3px;
     border-radius: 10px;
-    background: #edf2f7;
+    background: var(--theme-bg-edf2f7);
 }
 
 .squash-segmented button {
@@ -297,13 +297,13 @@ select.squash-input {
     font: inherit;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
     cursor: pointer;
 }
 
 .squash-segmented button.active {
-    background: white;
-    color: #1e40af;
+    background: var(--theme-bg-ffffff);
+    color: var(--theme-fg-1e40af);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -340,7 +340,7 @@ select.squash-input {
 
 .squash-when {
     font-size: 0.875rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     font-weight: 500;
 }
 
@@ -357,24 +357,24 @@ select.squash-input {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    background: #edf2f7;
-    color: #4a5568;
+    background: var(--theme-bg-edf2f7);
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-status-in_progress {
-    background: #c6f6d5;
-    color: #22543d;
+    background: var(--theme-bg-c6f6d5);
+    color: var(--theme-fg-22543d);
     animation: squash-pulse 2s ease-in-out infinite;
 }
 
 .squash-status-scheduled {
-    background: #e0e7ff;
-    color: #3730a3;
+    background: var(--theme-bg-e0e7ff);
+    color: var(--theme-fg-3730a3);
 }
 
 .squash-status-cancelled {
-    background: #fed7d7;
-    color: #822727;
+    background: var(--theme-bg-fed7d7);
+    color: var(--theme-fg-822727);
 }
 
 @keyframes squash-pulse {
@@ -413,14 +413,14 @@ select.squash-input {
     padding: 6px 8px;
     border-left: 4px solid transparent;
     border-radius: 8px;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-scoreline-row.winner,
 .squash-scoreboard-side.winner {
     background: var(--side-soft);
     border-left-color: var(--side);
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
     font-weight: 700;
 }
 
@@ -433,9 +433,9 @@ select.squash-input {
     flex-shrink: 0;
     padding: 2px 8px;
     border-radius: 999px;
-    background: white;
+    background: var(--theme-bg-ffffff);
     box-shadow: inset 0 0 0 2px var(--side);
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.3px;
@@ -475,12 +475,12 @@ select.squash-input {
 .squash-games-table td.won {
     background: var(--side-soft);
     box-shadow: inset 0 0 0 2px var(--side);
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
     font-weight: 700;
 }
 
 .squash-scoreline-games span.open {
-    color: #38a169;
+    color: var(--theme-fg-38a169);
     font-weight: 600;
 }
 
@@ -505,7 +505,7 @@ select.squash-input {
     align-items: center;
     gap: 12px;
     font-size: 1.25rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 
@@ -529,7 +529,7 @@ select.squash-input {
 .squash-notes {
     margin: 8px 0 0 0;
     font-size: 0.9375rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-following {
@@ -549,7 +549,7 @@ select.squash-input {
     align-items: center;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -637,9 +637,9 @@ select.squash-input {
     margin: 0;
     padding: 10px 14px;
     border-radius: 8px;
-    background: #fffbeb;
+    background: var(--theme-bg-fffbeb);
     border: 1px solid #f6e05e;
-    color: #744210;
+    color: var(--theme-fg-744210);
     font-size: 0.875rem;
 }
 
@@ -659,7 +659,7 @@ select.squash-input {
 
 .squash-appeal-label {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     text-align: center;
     overflow-wrap: anywhere;
 }
@@ -697,7 +697,7 @@ select.squash-input {
 .squash-table th,
 .squash-table td {
     padding: 8px 10px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--theme-line-f0f0f0);
     text-align: center;
 }
 
@@ -713,13 +713,13 @@ select.squash-input {
     color: #718096;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom-color: #e0e0e0;
+    border-bottom-color: var(--theme-line-e0e0e0);
 }
 
 .squash-games-table tbody th,
 .squash-table tbody th {
     font-weight: 500;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-games-table td {
@@ -727,7 +727,7 @@ select.squash-input {
 }
 
 .squash-games-table td.open {
-    color: #38a169;
+    color: var(--theme-fg-38a169);
     font-weight: 600;
 }
 
@@ -748,12 +748,12 @@ select.squash-input {
 }
 
 .squash-ahead {
-    color: #2f855a;
+    color: var(--theme-fg-2f855a);
     font-weight: 600;
 }
 
 .squash-behind {
-    color: #c53030;
+    color: var(--theme-fg-c53030);
     font-weight: 600;
 }
 
@@ -767,7 +767,7 @@ select.squash-input {
 .squash-details summary {
     cursor: pointer;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-details[open] summary {
@@ -799,7 +799,7 @@ select.squash-input {
 
 .squash-enter-label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     margin-right: 4px;
 }
 
@@ -860,12 +860,12 @@ select.squash-input {
 }
 
 .squash-momentum-zero {
-    stroke: #cbd5e0;
+    stroke: var(--theme-line-cbd5e0);
     stroke-width: 1;
 }
 
 .squash-momentum-divider {
-    stroke: #edf2f7;
+    stroke: var(--theme-line-edf2f7);
     stroke-width: 1;
 }
 
@@ -936,12 +936,12 @@ select.squash-input {
     display: flex;
     flex-direction: column;
     padding: 6px 10px;
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     font-size: 0.8125rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     white-space: nowrap;
     pointer-events: none;
     z-index: 1;
@@ -968,7 +968,7 @@ select.squash-input {
     width: 110px;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-rally-dots {
@@ -1028,22 +1028,22 @@ select.squash-input {
     align-items: flex-start;
     gap: 2px;
     padding: 10px 12px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 8px;
-    background: white;
+    background: var(--theme-bg-ffffff);
     font: inherit;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     text-align: left;
     cursor: pointer;
 }
 
 .squash-merge-option:hover {
-    border-color: #a3bffa;
+    border-color: var(--theme-line-a3bffa);
 }
 
 .squash-merge-option.active {
     border-color: #1e40af;
-    background: #edf2ff;
+    background: var(--theme-bg-edf2ff);
 }
 
 /* Elo ladder */
@@ -1057,7 +1057,7 @@ select.squash-input {
 
 .squash-table td.squash-rating {
     font-weight: 700;
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
 }
 
 /* Rating history chart */
@@ -1093,7 +1093,7 @@ select.squash-input {
 }
 
 .squash-rating-grid {
-    stroke: #edf2f7;
+    stroke: var(--theme-line-edf2f7);
     stroke-width: 1;
 }
 
@@ -1115,7 +1115,7 @@ select.squash-input {
     transform: translateY(-50%);
     font-size: 0.8125rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     font-variant-numeric: tabular-nums;
     pointer-events: none;
 }
@@ -1137,7 +1137,7 @@ select.squash-input {
 .squash-insights-notes {
     margin: 12px 0 0 0;
     padding-left: 20px;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     font-size: 0.9375rem;
 }
 
@@ -1176,13 +1176,13 @@ select.squash-input {
     width: 100%;
     margin-top: 0;
     padding: 10px 36px 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--theme-line-d1d5db);
     border-radius: 6px;
     font: inherit;
     font-size: 0.95rem;
     line-height: 1.2;
-    color: #2c3e50;
-    background: white
+    color: var(--theme-fg-2c3e50);
+    background: var(--theme-bg-ffffff)
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234a5568' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
         no-repeat right 12px center;
     -webkit-appearance: none;
@@ -1370,12 +1370,12 @@ select.squash-input {
     min-width: 28px;
     padding: 4px 6px;
     border-radius: 6px;
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
     text-decoration: underline;
 }
 
 .squash-game-link:hover {
-    background: #eef2ff;
+    background: var(--theme-bg-eef2ff);
 }
 
 .squash-rally-table td,
@@ -1401,8 +1401,8 @@ select.squash-input {
     padding: 0 14px;
     border: none;
     border-radius: 10px;
-    background-color: #edf2f7;
-    color: #4a5568;
+    background-color: var(--theme-bg-edf2f7);
+    color: var(--theme-fg-4a5568);
     font: inherit;
     font-size: 0.875rem;
     font-weight: 600;
@@ -1413,7 +1413,7 @@ select.squash-input {
 }
 
 .squash-pill:hover {
-    background-color: #e2e8f0;
+    background-color: var(--theme-bg-e2e8f0);
 }
 
 .squash-pill:focus-visible {
@@ -1422,8 +1422,8 @@ select.squash-input {
 }
 
 .squash-pill.squash-pill-set {
-    background-color: #dbeafe;
-    color: #1e40af;
+    background-color: var(--theme-bg-dbeafe);
+    color: var(--theme-fg-1e40af);
 }
 
 select.squash-pill,
@@ -1454,7 +1454,7 @@ select.squash-pill,
     gap: 12px;
     padding: 12px;
     border-radius: 12px;
-    background: white;
+    background: var(--theme-bg-ffffff);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -1471,7 +1471,7 @@ select.squash-pill,
     align-items: center;
     gap: 6px;
     font-size: 0.875rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 /* Sharing a finished match */
@@ -1531,9 +1531,9 @@ select.squash-pill,
 
 .squash-elo-hero {
     justify-content: center;
-    background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
-    border: 1px solid #c7d2fe;
-    color: #1e40af;
+    background: linear-gradient(135deg, var(--theme-bg-eef2ff) 0%, var(--theme-bg-f8fafc) 100%);
+    border: 1px solid var(--theme-line-c7d2fe);
+    color: var(--theme-fg-1e40af);
 }
 
 .squash-elo-formats {
@@ -1544,8 +1544,8 @@ select.squash-pill,
 
 .squash-elo-format {
     padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-    background: white;
+    border: 1px solid var(--theme-line-e2e8f0);
+    background: var(--theme-bg-ffffff);
 }
 
 .squash-elo-eyebrow {
@@ -1553,7 +1553,7 @@ select.squash-pill,
     font-weight: 700;
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
 }
 
 /* The number, with its trend under it so the number stays centred */
@@ -1570,7 +1570,7 @@ select.squash-pill,
     line-height: 1;
     letter-spacing: -1px;
     font-variant-numeric: tabular-nums;
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
 }
 
 .squash-elo-format-value {
@@ -1578,7 +1578,7 @@ select.squash-pill,
     font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
 }
 
 .squash-elo-meta {
@@ -1592,7 +1592,7 @@ select.squash-pill,
 
 .squash-elo-rank {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-elo-change {
@@ -1605,23 +1605,23 @@ select.squash-pill,
 }
 
 .squash-elo-change.up {
-    background: #e6f4ea;
-    color: #1e6b41;
+    background: var(--theme-bg-e6f4ea);
+    color: var(--theme-fg-1e6b41);
 }
 
 .squash-elo-change.down {
-    background: #fdecec;
-    color: #a12727;
+    background: var(--theme-bg-fdecec);
+    color: var(--theme-fg-a12727);
 }
 
 .squash-elo-change.level {
-    background: #edf2f7;
-    color: #4a5568;
+    background: var(--theme-bg-edf2f7);
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-elo-tag {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     font-style: italic;
 }
 
@@ -1667,7 +1667,7 @@ select.squash-pill,
 
 .squash-ladder-me th,
 .squash-ladder-me td {
-    background: #eef2ff;
+    background: var(--theme-bg-eef2ff);
 }
 
 .squash-home-section {
@@ -1736,7 +1736,7 @@ select.squash-pill,
     border: 1px solid transparent;
     border-radius: 8px;
     background: none;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     font: inherit;
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
@@ -1749,17 +1749,17 @@ select.squash-pill,
 }
 
 .squash-calendar-day:hover:not(:disabled) {
-    background: #eef2ff;
+    background: var(--theme-bg-eef2ff);
 }
 
 .squash-calendar-day.today {
-    border-color: #cbd5e0;
+    border-color: var(--theme-line-cbd5e0);
     font-weight: 700;
 }
 
 .squash-calendar-day.chosen {
     border-color: #1e40af;
-    background: #eef2ff;
+    background: var(--theme-bg-eef2ff);
 }
 
 .squash-calendar-marks {
@@ -1836,7 +1836,7 @@ select.squash-pill,
     gap: 8px 12px;
     margin-bottom: 12px;
     font-size: 0.9375rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 /* Asking to join, for someone signed in who isn't a player */
@@ -1862,8 +1862,8 @@ select.squash-pill,
 .squash-request-message {
     margin: 0;
     padding: 8px 12px;
-    border-left: 3px solid #e0e0e0;
-    color: #4a5568;
+    border-left: 3px solid var(--theme-line-e0e0e0);
+    color: var(--theme-fg-4a5568);
     white-space: pre-wrap;
 }
 
@@ -1878,8 +1878,8 @@ select.squash-pill,
     margin-left: auto;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #4a5568;
-    background: #edf2f7;
+    color: var(--theme-fg-4a5568);
+    background: var(--theme-bg-edf2f7);
     padding: 2px 8px;
     border-radius: 999px;
     white-space: nowrap;
@@ -1889,13 +1889,13 @@ select.squash-pill,
 .squash-asking {
     display: block;
     border-left: 4px solid #1e40af;
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
     font-weight: 600;
     text-decoration: none;
 }
 
 .squash-asking:hover {
-    background: #eef2ff;
+    background: var(--theme-bg-eef2ff);
 }
 
 /* The games list: what's notable about each game, beside its time */
@@ -1909,8 +1909,8 @@ select.squash-pill,
 .squash-game-tag {
     padding: 2px 8px;
     border-radius: 999px;
-    background: #edf2f7;
-    color: #4a5568;
+    background: var(--theme-bg-edf2f7);
+    color: var(--theme-fg-4a5568);
     font-size: 0.75rem;
     font-weight: 600;
     white-space: nowrap;
@@ -1933,7 +1933,7 @@ select.squash-pill,
     flex-direction: column;
     gap: 6px;
     font-size: 0.875rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-feedback-form textarea {
@@ -1949,7 +1949,7 @@ select.squash-pill,
 }
 
 .squash-feedback-sent {
-    color: #2f855a;
+    color: var(--theme-fg-2f855a);
     font-weight: 600;
 }
 
@@ -1964,14 +1964,14 @@ select.squash-pill,
 
 .squash-feedback-item {
     padding: 14px 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--theme-line-e2e8f0);
     border-left: 4px solid #1e40af;
     border-radius: 10px;
-    background: white;
+    background: var(--theme-bg-ffffff);
 }
 
 .squash-feedback-item.resolved {
-    border-left-color: #cbd5e0;
+    border-left-color: var(--theme-line-cbd5e0);
 }
 
 .squash-feedback-head {
@@ -1982,7 +1982,7 @@ select.squash-pill,
 }
 
 .squash-feedback-sender {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-feedback-status {
@@ -1991,16 +1991,16 @@ select.squash-pill,
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
 }
 
 .squash-feedback-status.resolved {
-    color: #2f855a;
+    color: var(--theme-fg-2f855a);
 }
 
 .squash-feedback-message {
     margin: 10px 0 6px;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
@@ -2018,16 +2018,16 @@ select.squash-pill,
     gap: 14px;
     margin: 0 0 16px;
     padding: 14px 16px;
-    border: 1px dashed #a5b4fc;
+    border: 1px dashed var(--theme-line-a5b4fc);
     border-radius: 12px;
-    background: #f8faff;
-    color: #1e40af;
+    background: var(--theme-bg-f8faff);
+    color: var(--theme-fg-1e40af);
     text-decoration: none;
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .squash-elo-explain:hover {
-    background: #eef2ff;
+    background: var(--theme-bg-eef2ff);
     border-color: #1e40af;
     border-style: solid;
 }
@@ -2047,7 +2047,7 @@ select.squash-pill,
 
 .squash-elo-explain-text span {
     font-size: 0.875rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-elo-explain-arrow {
@@ -2121,7 +2121,7 @@ select.squash-pill,
     margin: 0;
     font-size: 1.0625rem;
     line-height: 1.6;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-formulas {
@@ -2133,9 +2133,9 @@ select.squash-pill,
 .squash-formula {
     margin: 0;
     padding: 16px 18px;
-    border: 1px solid #c7d2fe;
+    border: 1px solid var(--theme-line-c7d2fe);
     border-radius: 12px;
-    background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+    background: linear-gradient(135deg, var(--theme-bg-eef2ff) 0%, var(--theme-bg-f8fafc) 100%);
 }
 
 .squash-formula-name {
@@ -2143,13 +2143,13 @@ select.squash-pill,
     font-weight: 700;
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: #1e40af;
+    color: var(--theme-fg-1e40af);
 }
 
 .squash-formula-math {
     margin: 10px 0;
     font-size: 1.15rem;
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
     overflow-x: auto;
     overflow-y: hidden;
 }
@@ -2165,7 +2165,7 @@ select.squash-pill,
     margin: 0;
     font-size: 0.9375rem;
     line-height: 1.55;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-elo-try {
@@ -2180,7 +2180,7 @@ select.squash-pill,
     flex-direction: column;
     gap: 4px;
     font-size: 0.8125rem;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-elo-try input {
@@ -2191,7 +2191,7 @@ select.squash-pill,
 .squash-elo-try-result {
     margin: 20px 0 0;
     line-height: 2;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-elo-examples {
@@ -2202,14 +2202,14 @@ select.squash-pill,
 
 .squash-elo-example {
     padding: 14px 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--theme-line-e2e8f0);
     border-radius: 12px;
 }
 
 .squash-elo-example-title {
     margin: 0 0 10px;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-elo-example-sides {
@@ -2228,11 +2228,11 @@ select.squash-pill,
     display: flex;
     flex-direction: column;
     font-variant-numeric: tabular-nums;
-    color: #4a5568;
+    color: var(--theme-fg-4a5568);
 }
 
 .squash-elo-example-ratings strong {
-    color: #1a202c;
+    color: var(--theme-fg-1a202c);
 }
 
 .squash-elo-rules {
@@ -2242,7 +2242,7 @@ select.squash-pill,
     flex-direction: column;
     gap: 8px;
     line-height: 1.55;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-elo-changes {
@@ -2297,7 +2297,7 @@ select.squash-pill,
 
 .squash-comment {
     padding-bottom: 14px;
-    border-bottom: 1px solid #edf2f7;
+    border-bottom: 1px solid var(--theme-line-edf2f7);
 }
 
 .squash-comment-head {
@@ -2309,7 +2309,7 @@ select.squash-pill,
 }
 
 .squash-comment-head strong {
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .squash-comment-head .squash-game-tag {
@@ -2318,7 +2318,7 @@ select.squash-pill,
 
 .squash-comment-body {
     margin: 6px 0 0;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
@@ -2393,11 +2393,11 @@ select.squash-pill,
 }
 
 .squash-record-won {
-    color: #2f855a;
+    color: var(--theme-fg-2f855a);
 }
 
 .squash-record-lost {
-    color: #c53030;
+    color: var(--theme-fg-c53030);
 }
 
 .squash-record-drawn {

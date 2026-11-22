@@ -4,7 +4,7 @@
 
 .admin-users-loading {
     text-align: center;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .admin-users-grid {
@@ -18,8 +18,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e5e7eb);
     border-radius: 10px;
     padding: 16px;
 }
@@ -31,7 +31,7 @@
 
 .admin-user-card-id-row {
     padding-bottom: 12px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--theme-line-f3f4f6);
     gap: 8px;
 }
 
@@ -67,12 +67,12 @@
 .admin-user-name {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .admin-user-email {
     font-size: 0.8rem;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -87,7 +87,7 @@
     white-space: nowrap;
     font-size: 0.7rem;
     color: #9ca3af;
-    background: #f3f4f6;
+    background: var(--theme-bg-f3f4f6);
     padding: 3px 7px;
     border-radius: 4px;
 }
@@ -109,7 +109,7 @@
 .admin-user-card-actions-row {
     margin-top: auto;
     padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--theme-line-f3f4f6);
 }
 
 .admin-user-delete-button {

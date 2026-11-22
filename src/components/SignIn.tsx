@@ -2,16 +2,9 @@ import { useEffect, useState } from "react"
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
 
 import { API_URL } from "../configs"
-import {
-    apiFetch,
-    decodeProfile,
-    GoogleProfile,
-    refreshSessionIfDue,
-    setToken,
-    signOut,
-    useAuthToken
-} from "../auth"
+import { apiFetch, decodeProfile, GoogleProfile, refreshSessionIfDue, setToken, signOut, useAuthToken } from "../auth"
 import AppleSignIn from "./AppleSignIn"
+import { useTheme } from "../theme"
 import "./SignIn.css"
 
 // A signed-in caller defaults to the "guest" role in the API until an admin
@@ -26,6 +19,7 @@ async function provisionUser(): Promise<void> {
 }
 
 export default function SignIn() {
+    const { dark } = useTheme()
     const token = useAuthToken()
     const [profile, setProfile] = useState<GoogleProfile | null>(null)
     const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -40,7 +34,7 @@ export default function SignIn() {
         // (e.g. a silent re-auth in another tab) would otherwise linger on
         // screen indefinitely.
         if (token) {
-            (window as any).google?.accounts?.id?.cancel?.()
+            ;(window as any).google?.accounts?.id?.cancel?.()
         }
     }, [token])
 
@@ -92,7 +86,11 @@ export default function SignIn() {
                     <div className="site-signin-confirm">
                         <span>Delete your account?</span>
                         <button onClick={() => setConfirmingDelete(false)}>Cancel</button>
-                        <button className="site-signin-delete-confirm" onClick={handleDeleteAccount} disabled={deleting}>
+                        <button
+                            className="site-signin-delete-confirm"
+                            onClick={handleDeleteAccount}
+                            disabled={deleting}
+                        >
                             {deleting ? "Deleting..." : "Confirm"}
                         </button>
                     </div>
@@ -103,7 +101,12 @@ export default function SignIn() {
 
     return (
         <div className="site-signin">
+            {/* Google's own dark button on a dark page, where its white one
+                stands out. Made afresh when the theme changes, as the button
+                is drawn by Google once. */}
             <GoogleLogin
+                key={dark ? "dark" : "light"}
+                theme={dark ? "filled_black" : "outline"}
                 onSuccess={(response: CredentialResponse) => {
                     if (!response.credential) {
                         return

@@ -17,14 +17,14 @@
     font-size: 2.25rem;
     font-weight: 700;
     letter-spacing: -0.5px;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .about-lead {
     margin: 0;
     font-size: 1.125rem;
     line-height: 1.6;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .about-section {
@@ -52,8 +52,8 @@
     align-items: flex-start;
     gap: 16px;
     padding: 24px;
-    background: white;
-    border: 1px solid #e8eaed;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e8eaed);
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     text-decoration: none;
@@ -80,7 +80,7 @@
 .about-card-title {
     font-size: 1.0625rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .about-card:hover .about-card-title {
@@ -90,14 +90,14 @@
 .about-card-text {
     font-size: 0.9375rem;
     line-height: 1.6;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .about-subheading {
     margin: 20px 0 10px 0;
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .about-section h2 + .about-subheading {
@@ -116,7 +116,7 @@
 .about-tags li {
     padding: 6px 14px;
     border-radius: 999px;
-    background: #eef0fb;
+    background: var(--theme-bg-eef0fb);
     color: #4c5bd4;
     font-size: 0.875rem;
     font-weight: 500;

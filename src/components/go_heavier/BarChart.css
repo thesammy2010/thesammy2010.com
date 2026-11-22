@@ -2,8 +2,8 @@
    there is no legend. Marks stay thin, the grid stays recessive. */
 
 .chart {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 12px;
     padding: 24px;
     margin: 0;
@@ -22,7 +22,7 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .chart-subtitle {
@@ -33,7 +33,7 @@
 
 .chart-toggle {
     background: none;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 6px;
     padding: 4px 12px;
     font: inherit;
@@ -84,7 +84,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: #edf0f4;
+    background: var(--theme-bg-edf0f4);
 }
 
 .chart-bars {
@@ -129,7 +129,7 @@
     transform: translate(-50%, -4px);
     font-size: 0.6875rem;
     font-weight: 600;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
     white-space: nowrap;
     pointer-events: none;
 }
@@ -198,13 +198,13 @@
     color: #718096;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--theme-line-e0e0e0);
 }
 
 .chart-table td {
     padding: 8px 12px;
-    color: #5a6c7d;
-    border-bottom: 1px solid #f0f0f0;
+    color: var(--theme-fg-5a6c7d);
+    border-bottom: 1px solid var(--theme-line-f0f0f0);
 }
 
 .chart-table tbody tr:last-child td {

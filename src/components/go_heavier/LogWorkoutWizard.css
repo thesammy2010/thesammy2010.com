@@ -17,7 +17,7 @@
     flex: 1;
     padding: 8px 12px;
     border-radius: 8px;
-    background: #f4f5f7;
+    background: var(--theme-bg-f4f5f7);
     color: #a0aec0;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -25,12 +25,12 @@
 }
 
 .wizard-steps li.current {
-    background: #eef0fb;
+    background: var(--theme-bg-eef0fb);
     color: #4c5bd4;
 }
 
 .wizard-steps li.done {
-    background: #eef0fb;
+    background: var(--theme-bg-eef0fb);
     color: #a0aec0;
 }
 
@@ -43,11 +43,11 @@
 .wizard-session-label {
     margin: 0 0 16px 0;
     padding: 10px 14px;
-    background: #f8f9fa;
+    background: var(--theme-bg-f8f9fa);
     border-radius: 8px;
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .set-rows {
@@ -57,10 +57,10 @@
 }
 
 .set-row {
-    border: 1px solid #e8eaed;
+    border: 1px solid var(--theme-line-e8eaed);
     border-radius: 10px;
     padding: 14px;
-    background: #fdfdfe;
+    background: var(--theme-bg-fdfdfe);
 }
 
 .set-row-head {
@@ -87,9 +87,9 @@
     padding: 4px 10px;
     font-size: 0.75rem;
     font-weight: 600;
-    background: white;
-    color: #5a6c7d;
-    border: 1px solid #e0e0e0;
+    background: var(--theme-bg-ffffff);
+    color: var(--theme-fg-5a6c7d);
+    border: 1px solid var(--theme-line-e0e0e0);
     border-radius: 6px;
     width: auto;
 }
@@ -140,15 +140,15 @@
     width: 100%;
     margin-top: 12px;
     padding: 10px;
-    background: white;
+    background: var(--theme-bg-ffffff);
     color: #667eea;
-    border: 1px dashed #c3c9f5;
+    border: 1px dashed var(--theme-line-c3c9f5);
     border-radius: 8px;
     font-weight: 600;
 }
 
 .popup-form .add-set-button:hover {
-    background: #f4f5fb;
+    background: var(--theme-bg-f4f5fb);
     transform: none;
 }
 

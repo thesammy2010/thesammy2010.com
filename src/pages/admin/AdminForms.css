@@ -17,20 +17,20 @@
     margin: 0 0 8px;
     font-size: 1.75rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
 }
 
 .admin-form-hero p {
     margin: 0;
     font-size: 0.95rem;
-    color: #5a6c7d;
+    color: var(--theme-fg-5a6c7d);
 }
 
 .admin-restricted {
     margin: 0;
     font-size: 1.0625rem;
     line-height: 1.6;
-    color: #c0392b;
+    color: var(--theme-fg-c0392b);
     text-align: center;
 }
 
@@ -38,8 +38,8 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--theme-bg-ffffff);
+    border: 1px solid var(--theme-line-e5e7eb);
     border-radius: 12px;
     padding: 24px;
 }
@@ -49,7 +49,7 @@
     flex-direction: column;
     font-weight: 500;
     font-size: 0.9rem;
-    color: #2c3e50;
+    color: var(--theme-fg-2c3e50);
     gap: 6px;
 }
 
@@ -60,7 +60,7 @@
 
 .admin-form input {
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--theme-line-d1d5db);
     border-radius: 6px;
     font-size: 0.95rem;
     font-family: inherit;
@@ -112,17 +112,17 @@
     color: #ef4444;
     font-size: 0.85rem;
     padding: 8px;
-    background: #fee;
+    background: var(--theme-bg-ffeeee);
     border-radius: 4px;
     text-align: center;
 }
 
 .admin-success {
     margin: 0;
-    color: #15803d;
+    color: var(--theme-fg-15803d);
     font-size: 0.85rem;
     padding: 8px;
-    background: #ecfdf3;
+    background: var(--theme-bg-ecfdf3);
     border-radius: 4px;
     text-align: center;
 }
@@ -139,14 +139,14 @@
     flex-direction: column;
     gap: 12px;
     padding: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: var(--theme-bg-fef2f2);
+    border: 1px solid var(--theme-line-fecaca);
     border-radius: 8px;
 }
 
 .admin-warning {
     margin: 0;
-    color: #991b1b;
+    color: var(--theme-fg-991b1b);
     font-size: 0.9rem;
     text-align: center;
 }
@@ -163,8 +163,8 @@
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
-    background: #e5e7eb;
-    color: #374151;
+    background: var(--theme-bg-e5e7eb);
+    color: var(--theme-fg-374151);
 }
 
 @media (max-width: 640px) {
