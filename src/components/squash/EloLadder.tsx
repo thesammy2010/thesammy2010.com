@@ -98,9 +98,9 @@ export default function EloLadder({ ratings: current, format, players, me }: Pro
                         <tr>
                             <th>Player</th>
                             <th>Rating</th>
-                            <th>Last match</th>
+                            <th>Last game</th>
                             <th className="squash-hide-narrow">Peak</th>
-                            <th className="squash-hide-narrow">Rated</th>
+                            <th className="squash-hide-narrow">Games</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -122,7 +122,7 @@ export default function EloLadder({ ratings: current, format, players, me }: Pro
                                     {r.provisional && (
                                         <span
                                             className="squash-muted squash-pending"
-                                            title="Too few matches to mean much yet"
+                                            title="Too few games to mean much yet"
                                         >
                                             provisional
                                         </span>
@@ -137,7 +137,7 @@ export default function EloLadder({ ratings: current, format, players, me }: Pro
                                     {r.matches_rated > 0 ? signed(r.last_change) : ""}
                                 </td>
                                 <td className="squash-hide-narrow">{r.peak}</td>
-                                <td className="squash-hide-narrow">{r.matches_rated}</td>
+                                <td className="squash-hide-narrow">{r.games_rated ?? r.matches_rated}</td>
                             </tr>
                         ))}
                     </tbody>

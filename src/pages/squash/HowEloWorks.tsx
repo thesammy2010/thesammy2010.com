@@ -92,7 +92,8 @@ function TryIt({ method }: { method: RatingMethod }) {
                     />
                 </label>
                 <div className="squash-segmented" role="radiogroup" aria-label="Result">
-                    {(["win", "draw", "loss"] as Outcome[]).map((option) => (
+                    {/* A game always has a winner, so there's no draw */}
+                    {(["win", "loss"] as Outcome[]).map((option) => (
                         <button
                             key={option}
                             type="button"
@@ -101,7 +102,7 @@ function TryIt({ method }: { method: RatingMethod }) {
                             className={outcome === option ? "active" : ""}
                             onClick={() => setOutcome(option)}
                         >
-                            {option === "win" ? "You win" : option === "draw" ? "Draw" : "You lose"}
+                            {option === "win" ? "You win the game" : "You lose the game"}
                         </button>
                     ))}
                 </div>
@@ -109,7 +110,7 @@ function TryIt({ method }: { method: RatingMethod }) {
             {valid && (
                 <p className="squash-elo-try-result" role="status" aria-live="polite">
                     You were expected to take{" "}
-                    <strong>{percent(expectedScore(you, them, method.constants.scale))}</strong> of the result. You'd
+                    <strong>{percent(expectedScore(you, them, method.constants.scale))}</strong> of the games. You'd
                     move <Change value={change} /> to <strong>{Math.round((you + change) * 10) / 10}</strong>
                     , and they'd move <Change value={-change} />.
                 </p>
@@ -148,10 +149,12 @@ export default function HowEloWorks() {
                     <div className="stats-grid">
                         {[
                             { value: method.constants.start, label: "Everyone starts on" },
-                            { value: method.constants.k, label: "Most one match moves you" },
+                            { value: method.constants.k, label: "Most one game moves you" },
                             { value: method.constants.scale, label: "Points for 10 to 1 odds" },
-                            { value: method.constants.draw, label: "What a draw scores" },
-                            { value: method.constants.provisional_matches, label: "Matches until it's settled" }
+                            {
+                                value: method.constants.provisional_games ?? method.constants.provisional_matches,
+                                label: "Games until it's settled"
+                            }
                         ].map((tile) => (
                             <div key={tile.label} className="stat-tile">
                                 <div className="stat-tile-value">{tile.value}</div>
@@ -199,7 +202,7 @@ export default function HowEloWorks() {
                         <h4 className="squash-card-title">What's changed</h4>
                         <p className="squash-muted">
                             A change to how ratings are worked out moves everyone's at once, as they're worked out
-                            afresh from every match.
+                            afresh from every game.
                         </p>
                         <ol className="squash-elo-changes">
                             {method.changes.map((change) => (

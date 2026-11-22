@@ -11,8 +11,13 @@ interface Props {
 
 const HEIGHT = 180
 
-// A player's Elo rating after each completed match, oldest first. Drawn in
-// data units and stretched to fit, with strokes kept at 2px.
+// Where a point on the chart opens: its game's own page, or the match's from
+// an API that rated whole matches.
+const pathOf = (change: RatingChange) =>
+    `/squash/matches/${change.match_id}${change.game ? `/games/${change.game}` : ""}`
+
+// A player's Elo rating after each game of their completed matches, oldest
+// first. Drawn in data units and stretched to fit, with strokes kept at 2px.
 export default function RatingChart({ history }: Props) {
     const navigate = useNavigate()
     const [hovered, setHovered] = useState<number | null>(null)
@@ -26,7 +31,7 @@ export default function RatingChart({ history }: Props) {
 
     const path = points.map((rating, i) => `${i ? "L" : "M"}${i},${-rating}`).join(" ")
     const last = points.length - 1
-    // Index 0 is the start, before any match, so it has no match to show.
+    // Index 0 is the start, before any game, so it has no game to show.
     const match = hovered !== null && hovered > 0 ? history[hovered - 1] : null
 
     const indexAt = (clientX: number, element: HTMLElement) => {
@@ -41,7 +46,7 @@ export default function RatingChart({ history }: Props) {
             const step = e.key === "ArrowRight" ? 1 : -1
             setHovered((h) => Math.min(Math.max((h ?? (step > 0 ? 0 : last + 1)) + step, 1), last))
         } else if (e.key === "Enter" && match) {
-            navigate(`/squash/matches/${match.match_id}`)
+            navigate(pathOf(match))
         }
     }
 
@@ -49,7 +54,9 @@ export default function RatingChart({ history }: Props) {
         <figure className="squash-rating-chart">
             <figcaption>
                 <h4 className="squash-card-title">Rating</h4>
-                <p className="squash-muted">After each completed match, oldest first. Tap a point to open the match.</p>
+                <p className="squash-muted">
+                    After each game of a completed match, oldest first. Tap a point to open the game.
+                </p>
             </figcaption>
             <div className="squash-rating-frame">
                 <div className="squash-rating-axis" style={{ height: HEIGHT }} aria-hidden="true">
@@ -64,14 +71,12 @@ export default function RatingChart({ history }: Props) {
                     style={{ height: HEIGHT }}
                     tabIndex={0}
                     role="img"
-                    aria-label={`Rating over ${history.length} ${history.length === 1 ? "match" : "matches"}, from ${
+                    aria-label={`Rating over ${history.length} ${history.length === 1 ? "game" : "games"}, from ${
                         points[0]
                     } to ${points[last]}. Use the arrow keys to step through them and Enter to open one.`}
                     onPointerMove={(e) => setHovered(indexAt(e.clientX, e.currentTarget))}
                     onPointerLeave={() => setHovered(null)}
-                    onClick={(e) =>
-                        navigate(`/squash/matches/${history[indexAt(e.clientX, e.currentTarget) - 1].match_id}`)
-                    }
+                    onClick={(e) => navigate(pathOf(history[indexAt(e.clientX, e.currentTarget) - 1]))}
                     onKeyDown={onKeyDown}
                     onBlur={() => setHovered(null)}
                 >
@@ -118,7 +123,10 @@ export default function RatingChart({ history }: Props) {
                                 >
                                     {signed(match.change)}
                                 </span>
-                                <span className="squash-muted">{formatWhen(match.played_at)}</span>
+                                <span className="squash-muted">
+                                    {match.game ? `Game ${match.game} · ` : ""}
+                                    {formatWhen(match.played_at)}
+                                </span>
                             </div>
                         </>
                     )}
