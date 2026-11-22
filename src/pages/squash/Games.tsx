@@ -13,9 +13,9 @@ import {
 } from "../../components/squash/api"
 import DateRangeFilter, { useDateRangeParams } from "../../components/squash/DateRangeFilter"
 import SquashPage from "../../components/squash/SquashPage"
-import { formatWhen, SIDES, sideNames } from "../../components/squash/format"
+import { formatDuration, formatWhen, SIDES, sideNames } from "../../components/squash/format"
 import { dayBound } from "../../components/squash/dateRange"
-import { GameEntry, gamesOf } from "../../components/squash/games"
+import { GAME_LENGTHS, GameEntry, gamesOf, GameSort } from "../../components/squash/games"
 import { dedupeById } from "../../components/go_heavier/pagination"
 
 interface GamesData {
@@ -51,6 +51,11 @@ function GameCard({ entry, players, me }: { entry: GameEntry; players: Player[];
                     )}
                     {deuce && <span className="squash-game-tag">Deuce</span>}
                     {game.rallies > 0 && <span className="squash-game-tag">Point by point</span>}
+                    {game.duration_seconds != null && (
+                        <span className="squash-game-tag" title="From the first rally to the winning point">
+                            ⏱ {formatDuration(game.duration_seconds)}
+                        </span>
+                    )}
                 </span>
             </div>
             <div className="squash-scoreline">
@@ -95,6 +100,10 @@ export default function Games() {
         formatParam === "singles" || formatParam === "doubles" ? formatParam : undefined
     const deuceOnly = searchParams.get("deuce") === "1"
     const liveOnly = searchParams.get("live") === "1"
+    const lengthParam = searchParams.get("length")
+    const length = GAME_LENGTHS.find((b) => b.value === lengthParam)?.value
+    const sortParam = searchParams.get("sort")
+    const sort: GameSort = sortParam === "longest" || sortParam === "shortest" ? sortParam : "newest"
     const access = useSquashAccess()
     const me = access.status === "member" ? access.me : null
     const [{ from, to }, setRange] = useDateRangeParams()
@@ -152,7 +161,7 @@ export default function Games() {
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Games">
             {({ players, firstPage }) => {
-                const games = gamesOf(dedupeById([...firstPage, ...more]), { deuceOnly, liveOnly })
+                const games = gamesOf(dedupeById([...firstPage, ...more]), { deuceOnly, liveOnly, length, sort })
                 const done = firstPage.length < MATCHES_PAGE_SIZE || lastPageShort
 
                 return (
@@ -212,12 +221,40 @@ export default function Games() {
                                 />
                                 <span>Scored point by point</span>
                             </label>
+                            <div className="squash-segmented" role="radiogroup" aria-label="How long it took">
+                                {[{ value: "", label: "Any length" }, ...GAME_LENGTHS].map(({ value, label }) => (
+                                    <button
+                                        key={label}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={(length ?? "") === value}
+                                        className={(length ?? "") === value ? "active" : ""}
+                                        onClick={() => setParam("length", value)}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                            <label className="squash-sort">
+                                <span>Sort</span>
+                                <select
+                                    className="squash-input"
+                                    value={sort}
+                                    onChange={(e) =>
+                                        setParam("sort", e.target.value === "newest" ? "" : e.target.value)
+                                    }
+                                >
+                                    <option value="newest">Newest first</option>
+                                    <option value="longest">Longest first</option>
+                                    <option value="shortest">Shortest first</option>
+                                </select>
+                            </label>
                         </div>
 
                         {games.length === 0 ? (
                             <div className="squash-card squash-empty">
                                 <p>
-                                    {deuceOnly || liveOnly || from || to
+                                    {deuceOnly || liveOnly || length || from || to
                                         ? done
                                             ? "No games fit these filters."
                                             : "No games fit these filters in the latest matches. Load more to look further back."
