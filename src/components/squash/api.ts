@@ -487,8 +487,11 @@ export const squashApi = {
     setMyPreferences: (body: PlayerPreferences) =>
         request<Player>("PATCH", "/players/me", "Failed to save your preference", { body }),
     playerStats: (id: string) => request<PlayerStats>("GET", `/players/${id}/stats`, "Failed to load stats"),
-    headToHead: (id: string, opponentId: string) =>
-        request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head"),
+    // Singles and doubles together, or one alone
+    headToHead: (id: string, opponentId: string, format?: MatchFormat) =>
+        request<HeadToHead>("GET", `/players/${id}/head-to-head/${opponentId}`, "Failed to load the head-to-head", {
+            query: { format }
+        }),
     // Highest rated first; without a format every match counts to one rating
     ratings: (format?: MatchFormat, includeInactive = false) =>
         request<Rating[]>("GET", "/ratings", "Failed to load the ratings", {

@@ -25,7 +25,8 @@ interface PlayerData {
     player: Player
     players: Player[]
     stats: PlayerStats
-    headToHeads: HeadToHead[]
+    // Everyone they've played against, from their latest matches
+    opponents: string[]
     matches: Match[]
 }
 
@@ -40,12 +41,19 @@ const FORMATS: { value: MatchFormat | ""; label: string }[] = [
     { value: "doubles", label: "Doubles" }
 ]
 
-// The rating chart and point-by-point figures, for all matches or one
-// format, loaded apart from the rest so switching format is quick.
-function RatingAndInsights({ id }: { id: string }) {
+// The format picked on the page, in its address so it's kept on reload:
+// singles or doubles alone, or undefined for both.
+function useFormat(): [MatchFormat | undefined, (format: MatchFormat | "") => void] {
     const [searchParams, setSearchParams] = useSearchParams()
     const param = searchParams.get("format")
     const format: MatchFormat | undefined = param === "singles" || param === "doubles" ? param : undefined
+    return [format, (value) => setSearchParams(value ? { format: value } : {}, { replace: true })]
+}
+
+// The rating chart and point-by-point figures, for all matches or one
+// format, loaded apart from the rest so switching format is quick.
+function RatingAndInsights({ id }: { id: string }) {
+    const [format, setFormat] = useFormat()
     const { state, refreshing } = useSquashLoad<RatingData>(async () => {
         const [history, insights] = await Promise.all([
             squashApi.ratingHistory(id, format),
@@ -66,7 +74,7 @@ function RatingAndInsights({ id }: { id: string }) {
                             role="radio"
                             aria-checked={(format ?? "") === value}
                             className={(format ?? "") === value ? "active" : ""}
-                            onClick={() => setSearchParams(value ? { format: value } : {}, { replace: true })}
+                            onClick={() => setFormat(value)}
                         >
                             {label}
                         </button>
@@ -84,6 +92,73 @@ function RatingAndInsights({ id }: { id: string }) {
                     )}
                     <PlayerInsightsCard insights={state.data.insights} />
                 </>
+            )}
+        </div>
+    )
+}
+
+// Their record against each opponent, in the format picked above, loaded
+// apart from the rest like the rating so switching format is quick.
+function HeadToHeadCard({ id, opponents, players }: { id: string; opponents: string[]; players: Player[] }) {
+    const [format] = useFormat()
+    const { state, refreshing } = useSquashLoad<HeadToHead[]>(async () => {
+        const all = await Promise.all(opponents.map((o) => squashApi.headToHead(id, o, format)))
+        // Only those they've played in this format
+        return all.filter((h) => h.matches_played > 0)
+    }, [id, format, opponents.join()])
+    if (state.status !== "ready" || (state.data.length === 0 && !format)) {
+        return null
+    }
+    const headToHeads = state.data
+
+    return (
+        <div className={`squash-card ${refreshing ? "squash-refreshing" : ""}`}>
+            <h4 className="squash-card-title">Head to head</h4>
+            <p className="squash-muted">
+                Completed {format ?? "singles and doubles"} matches on opposite sides
+                {format ? ", as picked above" : ""}.
+            </p>
+            {headToHeads.length === 0 ? (
+                <p className="squash-muted">No completed {format} matches against anyone yet.</p>
+            ) : (
+                <table className="squash-table">
+                    <thead>
+                        <tr>
+                            <th>Against</th>
+                            <th>Played</th>
+                            <th>Record</th>
+                            <th>Games</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {[...headToHeads]
+                            .sort((a, b) => b.matches_played - a.matches_played)
+                            .map((h) => (
+                                <tr key={h.opponent_id}>
+                                    <th scope="row">
+                                        <Link className="squash-link" to={`/squash/players/${h.opponent_id}`}>
+                                            {players.find((p) => p.id === h.opponent_id)?.name ?? "Unknown player"}
+                                        </Link>
+                                    </th>
+                                    <td>{h.matches_played}</td>
+                                    <td
+                                        className={
+                                            h.matches_won > h.matches_lost
+                                                ? "squash-ahead"
+                                                : h.matches_won < h.matches_lost
+                                                ? "squash-behind"
+                                                : ""
+                                        }
+                                    >
+                                        {record(h.matches_won, h.matches_lost, h.matches_drawn)}
+                                    </td>
+                                    <td>
+                                        {h.games_won}-{h.games_lost}
+                                    </td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
             )}
         </div>
     )
@@ -164,13 +239,12 @@ export default function PlayerDetail() {
                 return m.players.filter((p) => p.side !== side).map((p) => p.player_id)
             })
         )
-        const headToHeads = await Promise.all(Array.from(opponents).map((o) => squashApi.headToHead(id, o)))
-        return { player, players, stats, matches, headToHeads }
+        return { player, players, stats, matches, opponents: Array.from(opponents) }
     }, [id])
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Player">
-            {({ player, players, stats, headToHeads, matches }, me) => (
+            {({ player, players, stats, opponents, matches }, me) => (
                 <>
                     <div className="squash-header">
                         <Link className="squash-link" to="/squash/players">
@@ -200,54 +274,7 @@ export default function PlayerDetail() {
 
                     <RatingAndInsights id={player.id} />
 
-                    {headToHeads.length > 0 && (
-                        <div className="squash-card">
-                            <h4 className="squash-card-title">Head to head</h4>
-                            <p className="squash-muted">Completed matches on opposite sides, doubles included.</p>
-                            <table className="squash-table">
-                                <thead>
-                                    <tr>
-                                        <th>Against</th>
-                                        <th>Played</th>
-                                        <th>Record</th>
-                                        <th>Games</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {[...headToHeads]
-                                        .sort((a, b) => b.matches_played - a.matches_played)
-                                        .map((h) => (
-                                            <tr key={h.opponent_id}>
-                                                <th scope="row">
-                                                    <Link
-                                                        className="squash-link"
-                                                        to={`/squash/players/${h.opponent_id}`}
-                                                    >
-                                                        {players.find((p) => p.id === h.opponent_id)?.name ??
-                                                            "Unknown player"}
-                                                    </Link>
-                                                </th>
-                                                <td>{h.matches_played}</td>
-                                                <td
-                                                    className={
-                                                        h.matches_won > h.matches_lost
-                                                            ? "squash-ahead"
-                                                            : h.matches_won < h.matches_lost
-                                                            ? "squash-behind"
-                                                            : ""
-                                                    }
-                                                >
-                                                    {record(h.matches_won, h.matches_lost, h.matches_drawn)}
-                                                </td>
-                                                <td>
-                                                    {h.games_won}-{h.games_lost}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <HeadToHeadCard id={player.id} opponents={opponents} players={players} />
 
                     <h3 className="squash-section-title">Matches</h3>
                     {matches.length === 0 ? (
