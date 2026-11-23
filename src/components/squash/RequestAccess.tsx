@@ -42,8 +42,13 @@ export default function RequestAccess() {
     const ask = (e: React.FormEvent) => {
         e.preventDefault()
         void run(async () => {
-            setRequest(await squashApi.requestAccess(message.trim() || null))
+            const made = await squashApi.requestAccess(message.trim() || null)
+            setRequest(made)
             setMessage("")
+            // Let in at once, as while the app's with App Review: in to the group
+            if (made.status === "approved") {
+                recheckSquashAccess()
+            }
         })
     }
 
