@@ -34,17 +34,19 @@ export default function Privacy() {
                 </p>
                 <p>
                     Others in the group also see your profile picture: the one from your Google account, or one you
-                    choose in the app, which is kept as a small JPEG without the photo's location or other details. They
-                    see what you write on matches too, and the admins see feedback you send and anything you report as
-                    offensive. Who you've blocked is kept so their comments and picture stay hidden from you.
+                    choose in the app, which is kept as a small JPEG without the photo's location or other details, at
+                    an address only the group is given. They see what you write on matches too, and the admins see
+                    feedback you send and anything you report as offensive. Who you've blocked is kept so their comments
+                    and picture stay hidden from you.
                 </p>
                 <p>
                     How2Squash's Apple Watch workouts go to Apple Health on your own phone. Heart rate, calories and
                     other health data never leave your devices.
                 </p>
                 <p>
-                    Your browser keeps you signed in, along with copies of some lists so pages open quickly. Signing out
-                    clears them. There's no analytics or tracking.
+                    Your browser keeps you signed in, along with copies of some lists so pages open quickly, and
+                    How2Squash keeps you signed in on your phone, in its keychain. Signing out clears them. There's no
+                    analytics or tracking.
                 </p>
                 <p>Nothing's sold, shared with anyone else, or used for advertising.</p>
             </section>
