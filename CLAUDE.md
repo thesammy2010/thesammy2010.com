@@ -21,7 +21,10 @@ squash group's pages under `/squash`. All of them talk to
   everything as TypeScript, so a new Markdown file needs adding to
   `.prettierignore`, as README.md and this file are.
 - Deploys go to GitHub Pages (`.github/workflows/gh-pages.yml`). Don't
-  deploy unless asked.
+  deploy unless asked. Pages served from outside the site, such as `/support`
+  and `/privacy` for the App Store, get their own `index.html` in the build
+  (`scripts/static-routes.sh`, run as `postbuild`) so they answer 200 rather
+  than going through `404.html`. Add a route there to give it one too.
 
 ## Squash (`/squash`)
 
