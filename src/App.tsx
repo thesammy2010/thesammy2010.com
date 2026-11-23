@@ -8,6 +8,7 @@ import Home from "./pages/Home"
 import About from "./pages/About"
 import NotFound from "./pages/NotFound"
 import Privacy from "./pages/Privacy"
+import Support from "./pages/Support"
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import GoHeavier from "./pages/GoHeavier"
@@ -91,6 +92,7 @@ const App: React.FC = () => {
                         <Route path="/squash/stats" element={<SquashStats />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/privacy" element={<Privacy />} />
+                        <Route path="/support" element={<Support />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/admin/provision" element={<ProvisionUser />} />
                         <Route path="/admin/users" element={<Users />} />
@@ -99,8 +101,7 @@ const App: React.FC = () => {
                     </Routes>
                 </BrowserRouter>
             </div>
-            <div>
-            </div>
+            <div></div>
         </GoogleOAuthProvider>
     )
 }

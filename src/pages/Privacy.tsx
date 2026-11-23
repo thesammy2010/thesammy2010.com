@@ -1,9 +1,10 @@
 import React from "react"
+import { Link } from "react-router-dom"
 
 import "./Privacy.css"
 
 const CONTACT = "contact@mail.thesammy2010.com"
-const UPDATED = "21 November 2026"
+const UPDATED = "23 November 2026"
 
 // What's kept about someone who signs in, here or in How2Squash, and how to
 // have it removed. Given to TestFlight and the App Store as How2Squash's
@@ -32,6 +33,12 @@ export default function Privacy() {
                     your request and any message with it are kept for the admins to answer.
                 </p>
                 <p>
+                    Others in the group also see your profile picture: the one from your Google account, or one you
+                    choose in the app, which is kept as a small JPEG without the photo's location or other details. They
+                    see what you write on matches too, and the admins see feedback you send and anything you report as
+                    offensive. Who you've blocked is kept so their comments and picture stay hidden from you.
+                </p>
+                <p>
                     How2Squash's Apple Watch workouts go to Apple Health on your own phone. Heart rate, calories and
                     other health data never leave your devices.
                 </p>
@@ -45,13 +52,15 @@ export default function Privacy() {
             <section className="privacy-section">
                 <h2>Deleting your account</h2>
                 <p>
-                    You can delete your account yourself once signed in, from the Delete account option on this site.
-                    That removes your sign-in details and any request to join. If you signed in with Apple, you can also
-                    stop this site using your Apple ID in your Apple Account settings, under Sign in with Apple.
+                    You can delete your account yourself once signed in, from Delete account on this site, or in
+                    How2Squash under Account. That removes your sign-in details, your pictures, what you've written on
+                    matches, feedback you've sent, anything you've reported, who you've blocked, and any request to
+                    join. If you signed in with Apple, you can also stop this site using your Apple ID in your Apple
+                    Account settings, under Sign in with Apple.
                 </p>
                 <p>
                     Matches you played in aren't deleted with it. They're part of other players' records and ratings
-                    too, so removing them would change someone else's history.
+                    too, so removing them would change someone else's history. They stay under "Deleted user".
                 </p>
             </section>
 
@@ -59,7 +68,8 @@ export default function Privacy() {
                 <h2>Anything else</h2>
                 <p>
                     To have your email address and name erased completely, to see what's kept about you, or for anything
-                    else about your data, email <a href={`mailto:${CONTACT}?subject=Privacy`}>{CONTACT}</a>.
+                    else about your data, email <a href={`mailto:${CONTACT}?subject=Privacy`}>{CONTACT}</a>. For help
+                    with How2Squash, see <Link to="/support">How2Squash support</Link>.
                 </p>
             </section>
         </div>
