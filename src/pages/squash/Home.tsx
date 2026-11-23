@@ -9,7 +9,8 @@ import {
     Rating,
     squashApi,
     useSquashAccess,
-    useSquashLoad
+    useSquashLoad,
+    counts
 } from "../../components/squash/api"
 import MatchCalendar from "../../components/squash/MatchCalendar"
 import MatchCard from "../../components/squash/MatchCard"
@@ -34,6 +35,8 @@ interface HomeData {
     // The caller's own, most recent first; empty for an admin who doesn't play
     mine: Match[]
     stats: PlayerStats | null
+    // Results waiting on the caller to confirm them
+    toConfirm: Match[]
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -166,18 +169,22 @@ export default function SquashHome() {
     }
 
     const { state, refreshing, reload } = useSquashLoad<HomeData>(async () => {
-        const [players, overall, singles, doubles, history, live, upcoming, mine, stats] = await Promise.all([
-            squashApi.players(true),
-            squashApi.ratings(),
-            squashApi.ratings("singles"),
-            squashApi.ratings("doubles"),
-            // Only for the trend line, so it's fine without one
-            meId ? squashApi.ratingHistory(meId).catch(() => []) : Promise.resolve([]),
-            squashApi.matches({ status: "in_progress" }, 1),
-            squashApi.matches({ status: "scheduled" }, 1),
-            meId ? squashApi.matches({ player_id: meId }, 1) : Promise.resolve([]),
-            meId ? squashApi.playerStats(meId) : Promise.resolve(null)
-        ])
+        const [players, overall, singles, doubles, history, live, upcoming, mine, stats, toConfirm] = await Promise.all(
+            [
+                squashApi.players(true),
+                squashApi.ratings(),
+                squashApi.ratings("singles"),
+                squashApi.ratings("doubles"),
+                // Only for the trend line, so it's fine without one
+                meId ? squashApi.ratingHistory(meId).catch(() => []) : Promise.resolve([]),
+                squashApi.matches({ status: "in_progress" }, 1),
+                squashApi.matches({ status: "scheduled" }, 1),
+                meId ? squashApi.matches({ player_id: meId }, 1) : Promise.resolve([]),
+                meId ? squashApi.playerStats(meId) : Promise.resolve(null),
+                // Missing from an API from before, so none
+                squashApi.resultsToConfirm().catch(() => [])
+            ]
+        )
         return {
             players,
             ratings: { overall, singles, doubles },
@@ -185,7 +192,8 @@ export default function SquashHome() {
             live,
             upcoming,
             mine,
-            stats
+            stats,
+            toConfirm
         }
     }, [meId])
 
@@ -204,10 +212,11 @@ export default function SquashHome() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Squash">
-            {({ players, ratings, trend, live, upcoming, mine, stats }, me) => {
+            {({ players, ratings, trend, live, upcoming, mine, stats, toConfirm }, me) => {
                 const form = me
                     ? formFor(
-                          mine.filter((m) => m.status === "completed"),
+                          // Results that count, as the API's figures
+                          mine.filter((m) => counts(m)),
                           me.id
                       )
                     : null
@@ -231,6 +240,20 @@ export default function SquashHome() {
                         </div>
 
                         <PendingRequests />
+
+                        {toConfirm.length > 0 && (
+                            <div className="squash-section">
+                                <h3 className="squash-section-title">Results to confirm</h3>
+                                <p className="squash-muted">
+                                    Scores the other side recorded. They count once you confirm them.
+                                </p>
+                                <div className="squash-match-list">
+                                    {toConfirm.map((match) => (
+                                        <MatchCard key={match.id} match={match} players={players} me={me} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {me && (
                             <div className="squash-card">

@@ -30,6 +30,11 @@ squash group's pages under `/squash`. All of them talk to
 - `components/squash/api.ts` has the types that mirror the API's
   `src/schemas/squash`, and every squash request. Keep it in step with the
   API and with How2Squash's `SharedSquash/SquashModels.swift`.
+- A completed match only counts towards records once both sides have
+  confirmed its result (`confirmation` on the match). Anything the site
+  works out itself from matches filters with `counts()` in `api.ts`, as the
+  API's own figures do. `ConfirmResult` on a match page confirms or disputes
+  it, and Home lists `resultsToConfirm`.
 - Access comes from `GET /squash/players/me` (`useSquashAccess`), not from
   roles. Squash is for players, plus admins who don't play.
 - Scoring live (`LiveScorer.tsx`) sends each rally against the match's

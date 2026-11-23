@@ -15,6 +15,6 @@ describe("MatchRecord", () => {
         const { container } = render(<MatchRecord won={1} lost={2} />)
 
         expect(container.textContent).toBe("1W 2L")
-        expect(container.querySelector(".squash-record-drawn")).toBeNull()
+        expect(screen.getByLabelText("1 won, 2 lost")).toBeInTheDocument()
     })
 })
