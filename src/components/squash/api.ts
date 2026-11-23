@@ -11,6 +11,7 @@ import { API_URL, ApiError } from "../../configs"
 import { apiFetch, getToken, subscribeToken } from "../../auth"
 
 export type MatchFormat = "singles" | "doubles"
+export type ResultConfirmation = "pending" | "confirmed" | "disputed"
 export type MatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled"
 export type Side = 1 | 2
 // The service boxes, as the server faces the front wall
@@ -104,11 +105,26 @@ export interface Match extends MatchInput {
     // box out itself.
     serving_box?: Box | null
     can_choose_box?: boolean
+    // For a completed match, whether its result counts: confirmed by both
+    // sides, pending until it is (or three days pass, confirms_at), or
+    // disputed. Missing from an API from before, when every result counted.
+    confirmation?: ResultConfirmation | null
+    // The sides still to confirm it
+    awaiting_sides?: Side[]
+    confirms_at?: string | null
+    // Whether the caller can confirm or dispute it
+    can_confirm?: boolean
     version: number
     created_by_id: string
     created_at: string
     // In the API's own format, so two compare as strings
     updated_at?: string | null
+}
+
+// Whether a match counts towards records: completed, with its result
+// confirmed by both sides, as the API counts them
+export function counts(match: Pick<Match, "status" | "confirmation">): boolean {
+    return match.status === "completed" && (match.confirmation ?? "confirmed") === "confirmed"
 }
 
 // What someone said about a match, or with `game`, one of its games
@@ -615,6 +631,16 @@ export const squashApi = {
     // to show. 409 against an old version, like a rally.
     chooseBox: (id: string, box: Box, version: number) =>
         request<Match>("PUT", `/matches/${id}/box`, "Failed to switch the box", { body: { box, version } }),
+    // Confirms the result for the caller's side, or as an admin for both
+    confirmResult: (id: string, version: number) =>
+        request<Match>("POST", `/matches/${id}/confirm`, "Failed to confirm the result", { body: { version } }),
+    // Says the result's wrong, the reason kept as a comment
+    disputeResult: (id: string, version: number, reason: string | null) =>
+        request<Match>("POST", `/matches/${id}/dispute`, "Failed to dispute the result", {
+            body: { version, reason }
+        }),
+    // Results waiting on the caller to confirm, the latest first
+    resultsToConfirm: () => request<Match[]>("GET", "/matches/to-confirm", "Failed to load the results to confirm"),
     undoRally: (id: string, version: number) =>
         request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })
 }

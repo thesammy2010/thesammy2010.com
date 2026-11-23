@@ -75,6 +75,10 @@ export default function MatchCard({ match, players, me }: Props) {
                 {match.duration_seconds != null && ` · ⏱ ${formatDuration(match.duration_seconds)}`}
                 {live && game.rallies > 0 && ` · game ${game.number} in play`}
                 {!match.hidden && match.status === "completed" && match.winning_side === null && " · drawn"}
+                {match.confirmation === "pending" && (
+                    <span className="squash-pending-result"> · ⏳ Awaiting confirmation</span>
+                )}
+                {match.confirmation === "disputed" && <span className="squash-disputed-result"> · ⚠️ Disputed</span>}
                 {match.hidden && " · score private"}
             </div>
         </Link>

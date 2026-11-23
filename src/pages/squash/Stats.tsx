@@ -10,7 +10,8 @@ import {
     Rating,
     Side,
     squashApi,
-    useSquashLoad
+    useSquashLoad,
+    counts
 } from "../../components/squash/api"
 import EloLadder from "../../components/squash/EloLadder"
 import SquashPage from "../../components/squash/SquashPage"
@@ -47,7 +48,8 @@ async function allCompleted(): Promise<Match[]> {
         const next = await squashApi.matches({ status: "completed" }, page)
         matches.push(...next)
         if (next.length < MATCHES_PAGE_SIZE) {
-            return matches.filter((m) => !m.hidden)
+            // Only results that count, as the API's own figures have them
+            return matches.filter((m) => !m.hidden && counts(m))
         }
     }
 }

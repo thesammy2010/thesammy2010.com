@@ -18,6 +18,7 @@ import MatchForm from "../../components/squash/MatchForm"
 import MergeMatches from "../../components/squash/MergeMatches"
 import MomentumChart from "../../components/squash/MomentumChart"
 import ShareResult from "../../components/squash/ShareResult"
+import ConfirmResult from "../../components/squash/ConfirmResult"
 import SquashPage from "../../components/squash/SquashPage"
 import {
     CALLS,
@@ -392,6 +393,8 @@ export default function MatchDetail() {
                         </div>
 
                         <Scoreboard match={match} players={players} />
+
+                        <ConfirmResult match={match} players={players} onMatch={applyMatch} />
 
                         {match.status === "completed" && (
                             <div className="squash-result-actions">

@@ -2500,3 +2500,37 @@ select.squash-pill,
 .stat-tile-value .squash-record * {
     -webkit-text-fill-color: currentColor;
 }
+
+/* A result waiting to be confirmed, or disputed */
+.squash-confirm {
+    border-left: 4px solid #d69e2e;
+}
+
+.squash-confirm.disputed {
+    border-left-color: #c53030;
+}
+
+.squash-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.squash-confirm-dispute {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.squash-pending-result {
+    color: var(--theme-fg-b7791f);
+    font-weight: 600;
+}
+
+.squash-disputed-result {
+    color: var(--theme-fg-b91c1c);
+    font-weight: 600;
+}
