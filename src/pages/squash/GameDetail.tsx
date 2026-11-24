@@ -12,7 +12,8 @@ import {
 } from "../../components/squash/api"
 import Comments from "../../components/squash/Comments"
 import { gameNotes, SidesTable } from "../../components/squash/Insights"
-import MomentumChart from "../../components/squash/MomentumChart"
+import RallyGraph from "../../components/squash/RallyGraph"
+import { useSimpleView } from "../../components/squash/simple"
 import SquashPage from "../../components/squash/SquashPage"
 import { CALLS, formatDuration, formatWhen, SIDES, sideNames } from "../../components/squash/format"
 
@@ -29,6 +30,7 @@ interface GameData {
 export default function GameDetail() {
     const { id = "", number = "" } = useParams()
     const gameNumber = Number(number)
+    const simple = useSimpleView()
 
     const { state, refreshing, reload } = useSquashLoad<GameData>(async () => {
         const [match, players, rallies, insights] = await Promise.all([
@@ -101,7 +103,7 @@ export default function GameDetail() {
                                     {game.duration_seconds != null && (
                                         <span
                                             className="squash-muted"
-                                            title="From the first rally to the winning point"
+                                            title="From its first rally, a let included, to the winning point"
                                         >
                                             {" "}
                                             · ⏱ {formatDuration(game.duration_seconds)}
@@ -148,83 +150,94 @@ export default function GameDetail() {
                             )}
                         </div>
 
-                        {gameRallies.length > 0 && (
-                            <div className="squash-card">
-                                <MomentumChart match={match} rallies={gameRallies} players={players} />
-                            </div>
+                        {!simple && (
+                            <RallyGraph match={match} rallies={gameRallies} players={players} linkGames={false} />
                         )}
 
-                        {gameInsights?.scored_live && (
+                        {!simple && gameInsights?.scored_live && (
                             <div className="squash-card">
                                 <h4 className="squash-card-title">Stats</h4>
                                 <SidesTable match={match} sides={gameInsights.sides} players={players} />
                             </div>
                         )}
 
-                        {gameRallies.length > 0 && (
+                        {!simple && gameRallies.length > 0 && (
                             <div className="squash-card">
                                 <h4 className="squash-card-title">Rally by rally</h4>
+                                <p className="squash-muted">
+                                    Shaded for who won the point. A rally's time runs from the one before it being
+                                    scored, so the first has none.
+                                </p>
                                 <table className="squash-table squash-rally-table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">Rally</th>
+                                            <th scope="col">#</th>
                                             {showServer && <th scope="col">Served</th>}
-                                            <th scope="col">Point to</th>
                                             <th scope="col">Call</th>
+                                            <th scope="col">Time</th>
                                             <th scope="col">Score</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {gameRallies.map((rally) => (
-                                            <tr key={rally.number}>
-                                                <th scope="row">{rally.number}</th>
-                                                {showServer && (
+                                        {gameRallies.map((rally, index) => {
+                                            const before = gameRallies[index - 1]
+                                            const seconds =
+                                                before?.created_at && rally.created_at
+                                                    ? (Date.parse(rally.created_at) - Date.parse(before.created_at)) /
+                                                      1000
+                                                    : null
+                                            const won = rally.won_by_side
+                                            return (
+                                                <tr
+                                                    key={rally.number}
+                                                    className={won === null ? "" : `squash-rally-won-${won}`}
+                                                    title={
+                                                        won === null
+                                                            ? "Replayed"
+                                                            : `Point to ${sideNames(match, won, players)}`
+                                                    }
+                                                >
+                                                    <th scope="row">{rally.number}</th>
+                                                    {showServer && (
+                                                        <td>
+                                                            {nameOf(rally.server_id) ?? "—"}
+                                                            {rally.box && (
+                                                                <span className="squash-muted"> · {rally.box} box</span>
+                                                            )}
+                                                        </td>
+                                                    )}
                                                     <td>
-                                                        {nameOf(rally.server_id) ?? "—"}
-                                                        {rally.box && (
-                                                            <span className="squash-muted"> · {rally.box} box</span>
+                                                        {rally.decision ? (
+                                                            <>
+                                                                {CALLS[rally.decision]}
+                                                                {rally.appealed_by_side !== null && (
+                                                                    <span className="squash-muted">
+                                                                        {" "}
+                                                                        ·{" "}
+                                                                        {sideNames(
+                                                                            match,
+                                                                            rally.appealed_by_side,
+                                                                            players
+                                                                        )}{" "}
+                                                                        appealed
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        ) : won === null ? (
+                                                            <span className="squash-muted">Replayed</span>
+                                                        ) : (
+                                                            ""
                                                         )}
                                                     </td>
-                                                )}
-                                                <td>
-                                                    {rally.won_by_side === null ? (
-                                                        <span className="squash-muted">Replayed</span>
-                                                    ) : (
-                                                        <>
-                                                            <span
-                                                                className={`squash-side-dot squash-side-${rally.won_by_side}`}
-                                                                aria-hidden="true"
-                                                            />{" "}
-                                                            {sideNames(match, rally.won_by_side, players)}
-                                                        </>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {rally.decision ? (
-                                                        <>
-                                                            {CALLS[rally.decision]}
-                                                            {rally.appealed_by_side !== null && (
-                                                                <span className="squash-muted">
-                                                                    {" "}
-                                                                    ·{" "}
-                                                                    {sideNames(
-                                                                        match,
-                                                                        rally.appealed_by_side,
-                                                                        players
-                                                                    )}{" "}
-                                                                    appealed
-                                                                </span>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        ""
-                                                    )}
-                                                </td>
-                                                <td className="squash-rally-score">
-                                                    {rally.side1_points}-{rally.side2_points}
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    <td className="squash-muted">
+                                                        {seconds === null ? "—" : formatDuration(Math.max(0, Math.round(seconds)))}
+                                                    </td>
+                                                    <td className="squash-rally-score">
+                                                        {rally.side1_points}-{rally.side2_points}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

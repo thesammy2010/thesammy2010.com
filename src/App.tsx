@@ -40,6 +40,7 @@ import SquashHome from "./pages/squash/Home"
 import SquashHowItWorks from "./pages/squash/HowItWorks"
 import SquashPlayers from "./pages/squash/Players"
 import PlayerDetail from "./pages/squash/PlayerDetail"
+import Rivalry from "./pages/squash/Rivalry"
 import SquashStats from "./pages/squash/Stats"
 import { GOOGLE_CLIENT_ID } from "./configs"
 
@@ -89,6 +90,7 @@ const App: React.FC = () => {
                         <Route path="/squash/matches/:id/games/:number" element={<GameDetail />} />
                         <Route path="/squash/players" element={<SquashPlayers />} />
                         <Route path="/squash/players/:id" element={<PlayerDetail />} />
+                        <Route path="/squash/players/:id/vs/:opponentId" element={<Rivalry />} />
                         <Route path="/squash/stats" element={<SquashStats />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/privacy" element={<Privacy />} />

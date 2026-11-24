@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import "../go_heavier/NavBar.css"
 import "./Squash.css"
+import { setSimpleView, useSimpleView } from "./simple"
 
 const LINKS = [
     { to: "/squash", label: "🏠 Home" },
@@ -16,6 +17,7 @@ const LINKS = [
 export default function SquashNavBar() {
     const location = useLocation()
     const [menuOpen, setMenuOpen] = useState(false)
+    const simple = useSimpleView()
 
     // A link tap should close the mobile menu rather than leave it open over
     // the page it just navigated to.
@@ -50,6 +52,16 @@ export default function SquashNavBar() {
                             {link.label}
                         </Link>
                     ))}
+                    {/* Fewer details: the scores, results and records */}
+                    <button
+                        type="button"
+                        className="squash-simple-toggle navbar-link-button"
+                        aria-pressed={simple}
+                        title="Hides the graphs, rally tables and point by point figures"
+                        onClick={() => setSimpleView(!simple)}
+                    >
+                        {simple ? "🔍 Show everything" : "✨ Simple view"}
+                    </button>
                 </nav>
             </div>
         </div>

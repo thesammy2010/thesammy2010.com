@@ -162,6 +162,8 @@ export interface Rally {
     box?: Box | null
     side1_points: number
     side2_points: number
+    // When it was scored, which times it from the one before
+    created_at?: string
 }
 
 // A rally played out, or an appeal and its call. A let has no winner and
@@ -210,6 +212,9 @@ export interface HeadToHead {
     matches_drawn: number
     games_won: number
     games_lost: number
+    // Points over every game of those matches; missing from an API from before
+    points_won?: number
+    points_lost?: number
 }
 
 export interface VenueInput {
@@ -489,6 +494,8 @@ export interface Approval {
 
 export interface MatchFilters {
     player_id?: string
+    // With player_id, only matches against this player, on the other side
+    opponent_id?: string
     status?: MatchStatus
     format?: MatchFormat
     venue_id?: string
@@ -565,8 +572,11 @@ export const squashApi = {
         request<RatingChange[]>("GET", `/players/${id}/ratings`, "Failed to load the rating history", {
             query: { format }
         }),
-    playerInsights: (id: string, format?: MatchFormat) =>
-        request<PlayerInsights>("GET", `/players/${id}/insights`, "Failed to load the insights", { query: { format } }),
+    // With an opponent, only the matches against them, for a rivalry
+    playerInsights: (id: string, format?: MatchFormat, opponentId?: string) =>
+        request<PlayerInsights>("GET", `/players/${id}/insights`, "Failed to load the insights", {
+            query: { format, opponent_id: opponentId }
+        }),
 
     venues: (includeInactive = false) =>
         request<Venue[]>("GET", "/venues", "Failed to load venues", { query: { include_inactive: includeInactive } }),
