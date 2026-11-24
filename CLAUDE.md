@@ -51,6 +51,19 @@ squash group's pages under `/squash`. All of them talk to
   `PUT .../box` (`squashApi.chooseBox`). `serve.ts` works it out locally only
   for an API from before, or a side picked here to serve first that the API
   doesn't have serving, and mirrors the app's `SquashServiceBox.swift`.
+- The site follows the app's look for stats: figures as rings
+  (`StatRings.tsx`, compared with yours on someone else's page, or the
+  opponent's on a rivalry, `/squash/players/:id/vs/:opponentId`), a
+  Momentum / Point by point switch (`RallyGraph.tsx`), the rally table
+  centred and shaded for who won each point, with each rally's time, and an
+  Overall card for the match (`MatchOverall.tsx`). Keep them in step with
+  How2Squash's `StatTiles`, `RivalryView`, `RallyChart` and
+  `MatchOverallSection`.
+- Simple view (`simple.ts`, in the menu, kept in localStorage) hides the
+  graphs, rally tables and point by point figures, and is offered once
+  after someone's first finished match (`SimpleViewOffer`). Put new
+  detailed figures behind it. Results in a word is app-only, as it needs
+  Apple Intelligence.
 
 ## Conventions
 

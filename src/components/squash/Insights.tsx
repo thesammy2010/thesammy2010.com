@@ -1,7 +1,8 @@
 import React from "react"
 
 import { GameInsights, Match, MatchInsights, Player, PlayerInsights, RallyInsights, Side } from "./api"
-import { formatDuration, SIDES, sideNames, winRate } from "./format"
+import { SIDES, sideNames, winRate } from "./format"
+import StatRings, { insightFigures } from "./StatRings"
 
 // "23/40 · 58%", or a dash with nothing to count
 function ratio(won: number, played: number, rate: number | null): string {
@@ -122,55 +123,33 @@ export function MatchInsightsCard({
     )
 }
 
-function Tile({ value, label }: { value: string; label: string }) {
-    return (
-        <div className="stat-tile">
-            <div className="stat-tile-value">{value}</div>
-            <div className="stat-tile-label">{label}</div>
-        </div>
-    )
-}
-
-/** A player's point-by-point figures over their completed matches. */
-export function PlayerInsightsCard({ insights }: { insights: PlayerInsights }) {
-    const { rallies: r } = insights
+/**
+ * A player's point-by-point figures over their completed matches, as rings,
+ * compared with `other`'s when given: yours on someone else's page, or the
+ * opponent's in a rivalry.
+ */
+export function PlayerInsightsCard({
+    insights,
+    other,
+    otherName = "You"
+}: {
+    insights: PlayerInsights
+    other?: PlayerInsights | null
+    otherName?: string
+}) {
     const deuce = insights.deuce_games_won + insights.deuce_games_lost
     if (insights.games_scored_live === 0 && deuce === 0) {
         return <p className="squash-muted">No games scored point by point yet, so nothing to break down.</p>
     }
+    const compared = other && other.games_scored_live > 0 ? other : null
     return (
         <>
             <p className="squash-muted">
                 From {insights.games_scored_live} {insights.games_scored_live === 1 ? "game" : "games"} scored point by
-                point. Deuce games count every game.
+                point; tie-breaks from every game.
+                {compared && ` Green where it beats ${otherName === "You" ? "yours" : `${otherName}'s`}, red where not.`}
             </p>
-            <div className="stats-grid squash-insights-grid">
-                <Tile value={winRate(r.rally_win_rate)} label="Rallies won" />
-                <Tile value={winRate(r.serve_win_rate)} label="On serve" />
-                <Tile value={winRate(r.receive_win_rate)} label="On receive" />
-                <Tile value={winRate(r.game_point_win_rate)} label="Game points taken" />
-                <Tile value={String(r.longest_run)} label="Longest run" />
-                <Tile value={String(insights.comebacks)} label="Comebacks" />
-                {insights.comebacks > 0 && (
-                    <Tile value={`${insights.biggest_comeback} down`} label="Biggest comeback" />
-                )}
-                <Tile value={String(insights.leads_lost)} label="Leads lost" />
-                <Tile value={`${insights.deuce_games_won}-${insights.deuce_games_lost}`} label="Deuce games" />
-                {insights.times && insights.times.games > 0 && (
-                    <>
-                        <Tile value={formatDuration(insights.times.average_seconds ?? 0)} label="Average game" />
-                        <Tile value={formatDuration(insights.times.longest_seconds ?? 0)} label="Longest game" />
-                        <Tile value={formatDuration(insights.times.total_seconds)} label="Time in games" />
-                    </>
-                )}
-                {appeals(r) > 0 && (
-                    <>
-                        <Tile value={String(r.strokes)} label="Strokes" />
-                        <Tile value={String(r.lets)} label="Lets" />
-                        <Tile value={String(r.no_lets)} label="No lets" />
-                    </>
-                )}
-            </div>
+            <StatRings figures={insightFigures(insights, compared, otherName)} />
         </>
     )
 }

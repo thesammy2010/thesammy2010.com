@@ -16,12 +16,14 @@ import { MatchInsightsCard } from "../../components/squash/Insights"
 import LiveScorer from "../../components/squash/LiveScorer"
 import MatchForm from "../../components/squash/MatchForm"
 import MergeMatches from "../../components/squash/MergeMatches"
-import MomentumChart from "../../components/squash/MomentumChart"
+import MatchOverall from "../../components/squash/MatchOverall"
+import RallyGraph from "../../components/squash/RallyGraph"
+import { useSimpleView } from "../../components/squash/simple"
+import SimpleViewOffer from "../../components/squash/SimpleViewOffer"
 import ShareResult from "../../components/squash/ShareResult"
 import ConfirmResult from "../../components/squash/ConfirmResult"
 import SquashPage from "../../components/squash/SquashPage"
 import {
-    CALLS,
     formatDuration,
     formatLabel,
     formatWhen,
@@ -85,59 +87,6 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
             </p>
             {match.hidden && <p className="squash-muted">Only its players and admins can see how this match went.</p>}
             {match.notes && <p className="squash-notes">{match.notes}</p>}
-        </div>
-    )
-}
-
-// Each rally as a dot in the colour of the side that won it, a game per row,
-// so runs of points and comebacks show at a glance. A let is a grey dash,
-// and a point given on a stroke or no let a ring. Each game links to its page.
-function PointByPoint({ match, rallies, players }: { match: Match; rallies: Rally[]; players: Player[] }) {
-    if (rallies.length === 0) {
-        return null
-    }
-    const byGame = new Map<number, Rally[]>()
-    rallies.forEach((rally) => byGame.set(rally.game, [...(byGame.get(rally.game) ?? []), rally]))
-
-    return (
-        <div className="squash-card">
-            <MomentumChart match={match} rallies={rallies} players={players} />
-            <h4 className="squash-card-title">Point by point</h4>
-            {Array.from(byGame.entries()).map(([gameNumber, gameRallies]) => {
-                const game = match.games.find((g) => g.number === gameNumber)
-                return (
-                    <div key={gameNumber} className="squash-rally-row">
-                        <span className="squash-rally-label">
-                            <Link className="squash-link" to={`/squash/matches/${match.id}/games/${gameNumber}`}>
-                                Game {gameNumber}
-                            </Link>
-                            {game && (
-                                <span className="squash-muted">
-                                    {" "}
-                                    {game.side1_points}-{game.side2_points}
-                                </span>
-                            )}
-                        </span>
-                        <span className="squash-rally-dots">
-                            {gameRallies.map((rally) => {
-                                const won = rally.won_by_side
-                                const call = rally.decision ? `, ${CALLS[rally.decision].toLowerCase()}` : ""
-                                const kind =
-                                    won === null
-                                        ? "squash-rally-let"
-                                        : `squash-side-${won}${rally.decision ? " squash-rally-call" : ""}`
-                                return (
-                                    <span
-                                        key={rally.number}
-                                        className={`squash-rally-dot ${kind}`}
-                                        title={`${rally.side1_points}-${rally.side2_points}${call}`}
-                                    />
-                                )
-                            })}
-                        </span>
-                    </div>
-                )
-            })}
         </div>
     )
 }
@@ -238,6 +187,7 @@ export default function MatchDetail() {
     const navigate = useNavigate()
     const isAdmin = useIsAdmin()
     const ownUserId = useOwnUserId()
+    const simple = useSimpleView()
     const [editing, setEditing] = useState(false)
     const [merging, setMerging] = useState(false)
     // A finished match's scores and details are only changed after asking to
@@ -393,6 +343,8 @@ export default function MatchDetail() {
                         </div>
 
                         <Scoreboard match={match} players={players} />
+
+                        <SimpleViewOffer match={match} me={me} />
 
                         <ConfirmResult match={match} players={players} onMatch={applyMatch} />
 
@@ -552,9 +504,13 @@ export default function MatchDetail() {
                                 </details>
                             )}
 
-                        <PointByPoint match={match} rallies={rallies} players={players} />
-
-                        {insights && <MatchInsightsCard match={match} insights={insights} players={players} />}
+                        {!simple && (
+                            <>
+                                <MatchOverall match={match} players={players} />
+                                <RallyGraph match={match} rallies={rallies} players={players} />
+                                {insights && <MatchInsightsCard match={match} insights={insights} players={players} />}
+                            </>
+                        )}
 
                         <Comments match={match} />
 

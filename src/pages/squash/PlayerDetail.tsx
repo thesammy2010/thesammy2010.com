@@ -23,6 +23,8 @@ import ServePreference from "../../components/squash/ServePreference"
 import SquashPage from "../../components/squash/SquashPage"
 import { winRate } from "../../components/squash/format"
 import MatchRecord from "../../components/squash/MatchRecord"
+import { useSimpleView } from "../../components/squash/simple"
+import StatRings, { recordFigures } from "../../components/squash/StatRings"
 
 interface PlayerData {
     player: Player
@@ -36,6 +38,8 @@ interface PlayerData {
 interface RatingData {
     history: RatingChange[]
     insights: PlayerInsights
+    // Yours, on someone else's page, to compare theirs with
+    mine: PlayerInsights | null
 }
 
 const FORMATS: { value: MatchFormat | ""; label: string }[] = [
@@ -55,15 +59,20 @@ function useFormat(): [MatchFormat | undefined, (format: MatchFormat | "") => vo
 
 // The rating chart and point-by-point figures, for all matches or one
 // format, loaded apart from the rest so switching format is quick.
-function RatingAndInsights({ id }: { id: string }) {
+function RatingAndInsights({ id, meId }: { id: string; meId: string | null }) {
     const [format, setFormat] = useFormat()
+    const simple = useSimpleView()
     const { state, refreshing } = useSquashLoad<RatingData>(async () => {
-        const [history, insights] = await Promise.all([
+        const [history, insights, mine] = await Promise.all([
             squashApi.ratingHistory(id, format),
-            squashApi.playerInsights(id, format)
+            squashApi.playerInsights(id, format),
+            meId && meId !== id ? squashApi.playerInsights(meId, format).catch(() => null) : Promise.resolve(null)
         ])
-        return { history, insights }
-    }, [id, format])
+        return { history, insights, mine }
+    }, [id, format, meId])
+    if (simple) {
+        return null
+    }
 
     return (
         <div className={`squash-card ${refreshing ? "squash-refreshing" : ""}`}>
@@ -93,7 +102,7 @@ function RatingAndInsights({ id }: { id: string }) {
                     ) : (
                         <p className="squash-muted">No completed {format ?? ""} matches to rate yet.</p>
                     )}
-                    <PlayerInsightsCard insights={state.data.insights} />
+                    <PlayerInsightsCard insights={state.data.insights} other={state.data.mine} />
                 </>
             )}
         </div>
@@ -139,7 +148,12 @@ function HeadToHeadCard({ id, opponents, players }: { id: string; opponents: str
                             .map((h) => (
                                 <tr key={h.opponent_id}>
                                     <th scope="row">
-                                        <Link className="squash-link" to={`/squash/players/${h.opponent_id}`}>
+                                        {/* The rivalry between the two */}
+                                        <Link
+                                            className="squash-link"
+                                            to={`/squash/players/${id}/vs/${h.opponent_id}`}
+                                            title="How they do against each other"
+                                        >
                                             {players.find((p) => p.id === h.opponent_id)?.name ?? "Unknown player"}
                                         </Link>
                                     </th>
@@ -172,53 +186,42 @@ function Tile({ value, label }: { value: React.ReactNode; label: string }) {
     )
 }
 
-// Singles and doubles side by side, as a doubles result says less about a
-// player than a singles one. Left out until they've played both.
-function RecordByFormat({ stats }: { stats: PlayerStats }) {
-    const rows: { label: string; r: PlayerRecord }[] = [
-        { label: "Singles", r: stats.singles },
-        { label: "Doubles", r: stats.doubles }
+// Their record overall, and in singles and doubles once they've played
+// both, as rings: matches, games and points won, compared with yours on
+// someone else's page.
+function Records({ stats, id, meId, name }: { stats: PlayerStats; id: string; meId: string | null; name: string }) {
+    const { state } = useSquashLoad<PlayerStats | null>(
+        async () => (meId && meId !== id ? squashApi.playerStats(meId).catch(() => null) : null),
+        [id, meId]
+    )
+    const mine = state.status === "ready" ? state.data : null
+    const rows: { label: string; r: PlayerRecord; m?: PlayerRecord }[] = [
+        { label: "Overall", r: stats, m: mine ?? undefined },
+        { label: "Singles", r: stats.singles, m: mine?.singles },
+        { label: "Doubles", r: stats.doubles, m: mine?.doubles }
     ]
-    if (rows.some(({ r }) => r.matches_played === 0)) {
+    // Singles and doubles apart only once they've played both
+    const shown = rows.filter(({ r }, index) => r.matches_played > 0 && (index === 0 || rows.slice(1).every((x) => x.r.matches_played > 0)))
+    if (stats.matches_played === 0) {
         return null
     }
     return (
         <div className="squash-card">
-            <h4 className="squash-card-title">Singles and doubles</h4>
-            <table className="squash-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th scope="col">Matches</th>
-                        <th scope="col">Won-lost</th>
-                        <th scope="col">Win rate</th>
-                        <th scope="col" className="squash-hide-narrow">
-                            Games
-                        </th>
-                        <th scope="col" className="squash-hide-narrow">
-                            Points
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows.map(({ label, r }) => (
-                        <tr key={label}>
-                            <th scope="row">{label}</th>
-                            <td>{r.matches_played}</td>
-                            <td>
-                                <MatchRecord won={r.matches_won} lost={r.matches_lost} drawn={r.matches_drawn} />
-                            </td>
-                            <td>{winRate(r.win_rate)}</td>
-                            <td className="squash-hide-narrow">
-                                {r.games_won}-{r.games_lost}
-                            </td>
-                            <td className="squash-hide-narrow">
-                                {r.points_won}-{r.points_lost}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <h4 className="squash-card-title">Record</h4>
+            {mine && (
+                <p className="squash-muted">Green where {name} does better than you, red where you do.</p>
+            )}
+            {shown.map(({ label, r, m }) => (
+                <div key={label} className="squash-record-block">
+                    {shown.length > 1 && (
+                        <h5 className="squash-record-block-title">
+                            {label}{" "}
+                            <MatchRecord won={r.matches_won} lost={r.matches_lost} drawn={r.matches_drawn} />
+                        </h5>
+                    )}
+                    <StatRings figures={recordFigures(r, m && m.matches_played > 0 ? m : undefined)} />
+                </div>
+            ))}
         </div>
     )
 }
@@ -283,13 +286,19 @@ export default function PlayerDetail() {
                             label="Record"
                         />
                         <Tile value={winRate(stats.win_rate)} label="Win rate" />
-                        <Tile value={`${stats.games_won}-${stats.games_lost}`} label="Games" />
-                        <Tile value={`${stats.points_won}-${stats.points_lost}`} label="Points" />
                     </div>
 
-                    <RecordByFormat stats={stats} />
+                    {me && me.id !== player.id && (
+                        <p className="squash-centre">
+                            <Link className="squash-button-link" to={`/squash/players/${me.id}/vs/${player.id}`}>
+                                You v {player.name}
+                            </Link>
+                        </p>
+                    )}
 
-                    <RatingAndInsights id={player.id} />
+                    <Records stats={stats} id={player.id} meId={me?.id ?? null} name={player.name} />
+
+                    <RatingAndInsights id={player.id} meId={me?.id ?? null} />
 
                     <HeadToHeadCard id={player.id} opponents={opponents} players={players} />
 
