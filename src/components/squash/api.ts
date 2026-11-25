@@ -21,6 +21,8 @@ export interface Player {
     id: string
     name: string
     user_id: string | null
+    // Only given for the caller's own player, or to an admin; null for
+    // anyone else's, so show or search by it only where an admin's looking
     email: string | null
     is_active: boolean
     // The box they like to start a hand serving from; null, or missing from
