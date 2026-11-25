@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import "./Privacy.css"
 
 const CONTACT = "contact@mail.thesammy2010.com"
-const UPDATED = "23 November 2026"
+const UPDATED = "25 November 2026"
 
 // What's kept about someone who signs in, here or in How2Squash, and how to
 // have it removed. Given to TestFlight and the App Store as How2Squash's
@@ -40,13 +40,27 @@ export default function Privacy() {
                     and picture stay hidden from you.
                 </p>
                 <p>
-                    How2Squash's Apple Watch workouts go to Apple Health on your own phone. Heart rate, calories and
-                    other health data never leave your devices.
+                    If you turn on notifications in How2Squash, the address Apple gives your phone for them is kept, with
+                    whether it's an App Store or a test build, so the app can tell you when a result needs confirming,
+                    someone disputes one or comments on a match you play in. They're sent through Apple's push
+                    notification service. Turning notifications off, signing out or deleting your account removes it.
+                </p>
+                <p>
+                    How2Squash's Apple Watch workouts go to Apple Health on your own phone. If you turn on Heart rate in
+                    games, the app reads your heart rate and calories from Health for the time each game was played, and
+                    your date of birth to work out your heart rate zones, to show you on your phone. Heart rate, calories,
+                    your date of birth and other health data never leave your devices, and aren't sent to this site.
+                    You can take the app's Health access away in your phone's Settings, under Health.
+                </p>
+                <p>
+                    With Results in a word, How2Squash sums up your games, matches and days, using Apple Intelligence on
+                    your phone where it has it. That's done on your phone alone, and what it writes is kept only there.
                 </p>
                 <p>
                     Your browser keeps you signed in, along with copies of some lists so pages open quickly, and
-                    How2Squash keeps you signed in on your phone, in its keychain. Signing out clears them. There's no
-                    analytics or tracking.
+                    How2Squash keeps you signed in on your phone, in its keychain, with copies of what it last loaded so
+                    it works without signal, your settings, and any points scored that are still to be sent. Signing out
+                    clears your sign-in and the copies. There's no analytics or tracking.
                 </p>
                 <p>Nothing's sold, shared with anyone else, or used for advertising.</p>
             </section>
@@ -56,8 +70,8 @@ export default function Privacy() {
                 <p>
                     You can delete your account yourself once signed in, from Delete account on this site, or in
                     How2Squash under Account. That removes your sign-in details, your pictures, what you've written on
-                    matches, feedback you've sent, anything you've reported, who you've blocked, and any request to
-                    join. If you signed in with Apple, you can also stop this site using your Apple ID in your Apple
+                    matches, feedback you've sent, anything you've reported, who you've blocked, any request to join,
+                    and the phones registered for your notifications. If you signed in with Apple, you can also stop this site using your Apple ID in your Apple
                     Account settings, under Sign in with Apple.
                 </p>
                 <p>
