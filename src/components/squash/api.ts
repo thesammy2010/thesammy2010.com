@@ -391,10 +391,23 @@ export interface RatingMethod {
         provisional_matches: number
         // Missing from an API that rated whole matches
         provisional_games?: number
+        // A win by this many points between equals is a standard game, and
+        // how much a favourite's win is damped; missing or 0 from an API
+        // from before margins counted
+        margin_base?: number
+        favourite_damping?: number
     }
     formulas: RatingFormula[]
     rules: string[]
-    examples: { description: string; side1: RatingExampleSide; side2: RatingExampleSide }[]
+    examples: {
+        description: string
+        // The game's score, side 1 first, and how much its margin counted;
+        // missing from an API from before
+        points?: number[]
+        multiplier?: number
+        side1: RatingExampleSide
+        side2: RatingExampleSide
+    }[]
     // Newest first
     changes: { version: number; date: string; summary: string }[]
 }
