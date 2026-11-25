@@ -62,6 +62,12 @@ squash group's pages under `/squash`. All of them talk to
 - The API gives a player's `email` only to that player and to admins, and
   null to anyone else, so anything that shows or searches by it is for
   admins only, as the players list's sign-in labels and search are.
+- Advanced tracking (`advanced_tracking`, once `tracks_box`, read with
+  `advancedTracking()` in `format.ts`) is whether a match follows the service
+  box and the referee's calls. Without it, `LiveScorer` shows neither. Send
+  both names, so an API from before still takes it.
+- Only an admin can delete a match whose result is confirmed, so Delete
+  isn't offered to anyone else.
 - Simple view (`simple.ts`, in the menu, kept in localStorage) hides the
   graphs, rally tables and point by point figures, and is offered once
   after someone's first finished match (`SimpleViewOffer`). Put new

@@ -92,8 +92,31 @@ describe("LiveScorer", () => {
         expect(screen.queryByRole("button", { name: "Change" })).not.toBeInTheDocument()
     })
 
-    it("shows and sends no box for a match that doesn't track them", async () => {
+    it("offers the referee's calls with advanced tracking", () => {
+        render(<LiveScorer match={match} rallies={[]} players={players} onMatch={jest.fn()} />)
+
+        expect(screen.getAllByRole("button", { name: "Let" })).toHaveLength(2)
+        expect(screen.getAllByRole("button", { name: "Stroke" })).toHaveLength(2)
+    })
+
+    it("offers no calls without advanced tracking", () => {
+        const untracked: Match = { ...match, advanced_tracking: false }
+        render(<LiveScorer match={untracked} rallies={[]} players={players} onMatch={jest.fn()} />)
+
+        expect(screen.queryByRole("button", { name: "Let" })).not.toBeInTheDocument()
+        expect(screen.queryByRole("button", { name: "Stroke" })).not.toBeInTheDocument()
+        expect(screen.queryByRole("button", { name: "No let" })).not.toBeInTheDocument()
+    })
+
+    it("takes tracks_box false from an API from before as no advanced tracking", () => {
         const untracked: Match = { ...match, tracks_box: false }
+        render(<LiveScorer match={untracked} rallies={[]} players={players} onMatch={jest.fn()} />)
+
+        expect(screen.queryByRole("button", { name: "Let" })).not.toBeInTheDocument()
+    })
+
+    it("shows and sends no box without advanced tracking", async () => {
+        const untracked: Match = { ...match, advanced_tracking: false }
         const addRally = jest.spyOn(squashApi, "addRally").mockResolvedValue(untracked)
         render(<LiveScorer match={untracked} rallies={[]} players={players} onMatch={jest.fn()} />)
 

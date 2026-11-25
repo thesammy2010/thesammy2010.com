@@ -305,6 +305,8 @@ export default function MatchDetail() {
                     isAdmin ||
                     (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
                     (me !== null && match.players.some((p) => p.player_id === me.id))
+                // A confirmed result only an admin can delete, as the API allows
+                const canDelete = isAdmin || match.confirmation !== "confirmed"
 
                 if (match.hidden) {
                     return (
@@ -589,7 +591,7 @@ export default function MatchDetail() {
                                         </button>
                                     </span>
                                 )}
-                                {confirming !== "delete" ? (
+                                {!canDelete ? null : confirming !== "delete" ? (
                                     <button
                                         type="button"
                                         className="squash-danger-button"

@@ -27,7 +27,7 @@ const SECTIONS: { title: string; tips: { icon: string; text: React.ReactNode }[]
             },
             {
                 icon: "✋",
-                text: "For an appeal, use Let, Stroke or No let under the side that appealed: a let replays the rally, a stroke is their point, a no let their opponent's."
+                text: "For an appeal, use Let, Stroke or No let under the side that appealed: a let replays the rally, a stroke is their point, a no let their opponent's. They and the service box only show for a match with advanced tracking, which is on unless it's turned off when the match is arranged."
             },
             { icon: "🔢", text: "Played a game without tapping each rally? Enter its score instead, below the games." },
             {

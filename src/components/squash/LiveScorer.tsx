@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import { Box, Match, Player, Rally, RallyInput, Side, squashApi, StaleMatchError } from "./api"
-import { ballFor, currentGame, SIDES, sideNames, toInput } from "./format"
+import { advancedTracking, ballFor, currentGame, SIDES, sideNames, toInput } from "./format"
 import { serviceBox } from "./serve"
 
 interface Props {
@@ -17,7 +17,8 @@ interface Props {
 // the same rally first the API refuses it and hands back the match as it now
 // stands, which is shown instead of adding the point twice. Under each side
 // are the calls on that side's appeals: a let, replayed with no point, a
-// stroke to them, or a no let, the point to their opponent.
+// stroke to them, or a no let, the point to their opponent. A match without
+// advanced tracking has neither the calls nor the box.
 //
 // Above the buttons is who's serving and from which box. Who serves first
 // comes from the API: the spin of the racket for the first game, then the
@@ -56,12 +57,13 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const boxFromApi = match.can_choose_box !== undefined && (picked === null || picked === match.serving_side)
     // Worked out here otherwise: each hand starts in the box its server
     // prefers, or else the right
+    const tracked = advancedTracking(match)
     const localBox =
-        match.tracks_box === false || boxFromApi
+        !tracked || boxFromApi
             ? null
             : serviceBox(match, rallies, picked, switched, (side) => playerOf(serverId(side))?.preferred_box ?? "right")
     const box: Box | null =
-        match.tracks_box === false ? null : boxFromApi ? match.serving_box ?? null : localBox?.box ?? null
+        !tracked ? null : boxFromApi ? match.serving_box ?? null : localBox?.box ?? null
     const canSwitchBox = boxFromApi ? match.can_choose_box === true && box !== null : localBox !== null
     const across = (side: Box): Box => (side === "right" ? "left" : "right")
     const switchBox = () => {
@@ -234,45 +236,47 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                 })}
             </div>
 
-            <div className="squash-scorer-appeals">
-                {SIDES.map((side) => {
-                    const names = sideNames(match, side, players)
-                    return (
-                        <div key={side} className="squash-appeal" role="group" aria-label={`${names} appealed`}>
-                            <span className="squash-appeal-label">Appeal by {names}</span>
-                            <div className="squash-appeal-buttons">
-                                <button
-                                    type="button"
-                                    className="squash-secondary-button"
-                                    onClick={() => score({ decision: "let", appealed_by_side: side })}
-                                    disabled={busy}
-                                    title="Replayed: no point, same server"
-                                >
-                                    Let
-                                </button>
-                                <button
-                                    type="button"
-                                    className="squash-secondary-button"
-                                    onClick={() => score({ won_by_side: side, decision: "stroke" })}
-                                    disabled={busy}
-                                    title={`Point to ${names}`}
-                                >
-                                    Stroke
-                                </button>
-                                <button
-                                    type="button"
-                                    className="squash-secondary-button"
-                                    onClick={() => score({ won_by_side: other(side), decision: "no_let" })}
-                                    disabled={busy}
-                                    title={`Point to ${sideNames(match, other(side), players)}`}
-                                >
-                                    No let
-                                </button>
+            {tracked && (
+                <div className="squash-scorer-appeals">
+                    {SIDES.map((side) => {
+                        const names = sideNames(match, side, players)
+                        return (
+                            <div key={side} className="squash-appeal" role="group" aria-label={`${names} appealed`}>
+                                <span className="squash-appeal-label">Appeal by {names}</span>
+                                <div className="squash-appeal-buttons">
+                                    <button
+                                        type="button"
+                                        className="squash-secondary-button"
+                                        onClick={() => score({ decision: "let", appealed_by_side: side })}
+                                        disabled={busy}
+                                        title="Replayed: no point, same server"
+                                    >
+                                        Let
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="squash-secondary-button"
+                                        onClick={() => score({ won_by_side: side, decision: "stroke" })}
+                                        disabled={busy}
+                                        title={`Point to ${names}`}
+                                    >
+                                        Stroke
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="squash-secondary-button"
+                                        onClick={() => score({ won_by_side: other(side), decision: "no_let" })}
+                                        disabled={busy}
+                                        title={`Point to ${sideNames(match, other(side), players)}`}
+                                    >
+                                        No let
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )
-                })}
-            </div>
+                        )
+                    })}
+                </div>
+            )}
 
             {notice && (
                 <p className="squash-notice" role="status">
