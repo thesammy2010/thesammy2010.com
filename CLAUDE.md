@@ -59,6 +59,9 @@ squash group's pages under `/squash`. All of them talk to
   Overall card for the match (`MatchOverall.tsx`). Keep them in step with
   How2Squash's `StatTiles`, `RivalryView`, `RallyChart` and
   `MatchOverallSection`.
+- The API gives a player's `email` only to that player and to admins, and
+  null to anyone else, so anything that shows or searches by it is for
+  admins only, as the players list's sign-in labels and search are.
 - Simple view (`simple.ts`, in the menu, kept in localStorage) hides the
   graphs, rally tables and point by point figures, and is offered once
   after someone's first finished match (`SimpleViewOffer`). Put new
