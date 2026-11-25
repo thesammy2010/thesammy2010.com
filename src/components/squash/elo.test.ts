@@ -1,4 +1,4 @@
-import { expectedScore, ratingChange } from "./elo"
+import { expectedScore, gameRatingChange, marginMultiplier, ratingChange } from "./elo"
 
 // The API's own description of the method, version 2
 const constants = { k: 32, scale: 400, draw: 0.5 }
@@ -22,5 +22,34 @@ describe("ratingChange", () => {
 
     it("moves the loser by the same amount the other way", () => {
         expect(ratingChange(1100, 1000, "loss", constants)).toBe(-20.5)
+    })
+})
+
+// The API's own description of the method, version 4, with margins
+const v4 = { k: 10, scale: 400, draw: 0.5, margin_base: 4, favourite_damping: 2.2 }
+
+describe("gameRatingChange", () => {
+    // The worked examples the API gives, which its own ratings code produced
+    it("matches the API's worked examples", () => {
+        expect(gameRatingChange(1000, 1100, 11, 5, v4)).toBe(8.1)
+        expect(gameRatingChange(1100, 1000, 11, 5, v4)).toBe(4.2)
+        expect(gameRatingChange(1000, 1000, 12, 10, v4)).toBe(3.4)
+        expect(gameRatingChange(1000, 1000, 11, 0, v4)).toBe(7.7)
+        // Doubles plays as each pair's average: 1200 and 1000 against 1050s
+        expect(gameRatingChange(1100, 1050, 11, 5, v4)).toBe(5.1)
+    })
+
+    it("moves the loser by the same amount the other way", () => {
+        expect(gameRatingChange(1100, 1000, 5, 11, v4)).toBe(-8.1)
+    })
+
+    it("doesn't rate a game that isn't finished", () => {
+        expect(gameRatingChange(1000, 1000, 11, 10, v4)).toBeNull()
+        expect(gameRatingChange(1000, 1000, 9, 7, v4)).toBeNull()
+    })
+
+    it("counts every game the same for an API from before margins", () => {
+        expect(marginMultiplier(2, 0, constants)).toBe(1)
+        expect(marginMultiplier(4, 0, v4)).toBeCloseTo(1)
     })
 })

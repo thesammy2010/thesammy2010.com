@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { RatingExampleSide, RatingMethod, squashApi, useSquashLoad } from "../../components/squash/api"
 import Formula from "../../components/squash/Formula"
 import SquashPage from "../../components/squash/SquashPage"
-import { expectedScore, Outcome, ratingChange } from "../../components/squash/elo"
+import { expectedScore, gameRatingChange, marginMultiplier } from "../../components/squash/elo"
 import { signed } from "../../components/squash/format"
 
 // "20 November 2026" from the API's "2026-11-20"
@@ -56,16 +56,25 @@ function ExampleSide({ side, label }: { side: RatingExampleSide; label: string }
     )
 }
 
-// Two ratings and a result in, the expected scores and how far each moves
-// out, with the API's own constants.
+// Two ratings and a game's score in; the expected share, how much the margin
+// counts and how far each moves out, with the API's own constants.
 function TryIt({ method }: { method: RatingMethod }) {
     const [yours, setYours] = useState(String(method.constants.start))
     const [theirs, setTheirs] = useState(String(method.constants.start + 100))
-    const [outcome, setOutcome] = useState<Outcome>("win")
+    const [mine, setMine] = useState("11")
+    const [others, setOthers] = useState("7")
     const you = Number(yours)
     const them = Number(theirs)
-    const valid = yours !== "" && theirs !== "" && Number.isFinite(you) && Number.isFinite(them)
-    const change = valid ? ratingChange(you, them, outcome, method.constants) : 0
+    const points = Number(mine)
+    const against = Number(others)
+    const valid = [yours, theirs, mine, others].every((value) => value !== "" && Number.isFinite(Number(value)))
+    const change = valid ? gameRatingChange(you, them, points, against, method.constants) : null
+    const margins = (method.constants.margin_base ?? 0) > 0
+    const multiplier = marginMultiplier(
+        Math.abs(points - against),
+        points > against ? you - them : them - you,
+        method.constants
+    )
 
     return (
         <div className="squash-card">
@@ -91,28 +100,47 @@ function TryIt({ method }: { method: RatingMethod }) {
                         onChange={(e) => setTheirs(e.target.value)}
                     />
                 </label>
-                <div className="squash-segmented" role="radiogroup" aria-label="Result">
-                    {/* A game always has a winner, so there's no draw */}
-                    {(["win", "loss"] as Outcome[]).map((option) => (
-                        <button
-                            key={option}
-                            type="button"
-                            role="radio"
-                            aria-checked={outcome === option}
-                            className={outcome === option ? "active" : ""}
-                            onClick={() => setOutcome(option)}
-                        >
-                            {option === "win" ? "You win the game" : "You lose the game"}
-                        </button>
-                    ))}
-                </div>
+                <label>
+                    <span>Your points</span>
+                    <input
+                        className="squash-input"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        value={mine}
+                        onChange={(e) => setMine(e.target.value)}
+                    />
+                </label>
+                <label>
+                    <span>Their points</span>
+                    <input
+                        className="squash-input"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        value={others}
+                        onChange={(e) => setOthers(e.target.value)}
+                    />
+                </label>
             </div>
-            {valid && (
+            {valid && change === null && (
+                <p className="squash-elo-try-result" role="status" aria-live="polite">
+                    Not a finished game: one side needs 11, two clear.
+                </p>
+            )}
+            {valid && change !== null && (
                 <p className="squash-elo-try-result" role="status" aria-live="polite">
                     You were expected to take{" "}
-                    <strong>{percent(expectedScore(you, them, method.constants.scale))}</strong> of the games. You'd
-                    move <Change value={change} /> to <strong>{Math.round((you + change) * 10) / 10}</strong>
-                    , and they'd move <Change value={-change} />.
+                    <strong>{percent(expectedScore(you, them, method.constants.scale))}</strong> of the games.
+                    {margins && (
+                        <>
+                            {" "}
+                            Won by {Math.abs(points - against)}, it counts <strong>{multiplier.toFixed(2)}×</strong> a
+                            standard game.
+                        </>
+                    )}{" "}
+                    You'd move <Change value={change} /> to <strong>{Math.round((you + change) * 10) / 10}</strong>, and
+                    they'd move <Change value={-change} />.
                 </p>
             )}
         </div>
@@ -149,7 +177,13 @@ export default function HowEloWorks() {
                     <div className="stats-grid">
                         {[
                             { value: method.constants.start, label: "Everyone starts on" },
-                            { value: method.constants.k, label: "Most one game moves you" },
+                            {
+                                value: method.constants.k,
+                                label:
+                                    (method.constants.margin_base ?? 0) > 0
+                                        ? `A win by ${method.constants.margin_base} moves you up to`
+                                        : "Most one game moves you"
+                            },
                             { value: method.constants.scale, label: "Points for 10 to 1 odds" },
                             {
                                 value: method.constants.provisional_games ?? method.constants.provisional_matches,
