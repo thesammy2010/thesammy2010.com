@@ -1,5 +1,6 @@
 import type { Game, Match, Player } from "./api"
 import {
+    advancedTracking,
     ballFor,
     canMerge,
     currentGame,
@@ -11,6 +12,7 @@ import {
     resultSummary,
     sideNames,
     signed,
+    toInput,
     winRate
 } from "./format"
 
@@ -256,5 +258,21 @@ describe("formatDuration", () => {
         expect(formatDuration(242)).toBe("4:02")
         expect(formatDuration(59.6)).toBe("1:00")
         expect(formatDuration(3733)).toBe("1:02:13")
+    })
+})
+
+describe("advancedTracking", () => {
+    it("is on unless the match says otherwise, under either name", () => {
+        expect(advancedTracking({})).toBe(true)
+        expect(advancedTracking({ advanced_tracking: false })).toBe(false)
+        expect(advancedTracking({ tracks_box: false })).toBe(false)
+        expect(advancedTracking({ advanced_tracking: true, tracks_box: false })).toBe(true)
+    })
+
+    it("is sent under both names, so an API from before still takes it", () => {
+        const input = toInput({ tracks_box: false } as Match)
+
+        expect(input.advanced_tracking).toBe(false)
+        expect(input.tracks_box).toBe(false)
     })
 })

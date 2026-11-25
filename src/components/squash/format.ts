@@ -4,6 +4,12 @@ import type { Game, Match, MatchInput, MatchStatus, Player, RallyDecision, Side 
 
 export const SIDES: Side[] = [1, 2]
 
+// Whether a match follows the service boxes and the referee's calls: under
+// either name the API has given it, and on for a match from before either
+export function advancedTracking(match: Pick<MatchInput, "advanced_tracking" | "tracks_box">): boolean {
+    return match.advanced_tracking ?? match.tracks_box ?? true
+}
+
 // The match as it stands, for a PUT that changes only some of it
 export function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchInput {
     return {
@@ -15,7 +21,8 @@ export function toInput(match: Match, changes: Partial<MatchInput> = {}): MatchI
         best_of: match.best_of,
         notes: match.notes,
         is_private: match.is_private,
-        tracks_box: match.tracks_box ?? true,
+        advanced_tracking: advancedTracking(match),
+        tracks_box: advancedTracking(match),
         players: match.players,
         ...changes
     }

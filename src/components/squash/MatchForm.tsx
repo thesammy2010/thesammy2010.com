@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 
 import { Match, MatchFormat, MatchInput, Player, Side, squashApi, Venue } from "./api"
-import { fromLocalInput, toLocalInput } from "./format"
+import { advancedTracking, fromLocalInput, toLocalInput } from "./format"
 import { useCanAccess } from "../../roles"
 import "../go_heavier/LocationForm.css"
 import "./Squash.css"
@@ -51,7 +51,7 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
     const canAddVenue = useCanAccess("POST", "/squash/venues")
     const [notes, setNotes] = useState(match?.notes ?? "")
     const [isPrivate, setIsPrivate] = useState(match?.is_private ?? false)
-    const [tracksBox, setTracksBox] = useState(match?.tracks_box ?? true)
+    const [tracking, setTracking] = useState(match ? advancedTracking(match) : true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -113,7 +113,8 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                 best_of: bestOf === "" ? null : Number(bestOf),
                 notes: notes.trim() || null,
                 is_private: isPrivate,
-                tracks_box: tracksBox,
+                advanced_tracking: tracking,
+                tracks_box: tracking,
                 players: slots.flatMap((side, i) =>
                     side.map((playerId) => ({ player_id: playerId, side: (i + 1) as Side }))
                 )
@@ -264,8 +265,8 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                     </label>
 
                     <label className="squash-checkbox">
-                        <input type="checkbox" checked={tracksBox} onChange={(e) => setTracksBox(e.target.checked)} />
-                        <span>Track service boxes: scoring shows which box to serve from</span>
+                        <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} />
+                        <span>Advanced tracking: scoring shows which box to serve from, and takes lets and strokes</span>
                     </label>
 
                     {error && <p className="error-message">{error}</p>}
