@@ -396,6 +396,10 @@ export interface RatingMethod {
         // from before margins counted
         margin_base?: number
         favourite_damping?: number
+        // How far a new player's rating moves instead, for their first
+        // new_games games; missing or 0 from an API from before
+        k_new?: number
+        new_games?: number
     }
     formulas: RatingFormula[]
     rules: string[]
@@ -671,7 +675,13 @@ export const squashApi = {
     // Results waiting on the caller to confirm, the latest first
     resultsToConfirm: () => request<Match[]>("GET", "/matches/to-confirm", "Failed to load the results to confirm"),
     undoRally: (id: string, version: number) =>
-        request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } })
+        request<Match>("DELETE", `/matches/${id}/rallies/last`, "Failed to undo the point", { query: { version } }),
+    // Puts right when a rally was played, such as a point undone by mistake
+    // and scored again later. It has to stay between the rallies either side.
+    setRallyTime: (id: string, game: number, number: number, createdAt: string, version: number) =>
+        request<Match>("PUT", `/matches/${id}/rallies/${game}/${number}/time`, "Couldn't correct the rally's time", {
+            body: { created_at: createdAt, version }
+        })
 }
 
 export type SquashAccess =

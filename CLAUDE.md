@@ -51,6 +51,9 @@ squash group's pages under `/squash`. All of them talk to
   `PUT .../box` (`squashApi.chooseBox`). `serve.ts` works it out locally only
   for an API from before, or a side picked here to serve first that the API
   doesn't have serving, and mirrors the app's `SquashServiceBox.swift`.
+- Rally times come from the API without a zone, in UTC: read them with
+  `apiTime` (`format.ts`), not `Date.parse`. A game's rally table has a Fix
+  button per rally (`RallyTimeFix`) for whoever can change the match.
 - The site follows the app's look for stats: figures as rings
   (`StatRings.tsx`, compared with yours on someone else's page, or the
   opponent's on a rivalry, `/squash/players/:id/vs/:opponentId`), a

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
 import { MatchFormat, Player, Rating, squashApi } from "./api"
-import { signed } from "./format"
+import { RATING_SETTLED_AFTER, signed } from "./format"
 
 // Which ladder: every match together, or one format alone
 export type Ladder = "overall" | MatchFormat
@@ -81,7 +81,8 @@ export default function EloLadder({ ratings: current, format, players, me }: Pro
                 {ladder === "overall"
                     ? "Every match counts, singles and doubles together. "
                     : `${ladder === "singles" ? "Singles" : "Doubles"} matches alone. `}
-                Everyone starts on 1000. A win moves you up and a loss down, further against someone rated higher.
+                Everyone starts on 1000. A win moves you up and a loss down, further against someone rated higher. A
+                rating shows once it's from {RATING_SETTLED_AFTER} games.
             </p>
             {inactive.size > 0 && (
                 <label className="squash-checkbox">

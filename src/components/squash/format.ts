@@ -213,6 +213,34 @@ export function signed(value: number): string {
 
 // "4-2", or "4-2-1" with draws
 /** "4:02" for a game, or "1:02:13" past the hour, from seconds. */
+// A time from the API in milliseconds. Rallies' times come without a zone,
+// in UTC, which Date.parse would otherwise read as local.
+export function apiTime(value: string): number {
+    return Date.parse(/(Z|[+-]\d{2}:?\d{2})$/.test(value) ? value : `${value}Z`)
+}
+
+// The middle gap between a game's rallies, in seconds, for a time to put back
+export function typicalRallySeconds(rallies: { created_at?: string }[]): number | null {
+    const times = rallies.flatMap((r) => (r.created_at ? [apiTime(r.created_at)] : []))
+    const gaps = times
+        .slice(1)
+        .map((t, i) => Math.round((t - times[i]) / 1000))
+        .filter((s) => s > 0)
+        .sort((a, b) => a - b)
+    return gaps.length ? gaps[Math.floor(gaps.length / 2)] : null
+}
+
+// A rating isn't shown until it's from this many games: the API leaves
+// ratings from fewer off the ladder (elo.PROVISIONAL_GAMES)
+export const RATING_SETTLED_AFTER = 20
+
+// "Rated after 10 games · 3 to go", for a rating that hasn't settled, from
+// how many games have been rated; null with none, or once it's settled
+export function ratingToGo(gamesRated: number): string | null {
+    if (gamesRated <= 0 || gamesRated >= RATING_SETTLED_AFTER) return null
+    return `Rated after ${RATING_SETTLED_AFTER} games · ${RATING_SETTLED_AFTER - gamesRated} to go`
+}
+
 export function formatDuration(seconds: number): string {
     const whole = Math.round(seconds)
     const hours = Math.floor(whole / 3600)

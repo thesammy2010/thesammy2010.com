@@ -14,6 +14,20 @@ export interface EloConstants {
     margin_base?: number
     // Damps a favourite's win and lifts an upset's
     favourite_damping?: number
+    // How far a new player's rating moves instead of k, for their first
+    // new_games games; missing or 0 from an API from before
+    k_new?: number
+    new_games?: number
+}
+
+/**
+ * The K a game between these players moves by: the average of theirs, a new
+ * player's being k_new, so both sides move alike, as the API's elo.rate.
+ */
+export function gameK(constants: EloConstants, youNew: boolean, themNew: boolean): number {
+    const kNew = constants.k_new ?? 0
+    if (kNew <= 0) return constants.k
+    return ((youNew ? kNew : constants.k) + (themNew ? kNew : constants.k)) / 2
 }
 
 export type Outcome = "win" | "draw" | "loss"
@@ -57,13 +71,14 @@ export function gameRatingChange(
     opponent: number,
     points: number,
     theirs: number,
-    constants: EloConstants
+    constants: EloConstants,
+    k: number = constants.k
 ): number | null {
     const finished = Math.max(points, theirs) >= 11 && Math.abs(points - theirs) >= 2
     if (!finished) return null
     const won = points > theirs
     const lead = won ? rating - opponent : opponent - rating
     const multiplier = marginMultiplier(Math.abs(points - theirs), lead, constants)
-    const change = constants.k * multiplier * ((won ? 1 : 0) - expectedScore(rating, opponent, constants.scale))
+    const change = k * multiplier * ((won ? 1 : 0) - expectedScore(rating, opponent, constants.scale))
     return Math.round(change * 10) / 10
 }

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Link, useParams } from "react-router-dom"
 
 import {
@@ -13,9 +13,19 @@ import {
 import Comments from "../../components/squash/Comments"
 import { gameNotes, SidesTable } from "../../components/squash/Insights"
 import RallyGraph from "../../components/squash/RallyGraph"
+import RallyTimeFix from "../../components/squash/RallyTimeFix"
 import { useSimpleView } from "../../components/squash/simple"
 import SquashPage from "../../components/squash/SquashPage"
-import { CALLS, formatDuration, formatWhen, SIDES, sideNames } from "../../components/squash/format"
+import {
+    apiTime,
+    CALLS,
+    formatDuration,
+    formatWhen,
+    SIDES,
+    sideNames,
+    typicalRallySeconds
+} from "../../components/squash/format"
+import { useIsAdmin, useOwnUserId } from "../../roles"
 
 interface GameData {
     match: Match
@@ -31,6 +41,10 @@ export default function GameDetail() {
     const { id = "", number = "" } = useParams()
     const gameNumber = Number(number)
     const simple = useSimpleView()
+    const isAdmin = useIsAdmin()
+    const ownUserId = useOwnUserId()
+    // The rally whose time is being corrected
+    const [fixing, setFixing] = useState<number | null>(null)
 
     const { state, refreshing, reload } = useSquashLoad<GameData>(async () => {
         const [match, players, rallies, insights] = await Promise.all([
@@ -44,7 +58,15 @@ export default function GameDetail() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Game">
-            {({ match, players, rallies, insights }) => {
+            {({ match, players, rallies, insights }, me) => {
+                // Its players, whoever arranged it and admins, as the API allows
+                const canChange =
+                    isAdmin ||
+                    (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
+                    (me !== null && match.players.some((p) => p.player_id === me.id))
+                // Every rally in the order played, for a rally's neighbours
+                const allOrdered = [...rallies].sort((a, b) => a.game - b.game || a.number - b.number)
+                const timeOf = (r: Rally | undefined) => (r?.created_at ? apiTime(r.created_at) : null)
                 const matchLink = `/squash/matches/${match.id}`
                 const game = match.games.find((g) => g.number === gameNumber)
                 const header = (
@@ -167,6 +189,7 @@ export default function GameDetail() {
                                 <p className="squash-muted">
                                     Shaded for who won the point. A rally's time runs from the one before it being
                                     scored, so the first has none.
+                                    {canChange && " Choose Fix on a rally to correct its time."}
                                 </p>
                                 <table className="squash-table squash-rally-table">
                                     <thead>
@@ -176,6 +199,7 @@ export default function GameDetail() {
                                             <th scope="col">Call</th>
                                             <th scope="col">Time</th>
                                             <th scope="col">Score</th>
+                                            {canChange && <th scope="col" aria-label="Correct the time" />}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -183,59 +207,105 @@ export default function GameDetail() {
                                             const before = gameRallies[index - 1]
                                             const seconds =
                                                 before?.created_at && rally.created_at
-                                                    ? (Date.parse(rally.created_at) - Date.parse(before.created_at)) /
-                                                      1000
+                                                    ? (apiTime(rally.created_at) - apiTime(before.created_at)) / 1000
                                                     : null
+                                            const at = allOrdered.findIndex(
+                                                (r) => r.game === rally.game && r.number === rally.number
+                                            )
                                             const won = rally.won_by_side
                                             return (
-                                                <tr
-                                                    key={rally.number}
-                                                    className={won === null ? "" : `squash-rally-won-${won}`}
-                                                    title={
-                                                        won === null
-                                                            ? "Replayed"
-                                                            : `Point to ${sideNames(match, won, players)}`
-                                                    }
-                                                >
-                                                    <th scope="row">{rally.number}</th>
-                                                    {showServer && (
-                                                        <td>
-                                                            {nameOf(rally.server_id) ?? "—"}
-                                                            {rally.box && (
-                                                                <span className="squash-muted"> · {rally.box} box</span>
-                                                            )}
-                                                        </td>
-                                                    )}
-                                                    <td>
-                                                        {rally.decision ? (
-                                                            <>
-                                                                {CALLS[rally.decision]}
-                                                                {rally.appealed_by_side !== null && (
+                                                <React.Fragment key={rally.number}>
+                                                    <tr
+                                                        className={won === null ? "" : `squash-rally-won-${won}`}
+                                                        title={
+                                                            won === null
+                                                                ? "Replayed"
+                                                                : `Point to ${sideNames(match, won, players)}`
+                                                        }
+                                                    >
+                                                        <th scope="row">{rally.number}</th>
+                                                        {showServer && (
+                                                            <td>
+                                                                {nameOf(rally.server_id) ?? "—"}
+                                                                {rally.box && (
                                                                     <span className="squash-muted">
                                                                         {" "}
-                                                                        ·{" "}
-                                                                        {sideNames(
-                                                                            match,
-                                                                            rally.appealed_by_side,
-                                                                            players
-                                                                        )}{" "}
-                                                                        appealed
+                                                                        · {rally.box} box
                                                                     </span>
                                                                 )}
-                                                            </>
-                                                        ) : won === null ? (
-                                                            <span className="squash-muted">Replayed</span>
-                                                        ) : (
-                                                            ""
+                                                            </td>
                                                         )}
-                                                    </td>
-                                                    <td className="squash-muted">
-                                                        {seconds === null ? "—" : formatDuration(Math.max(0, Math.round(seconds)))}
-                                                    </td>
-                                                    <td className="squash-rally-score">
-                                                        {rally.side1_points}-{rally.side2_points}
-                                                    </td>
-                                                </tr>
+                                                        <td>
+                                                            {rally.decision ? (
+                                                                <>
+                                                                    {CALLS[rally.decision]}
+                                                                    {rally.appealed_by_side !== null && (
+                                                                        <span className="squash-muted">
+                                                                            {" "}
+                                                                            ·{" "}
+                                                                            {sideNames(
+                                                                                match,
+                                                                                rally.appealed_by_side,
+                                                                                players
+                                                                            )}{" "}
+                                                                            appealed
+                                                                        </span>
+                                                                    )}
+                                                                </>
+                                                            ) : won === null ? (
+                                                                <span className="squash-muted">Replayed</span>
+                                                            ) : (
+                                                                ""
+                                                            )}
+                                                        </td>
+                                                        <td className="squash-muted">
+                                                            {seconds === null
+                                                                ? "—"
+                                                                : formatDuration(Math.max(0, Math.round(seconds)))}
+                                                        </td>
+                                                        <td className="squash-rally-score">
+                                                            {rally.side1_points}-{rally.side2_points}
+                                                        </td>
+                                                        {canChange && (
+                                                            <td>
+                                                                <button
+                                                                    type="button"
+                                                                    className="squash-text-button"
+                                                                    aria-label={`Correct rally ${rally.number}'s time`}
+                                                                    onClick={() =>
+                                                                        setFixing(
+                                                                            fixing === rally.number
+                                                                                ? null
+                                                                                : rally.number
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Fix
+                                                                </button>
+                                                            </td>
+                                                        )}
+                                                    </tr>
+                                                    {fixing === rally.number && rally.created_at && (
+                                                        <tr>
+                                                            <td
+                                                                className="squash-rally-fix-cell"
+                                                                colSpan={(showServer ? 5 : 4) + 1}
+                                                            >
+                                                                <RallyTimeFix
+                                                                    match={match}
+                                                                    rally={rally}
+                                                                    previous={timeOf(allOrdered[at - 1])}
+                                                                    next={timeOf(allOrdered[at + 1])}
+                                                                    typical={typicalRallySeconds(gameRallies)}
+                                                                    onDone={(changed) => {
+                                                                        setFixing(null)
+                                                                        if (changed) reload()
+                                                                    }}
+                                                                />
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
                                             )
                                         })}
                                     </tbody>

@@ -1,6 +1,7 @@
 import type { Game, Match, Player } from "./api"
 import {
     advancedTracking,
+    apiTime,
     ballFor,
     canMerge,
     currentGame,
@@ -8,11 +9,13 @@ import {
     gameScores,
     gameWinner,
     nextEnteredGame,
+    ratingToGo,
     record,
     resultSummary,
     sideNames,
     signed,
     toInput,
+    typicalRallySeconds,
     winRate
 } from "./format"
 
@@ -274,5 +277,38 @@ describe("advancedTracking", () => {
 
         expect(input.advanced_tracking).toBe(false)
         expect(input.tracks_box).toBe(false)
+    })
+})
+
+describe("apiTime", () => {
+    it("reads a time without a zone as UTC", () => {
+        expect(apiTime("2026-11-25T19:00:00")).toBe(Date.UTC(2026, 10, 25, 19, 0, 0))
+    })
+
+    it("keeps a zone it's given", () => {
+        expect(apiTime("2026-11-25T19:00:00+01:00")).toBe(Date.UTC(2026, 10, 25, 18, 0, 0))
+    })
+})
+
+describe("typicalRallySeconds", () => {
+    it("is the middle gap between rallies", () => {
+        const at = (s: number) => ({ created_at: new Date(Date.UTC(2026, 0, 1) + s * 1000).toISOString() })
+        // Gaps of 10, 20 and 600 seconds: an undone point scored again later
+        expect(typicalRallySeconds([at(0), at(10), at(30), at(630)])).toBe(20)
+    })
+
+    it("is null with nothing to go on", () => {
+        expect(typicalRallySeconds([{ created_at: "2026-01-01T00:00:00Z" }])).toBeNull()
+    })
+})
+
+describe("ratingToGo", () => {
+    it("counts down to a settled rating", () => {
+        expect(ratingToGo(17)).toBe("Rated after 20 games · 3 to go")
+    })
+
+    it("says nothing with no games or once settled", () => {
+        expect(ratingToGo(0)).toBeNull()
+        expect(ratingToGo(20)).toBeNull()
     })
 })

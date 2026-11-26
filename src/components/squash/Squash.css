@@ -2710,3 +2710,36 @@ select.squash-pill,
 .navbar-links .squash-simple-toggle:hover {
     background: rgba(255, 255, 255, 0.25);
 }
+
+/* Correcting a rally's time, opened under its row */
+.squash-rally-fix {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 12px;
+    padding: 8px 0;
+    text-align: center;
+}
+
+.squash-rally-fix input[type="number"] {
+    width: 5em;
+}
+
+.squash-rally-fix-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.squash-rally-table .squash-rally-fix-cell {
+    text-align: center;
+}
+
+/* Whether either player's new, under the calculator's numbers */
+.squash-elo-try-new {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 16px;
+    margin-top: 12px;
+}
