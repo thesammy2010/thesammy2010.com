@@ -21,7 +21,7 @@ import PlayerAvatar from "../../components/squash/PlayerAvatar"
 import ProfilePicture from "../../components/squash/ProfilePicture"
 import ServePreference from "../../components/squash/ServePreference"
 import SquashPage from "../../components/squash/SquashPage"
-import { winRate } from "../../components/squash/format"
+import { RATING_SETTLED_AFTER, ratingToGo, winRate } from "../../components/squash/format"
 import MatchRecord from "../../components/squash/MatchRecord"
 import { useSimpleView } from "../../components/squash/simple"
 import StatRings, { recordFigures } from "../../components/squash/StatRings"
@@ -97,8 +97,11 @@ function RatingAndInsights({ id, meId }: { id: string; meId: string | null }) {
             {state.status === "error" && <p className="error-message">{state.message}</p>}
             {state.status === "ready" && (
                 <>
-                    {state.data.history.length > 0 ? (
+                    {state.data.history.length >= RATING_SETTLED_AFTER ? (
                         <RatingChart history={state.data.history} />
+                    ) : state.data.history.length > 0 ? (
+                        // Too few games for the rating to be shown yet
+                        <p className="squash-muted">{ratingToGo(state.data.history.length)}.</p>
                     ) : (
                         <p className="squash-muted">No completed {format ?? ""} matches to rate yet.</p>
                     )}
@@ -201,22 +204,21 @@ function Records({ stats, id, meId, name }: { stats: PlayerStats; id: string; me
         { label: "Doubles", r: stats.doubles, m: mine?.doubles }
     ]
     // Singles and doubles apart only once they've played both
-    const shown = rows.filter(({ r }, index) => r.matches_played > 0 && (index === 0 || rows.slice(1).every((x) => x.r.matches_played > 0)))
+    const shown = rows.filter(
+        ({ r }, index) => r.matches_played > 0 && (index === 0 || rows.slice(1).every((x) => x.r.matches_played > 0))
+    )
     if (stats.matches_played === 0) {
         return null
     }
     return (
         <div className="squash-card">
             <h4 className="squash-card-title">Record</h4>
-            {mine && (
-                <p className="squash-muted">Green where {name} does better than you, red where you do.</p>
-            )}
+            {mine && <p className="squash-muted">Green where {name} does better than you, red where you do.</p>}
             {shown.map(({ label, r, m }) => (
                 <div key={label} className="squash-record-block">
                     {shown.length > 1 && (
                         <h5 className="squash-record-block-title">
-                            {label}{" "}
-                            <MatchRecord won={r.matches_won} lost={r.matches_lost} drawn={r.matches_drawn} />
+                            {label} <MatchRecord won={r.matches_won} lost={r.matches_lost} drawn={r.matches_drawn} />
                         </h5>
                     )}
                     <StatRings figures={recordFigures(r, m && m.matches_played > 0 ? m : undefined)} />

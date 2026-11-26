@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { RatingExampleSide, RatingMethod, squashApi, useSquashLoad } from "../../components/squash/api"
 import Formula from "../../components/squash/Formula"
 import SquashPage from "../../components/squash/SquashPage"
-import { expectedScore, gameRatingChange, marginMultiplier } from "../../components/squash/elo"
+import { expectedScore, gameK, gameRatingChange, marginMultiplier } from "../../components/squash/elo"
 import { signed } from "../../components/squash/format"
 
 // "20 November 2026" from the API's "2026-11-20"
@@ -42,7 +42,7 @@ function ExampleSide({ side, label }: { side: RatingExampleSide; label: string }
             <span className="squash-elo-example-ratings">
                 {side.ratings_before.map((before, i) => (
                     <span key={i}>
-                        {before} → <strong>{side.ratings_after[i]}</strong>
+                        {before} → <strong>{Math.round(side.ratings_after[i])}</strong>
                     </span>
                 ))}
             </span>
@@ -63,12 +63,17 @@ function TryIt({ method }: { method: RatingMethod }) {
     const [theirs, setTheirs] = useState(String(method.constants.start + 100))
     const [mine, setMine] = useState("11")
     const [others, setOthers] = useState("7")
+    // In their first games, when a rating moves faster
+    const [youNew, setYouNew] = useState(false)
+    const [themNew, setThemNew] = useState(false)
+    const newGames = (method.constants.k_new ?? 0) > 0 ? method.constants.new_games : undefined
+    const k = gameK(method.constants, youNew, themNew)
     const you = Number(yours)
     const them = Number(theirs)
     const points = Number(mine)
     const against = Number(others)
     const valid = [yours, theirs, mine, others].every((value) => value !== "" && Number.isFinite(Number(value)))
-    const change = valid ? gameRatingChange(you, them, points, against, method.constants) : null
+    const change = valid ? gameRatingChange(you, them, points, against, method.constants, k) : null
     const margins = (method.constants.margin_base ?? 0) > 0
     const multiplier = marginMultiplier(
         Math.abs(points - against),
@@ -123,6 +128,18 @@ function TryIt({ method }: { method: RatingMethod }) {
                     />
                 </label>
             </div>
+            {newGames !== undefined && (
+                <div className="squash-elo-try-new">
+                    <label className="squash-checkbox">
+                        <input type="checkbox" checked={youNew} onChange={(e) => setYouNew(e.target.checked)} />
+                        You're in your first {newGames} games
+                    </label>
+                    <label className="squash-checkbox">
+                        <input type="checkbox" checked={themNew} onChange={(e) => setThemNew(e.target.checked)} />
+                        They're in their first {newGames} games
+                    </label>
+                </div>
+            )}
             {valid && change === null && (
                 <p className="squash-elo-try-result" role="status" aria-live="polite">
                     Not a finished game: one side needs 11, two clear.
@@ -138,9 +155,15 @@ function TryIt({ method }: { method: RatingMethod }) {
                             Won by {Math.abs(points - against)}, it counts <strong>{multiplier.toFixed(2)}×</strong> a
                             standard game.
                         </>
+                    )}
+                    {k !== method.constants.k && (
+                        <>
+                            {" "}
+                            With a new player in it, it moves by K {k} rather than {method.constants.k}.
+                        </>
                     )}{" "}
-                    You'd move <Change value={change} /> to <strong>{Math.round((you + change) * 10) / 10}</strong>, and
-                    they'd move <Change value={-change} />.
+                    You'd move <Change value={change} /> to <strong>{Math.round(you + change)}</strong>, and they'd move{" "}
+                    <Change value={-change} />.
                 </p>
             )}
         </div>
@@ -184,10 +207,16 @@ export default function HowEloWorks() {
                                         ? `A win by ${method.constants.margin_base} moves you up to`
                                         : "Most one game moves you"
                             },
+                            ...((method.constants.k_new ?? 0) > 0
+                                ? [
+                                      { value: method.constants.k_new, label: "Up to, in your first games" },
+                                      { value: method.constants.new_games, label: "Games you move faster for" }
+                                  ]
+                                : []),
                             { value: method.constants.scale, label: "Points for 10 to 1 odds" },
                             {
                                 value: method.constants.provisional_games ?? method.constants.provisional_matches,
-                                label: "Games until it's settled"
+                                label: "Games until it's shown"
                             }
                         ].map((tile) => (
                             <div key={tile.label} className="stat-tile">

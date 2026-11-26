@@ -20,7 +20,7 @@ import PendingRequests from "../../components/squash/PendingRequests"
 import ServePreference from "../../components/squash/ServePreference"
 import Sparkline from "../../components/squash/Sparkline"
 import SquashPage from "../../components/squash/SquashPage"
-import { signed, winRate } from "../../components/squash/format"
+import { ratingToGo, signed, winRate } from "../../components/squash/format"
 import { changedSince, latestChange, soonestFirst } from "../../components/squash/home"
 import { formFor } from "../../components/squash/stats"
 import { ratingPoints } from "../../components/squash/ratingScale"
@@ -84,7 +84,14 @@ function Ratings({ ratings, trend, me }: { ratings: HomeData["ratings"]; trend: 
     const mine = (ladder: Ladder) => ratings[ladder].find((r) => r.player_id === me.id)
     const overall = mine("overall")
     if (!overall) {
-        return <p className="squash-muted">Not on the ladder yet. Finish a match to get a rating.</p>
+        // A rating from too few games isn't shown; the trend has one more
+        // point than games rated
+        const toGo = ratingToGo(Math.max(0, trend.length - 1))
+        return (
+            <p className="squash-muted">
+                Not on the ladder yet. {toGo ? `${toGo}.` : "Finish a match to get a rating."}
+            </p>
+        )
     }
     const recent = trend.slice(-20)
 

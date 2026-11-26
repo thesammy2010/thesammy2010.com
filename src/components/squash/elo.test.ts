@@ -1,4 +1,4 @@
-import { expectedScore, gameRatingChange, marginMultiplier, ratingChange } from "./elo"
+import { expectedScore, gameK, gameRatingChange, marginMultiplier, ratingChange } from "./elo"
 
 // The API's own description of the method, version 2
 const constants = { k: 32, scale: 400, draw: 0.5 }
@@ -51,5 +51,23 @@ describe("gameRatingChange", () => {
     it("counts every game the same for an API from before margins", () => {
         expect(marginMultiplier(2, 0, constants)).toBe(1)
         expect(marginMultiplier(4, 0, v4)).toBeCloseTo(1)
+    })
+})
+
+describe("gameK", () => {
+    const v5 = { k: 10, scale: 400, draw: 0.5, margin_base: 4, favourite_damping: 2.2, k_new: 25, new_games: 30 }
+
+    it("is the average of the players' K, a new player's being k_new", () => {
+        expect(gameK(v5, false, false)).toBe(10)
+        expect(gameK(v5, true, false)).toBe(17.5)
+        expect(gameK(v5, true, true)).toBe(25)
+    })
+
+    it("is k from an API from before new players moved faster", () => {
+        expect(gameK({ k: 10, scale: 400, draw: 0.5 }, true, true)).toBe(10)
+    })
+
+    it("matches the API's example of a new player's first game", () => {
+        expect(gameRatingChange(1000, 1000, 11, 5, v5, gameK(v5, true, false))).toBe(10.6)
     })
 })
