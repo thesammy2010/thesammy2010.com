@@ -28,6 +28,10 @@ export interface Player {
     // The box they like to start a hand serving from; null, or missing from
     // an API that hasn't got it yet, for no preference
     preferred_box?: Box | null
+    // The colours they like their side shown in (PlayerColour's names);
+    // null, or missing from an API from before, for none
+    primary_colour?: string | null
+    secondary_colour?: string | null
     // Their Google profile picture, once they've signed in with Google; null
     // otherwise, or missing from an API from before
     picture_url?: string | null
@@ -41,6 +45,8 @@ export interface PlayerPreferences {
     // What the group sees them called, in every match
     name?: string
     preferred_box?: Box | null
+    primary_colour?: string | null
+    secondary_colour?: string | null
 }
 
 export interface PlayerInput {
@@ -111,6 +117,10 @@ export interface Match extends MatchInput {
     // box out itself.
     serving_box?: Box | null
     can_choose_box?: boolean
+    // The colour each side's shown in, chosen by the API from its players'
+    // (colours.tsx). Missing from an API from before, for blue and orange
+    side1_colour?: string | null
+    side2_colour?: string | null
     // For a completed match, whether its result counts: confirmed by both
     // sides, pending until it is (or three days pass, confirms_at), or
     // disputed. Missing from an API from before, when every result counted.

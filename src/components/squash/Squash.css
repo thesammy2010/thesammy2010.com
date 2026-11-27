@@ -1,12 +1,38 @@
 /* Squash section. Builds on the Go Heavier stat tiles and nav bar layout;
    everything here is what those don't already cover. Side 1 is blue and
-   side 2 orange everywhere, so a side reads the same on every page. */
+   side 2 orange unless a match's players chose colours of their own
+   (colours.tsx), so a side reads the same on every page. */
 
 :root {
-    --squash-side-1: var(--theme-side-3b5bdb);
-    --squash-side-1-soft: var(--theme-bg-edf2ff);
-    --squash-side-2: var(--theme-side-e8590c);
-    --squash-side-2-soft: var(--theme-bg-fff4e6);
+    /* The colours a player can pick (colours.tsx); blue and orange are the
+       sides' own, and the rest mid shades that read in light and dark. */
+    --squash-colour-blue: var(--theme-side-3b5bdb);
+    --squash-colour-blue-soft: var(--theme-bg-edf2ff);
+    --squash-colour-orange: var(--theme-side-e8590c);
+    --squash-colour-orange-soft: var(--theme-bg-fff4e6);
+    --squash-colour-red: #e03131;
+    --squash-colour-green: #2f9e44;
+    --squash-colour-purple: #7950f2;
+    --squash-colour-pink: #d6336c;
+    --squash-colour-teal: #1098ad;
+    --squash-colour-yellow: #e8a100;
+    --squash-colour-red-soft: color-mix(in srgb, var(--squash-colour-red) 14%, transparent);
+    --squash-colour-green-soft: color-mix(in srgb, var(--squash-colour-green) 14%, transparent);
+    --squash-colour-purple-soft: color-mix(in srgb, var(--squash-colour-purple) 14%, transparent);
+    --squash-colour-pink-soft: color-mix(in srgb, var(--squash-colour-pink) 14%, transparent);
+    --squash-colour-teal-soft: color-mix(in srgb, var(--squash-colour-teal) 14%, transparent);
+    --squash-colour-yellow-soft: color-mix(in srgb, var(--squash-colour-yellow) 16%, transparent);
+
+    /* Side 1 and 2 as a match's players chose (MatchColours), else these */
+    --squash-side-1: var(--squash-colour-blue);
+    --squash-side-1-soft: var(--squash-colour-blue-soft);
+    --squash-side-2: var(--squash-colour-orange);
+    --squash-side-2-soft: var(--squash-colour-orange-soft);
+}
+
+/* Only carries a match's colours; adds nothing to the layout */
+.squash-match-colours {
+    display: contents;
 }
 
 .squash-navbar {
@@ -2742,4 +2768,48 @@ select.squash-pill,
     justify-content: center;
     gap: 4px 16px;
     margin-top: 12px;
+}
+
+/* Choosing your colours (ColourPreference) */
+.squash-colour-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin: 8px 0;
+}
+
+.squash-colour-label {
+    min-width: 80px;
+    font-weight: 600;
+}
+
+.squash-colour-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.squash-colour-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-shadow: 0 0 0 2px transparent;
+    cursor: pointer;
+    padding: 0;
+}
+
+.squash-colour-swatch.active {
+    box-shadow: 0 0 0 2px var(--theme-bg-ffffff, #fff), 0 0 0 4px currentColor;
+}
+
+.squash-colour-none {
+    background: transparent;
+    border-color: var(--theme-border-dee2e6, #ccc);
+    background-image: linear-gradient(135deg, transparent 45%, var(--theme-border-dee2e6, #ccc) 45%, var(--theme-border-dee2e6, #ccc) 55%, transparent 55%);
+}
+
+.squash-colour-swatch:disabled {
+    cursor: default;
 }

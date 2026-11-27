@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 
 import { Match, Player } from "./api"
 import { currentGame, formatDuration, formatLabel, formatWhen, SIDES, sideNames, STATUS_LABELS } from "./format"
+import { sideColourStyle } from "./colours"
 
 interface Props {
     match: Match
@@ -18,7 +19,11 @@ export default function MatchCard({ match, players, me }: Props) {
     const game = currentGame(match)
 
     return (
-        <Link to={`/squash/matches/${match.id}`} className={`squash-card squash-match-card ${live ? "live" : ""}`}>
+        <Link
+            to={`/squash/matches/${match.id}`}
+            className={`squash-card squash-match-card ${live ? "live" : ""}`}
+            style={sideColourStyle(match)}
+        >
             <div className="squash-card-head">
                 <span className="squash-when">
                     {formatWhen(match.played_at)}

@@ -33,6 +33,12 @@ squash group's pages under `/squash`. All of them talk to
 - `components/squash/api.ts` has the types that mirror the API's
   `src/schemas/squash`, and every squash request. Keep it in step with the
   API and with How2Squash's `SharedSquash/SquashModels.swift`.
+- A match's sides are drawn through `--squash-side-1`/`-2` (and `-soft`),
+  blue and orange unless the API gives `side1_colour`/`side2_colour` from
+  the players' choices (`ColourPreference`). Anything showing one match
+  sets them with `sideColourStyle(match)` or `withColours` from
+  `colours.tsx`; each colour's shade is `--squash-colour-<name>` in
+  `Squash.css`.
 - A completed match only counts towards records once both sides have
   confirmed its result (`confirmation` on the match). Anything the site
   works out itself from matches filters with `counts()` in `api.ts`, as the
