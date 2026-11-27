@@ -36,6 +36,7 @@ import {
     toInput
 } from "../../components/squash/format"
 import { useIsAdmin, useOwnUserId } from "../../roles"
+import { withColours } from "../../components/squash/colours"
 
 interface MatchData {
     match: Match
@@ -298,383 +299,404 @@ export default function MatchDetail() {
 
     return (
         <SquashPage state={state} refreshing={refreshing} onRefresh={reload} what="Match">
-            {({ match, players, rallies, insights }, me) => {
-                // Its players, whoever arranged it and admins can change a match, as
-                // the API allows. Whoever arranged a private one can't unless they play in it
-                const canChange =
-                    isAdmin ||
-                    (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
-                    (me !== null && match.players.some((p) => p.player_id === me.id))
-                // A confirmed result only an admin can delete, as the API allows
-                const canDelete = isAdmin || match.confirmation !== "confirmed"
+            {({ match, players, rallies, insights }, me) =>
+                withColours(
+                    match,
+                    (() => {
+                        // Its players, whoever arranged it and admins can change a match, as
+                        // the API allows. Whoever arranged a private one can't unless they play in it
+                        const canChange =
+                            isAdmin ||
+                            (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
+                            (me !== null && match.players.some((p) => p.player_id === me.id))
+                        // A confirmed result only an admin can delete, as the API allows
+                        const canDelete = isAdmin || match.confirmation !== "confirmed"
 
-                if (match.hidden) {
-                    return (
-                        <>
-                            <div className="squash-header">
-                                <Link className="squash-link" to="/squash/matches">
-                                    ← All matches
-                                </Link>
-                            </div>
-                            <Scoreboard match={match} players={players} />
-                        </>
-                    )
-                }
-                // Once it's over, the controls that change it wait behind Edit
-                const finished = match.status === "completed" || match.status === "cancelled"
-                const editable = canChange && (!finished || unlocked)
-                const lastGame = match.games[match.games.length - 1]
-                // A game typed in can be taken back as a whole; one scored
-                // live is undone a point at a time instead.
-                const canRemoveLastGame =
-                    editable && lastGame !== undefined && lastGame.rallies === 0 && match.status !== "cancelled"
-                // The point that won a best-of match can be taken back,
-                // which reopens it.
-                const canUndoWinner =
-                    editable && match.status === "completed" && lastGame !== undefined && lastGame.rallies > 0
-                // A finished match's games wait behind Edit like the rest
-                const canEditGames = editable && match.status !== "cancelled"
-                const gameBeingEdited = match.games.some((g) => g.number === editingGame) ? editingGame : null
+                        if (match.hidden) {
+                            return (
+                                <>
+                                    <div className="squash-header">
+                                        <Link className="squash-link" to="/squash/matches">
+                                            ← All matches
+                                        </Link>
+                                    </div>
+                                    <Scoreboard match={match} players={players} />
+                                </>
+                            )
+                        }
+                        // Once it's over, the controls that change it wait behind Edit
+                        const finished = match.status === "completed" || match.status === "cancelled"
+                        const editable = canChange && (!finished || unlocked)
+                        const lastGame = match.games[match.games.length - 1]
+                        // A game typed in can be taken back as a whole; one scored
+                        // live is undone a point at a time instead.
+                        const canRemoveLastGame =
+                            editable && lastGame !== undefined && lastGame.rallies === 0 && match.status !== "cancelled"
+                        // The point that won a best-of match can be taken back,
+                        // which reopens it.
+                        const canUndoWinner =
+                            editable && match.status === "completed" && lastGame !== undefined && lastGame.rallies > 0
+                        // A finished match's games wait behind Edit like the rest
+                        const canEditGames = editable && match.status !== "cancelled"
+                        const gameBeingEdited = match.games.some((g) => g.number === editingGame) ? editingGame : null
 
-                return (
-                    <>
-                        <div className="squash-header">
-                            <Link className="squash-link" to="/squash/matches">
-                                ← All matches
-                            </Link>
-                        </div>
-
-                        <Scoreboard match={match} players={players} />
-
-                        <SimpleViewOffer match={match} me={me} />
-
-                        <ConfirmResult match={match} players={players} onMatch={applyMatch} />
-
-                        {match.status === "completed" && (
-                            <div className="squash-result-actions">
-                                <ShareResult match={match} players={players} />
-                                {canUndoWinner && (
-                                    <button
-                                        type="button"
-                                        className="squash-secondary-button"
-                                        disabled={busy}
-                                        onClick={() => void undoWinner(match)}
-                                    >
-                                        ↶{" "}
-                                        {match.best_of === null
-                                            ? "Reopen and undo the last point"
-                                            : "Undo the winning point"}
-                                    </button>
-                                )}
-                                {undoError && <p className="error-message squash-inline-error">{undoError}</p>}
-                            </div>
-                        )}
-
-                        {isLive(match) && canChange && (
-                            <LiveScorer match={match} rallies={rallies} players={players} onMatch={applyMatch} />
-                        )}
-                        {isLive(match) && !canChange && (
-                            <p className="squash-muted squash-following">
-                                Following live. The score updates as it's played.
-                            </p>
-                        )}
-
-                        {match.games.length > 0 && (
-                            <div className="squash-card">
-                                <h4 className="squash-card-title">Games</h4>
-                                <p className="squash-muted">Tap a game's number for its own page.</p>
-                                <div className="squash-table-scroll">
-                                    <table className="squash-games-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Side</th>
-                                                {match.games.map((g) => (
-                                                    <th key={g.number}>
-                                                        <Link
-                                                            className="squash-game-link"
-                                                            to={`/squash/matches/${match.id}/games/${g.number}`}
-                                                            aria-label={`Game ${g.number}`}
-                                                        >
-                                                            {g.number}
-                                                        </Link>
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {SIDES.map((side) => (
-                                                <tr key={side} className={`squash-row-side-${side}`}>
-                                                    <th scope="row">
-                                                        <span
-                                                            className={`squash-side-dot squash-side-${side}`}
-                                                            aria-hidden="true"
-                                                        />{" "}
-                                                        {sideNames(match, side, players)}
-                                                    </th>
-                                                    {match.games.map((g) => (
-                                                        <td
-                                                            key={g.number}
-                                                            className={
-                                                                g.winning_side === side
-                                                                    ? "won"
-                                                                    : g.winning_side === null
-                                                                    ? "open"
-                                                                    : ""
-                                                            }
-                                                        >
-                                                            {side === 1 ? g.side1_points : g.side2_points}
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
-                                            {match.games.some((g) => g.duration_seconds != null) && (
-                                                <tr className="squash-games-time">
-                                                    <th scope="row" title="From the first rally to the winning point">
-                                                        ⏱ Time
-                                                    </th>
-                                                    {match.games.map((g) => (
-                                                        <td key={g.number} className="squash-muted">
-                                                            {g.duration_seconds != null
-                                                                ? formatDuration(g.duration_seconds)
-                                                                : "—"}
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                        return (
+                            <>
+                                <div className="squash-header">
+                                    <Link className="squash-link" to="/squash/matches">
+                                        ← All matches
+                                    </Link>
                                 </div>
-                                {canEditGames && (
-                                    <div className="squash-row-actions squash-edit-games">
-                                        <span className="squash-muted">Edit game</span>
-                                        {match.games.map((g) => (
+
+                                <Scoreboard match={match} players={players} />
+
+                                <SimpleViewOffer match={match} me={me} />
+
+                                <ConfirmResult match={match} players={players} onMatch={applyMatch} />
+
+                                {match.status === "completed" && (
+                                    <div className="squash-result-actions">
+                                        <ShareResult match={match} players={players} />
+                                        {canUndoWinner && (
                                             <button
-                                                key={g.number}
                                                 type="button"
-                                                className="squash-text-button"
-                                                aria-label={`Edit game ${g.number}`}
-                                                aria-pressed={gameBeingEdited === g.number}
+                                                className="squash-secondary-button"
                                                 disabled={busy}
-                                                onClick={() =>
-                                                    setEditingGame(gameBeingEdited === g.number ? null : g.number)
-                                                }
+                                                onClick={() => void undoWinner(match)}
                                             >
-                                                {g.number}
+                                                ↶{" "}
+                                                {match.best_of === null
+                                                    ? "Reopen and undo the last point"
+                                                    : "Undo the winning point"}
                                             </button>
-                                        ))}
+                                        )}
+                                        {undoError && <p className="error-message squash-inline-error">{undoError}</p>}
                                     </div>
                                 )}
-                                {gameBeingEdited !== null && (
-                                    <EnterGame
-                                        key={`${gameBeingEdited}-${match.version}`}
+
+                                {isLive(match) && canChange && (
+                                    <LiveScorer
                                         match={match}
-                                        number={gameBeingEdited}
-                                        onMatch={(next) => {
-                                            applyMatch(next)
-                                            setEditingGame(null)
-                                        }}
-                                        onCancel={() => setEditingGame(null)}
+                                        rallies={rallies}
+                                        players={players}
+                                        onMatch={applyMatch}
                                     />
                                 )}
-                                {canRemoveLastGame && (
-                                    <div className="squash-row-actions">
-                                        <button
-                                            type="button"
-                                            className="squash-text-button"
-                                            disabled={busy}
-                                            onClick={() =>
-                                                act(async () => applyMatch(await squashApi.deleteLastGame(match.id)))
-                                            }
-                                        >
-                                            Remove game {lastGame.number}
-                                        </button>
+                                {isLive(match) && !canChange && (
+                                    <p className="squash-muted squash-following">
+                                        Following live. The score updates as it's played.
+                                    </p>
+                                )}
+
+                                {match.games.length > 0 && (
+                                    <div className="squash-card">
+                                        <h4 className="squash-card-title">Games</h4>
+                                        <p className="squash-muted">Tap a game's number for its own page.</p>
+                                        <div className="squash-table-scroll">
+                                            <table className="squash-games-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Side</th>
+                                                        {match.games.map((g) => (
+                                                            <th key={g.number}>
+                                                                <Link
+                                                                    className="squash-game-link"
+                                                                    to={`/squash/matches/${match.id}/games/${g.number}`}
+                                                                    aria-label={`Game ${g.number}`}
+                                                                >
+                                                                    {g.number}
+                                                                </Link>
+                                                            </th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {SIDES.map((side) => (
+                                                        <tr key={side} className={`squash-row-side-${side}`}>
+                                                            <th scope="row">
+                                                                <span
+                                                                    className={`squash-side-dot squash-side-${side}`}
+                                                                    aria-hidden="true"
+                                                                />{" "}
+                                                                {sideNames(match, side, players)}
+                                                            </th>
+                                                            {match.games.map((g) => (
+                                                                <td
+                                                                    key={g.number}
+                                                                    className={
+                                                                        g.winning_side === side
+                                                                            ? "won"
+                                                                            : g.winning_side === null
+                                                                            ? "open"
+                                                                            : ""
+                                                                    }
+                                                                >
+                                                                    {side === 1 ? g.side1_points : g.side2_points}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                    {match.games.some((g) => g.duration_seconds != null) && (
+                                                        <tr className="squash-games-time">
+                                                            <th
+                                                                scope="row"
+                                                                title="From the first rally to the winning point"
+                                                            >
+                                                                ⏱ Time
+                                                            </th>
+                                                            {match.games.map((g) => (
+                                                                <td key={g.number} className="squash-muted">
+                                                                    {g.duration_seconds != null
+                                                                        ? formatDuration(g.duration_seconds)
+                                                                        : "—"}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {canEditGames && (
+                                            <div className="squash-row-actions squash-edit-games">
+                                                <span className="squash-muted">Edit game</span>
+                                                {match.games.map((g) => (
+                                                    <button
+                                                        key={g.number}
+                                                        type="button"
+                                                        className="squash-text-button"
+                                                        aria-label={`Edit game ${g.number}`}
+                                                        aria-pressed={gameBeingEdited === g.number}
+                                                        disabled={busy}
+                                                        onClick={() =>
+                                                            setEditingGame(
+                                                                gameBeingEdited === g.number ? null : g.number
+                                                            )
+                                                        }
+                                                    >
+                                                        {g.number}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {gameBeingEdited !== null && (
+                                            <EnterGame
+                                                key={`${gameBeingEdited}-${match.version}`}
+                                                match={match}
+                                                number={gameBeingEdited}
+                                                onMatch={(next) => {
+                                                    applyMatch(next)
+                                                    setEditingGame(null)
+                                                }}
+                                                onCancel={() => setEditingGame(null)}
+                                            />
+                                        )}
+                                        {canRemoveLastGame && (
+                                            <div className="squash-row-actions">
+                                                <button
+                                                    type="button"
+                                                    className="squash-text-button"
+                                                    disabled={busy}
+                                                    onClick={() =>
+                                                        act(async () =>
+                                                            applyMatch(await squashApi.deleteLastGame(match.id))
+                                                        )
+                                                    }
+                                                >
+                                                    Remove game {lastGame.number}
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
-                            </div>
-                        )}
 
-                        {editable &&
-                            match.status !== "cancelled" &&
-                            (match.status !== "completed" || match.best_of === null) && (
-                                <details className="squash-card squash-details">
-                                    <summary>Enter a game's score instead</summary>
-                                    <p className="squash-muted">
-                                        For games played without scoring them here, or to give the final score of the
-                                        game in play. The game that decides a best-of match finishes it.
-                                    </p>
-                                    <EnterGame key={`${match.version}`} match={match} onMatch={applyMatch} />
-                                </details>
-                            )}
+                                {editable &&
+                                    match.status !== "cancelled" &&
+                                    (match.status !== "completed" || match.best_of === null) && (
+                                        <details className="squash-card squash-details">
+                                            <summary>Enter a game's score instead</summary>
+                                            <p className="squash-muted">
+                                                For games played without scoring them here, or to give the final score
+                                                of the game in play. The game that decides a best-of match finishes it.
+                                            </p>
+                                            <EnterGame key={`${match.version}`} match={match} onMatch={applyMatch} />
+                                        </details>
+                                    )}
 
-                        {!simple && (
-                            <>
-                                <MatchOverall match={match} players={players} />
-                                <RallyGraph match={match} rallies={rallies} players={players} />
-                                {insights && <MatchInsightsCard match={match} insights={insights} players={players} />}
-                            </>
-                        )}
-
-                        <Comments match={match} />
-
-                        {/* Greyed out for anyone else, so they can see why they can't */}
-                        {(!canChange || (finished && !unlocked)) && (
-                            <div className="squash-card squash-manage">
-                                <button
-                                    type="button"
-                                    className="squash-secondary-button"
-                                    disabled={!canChange}
-                                    onClick={() => setUnlocked(true)}
-                                >
-                                    ✏️ Edit
-                                </button>
-                                {!canChange && (
-                                    <span className="squash-muted">
-                                        Only the match's players, whoever arranged it and admins can edit it.
-                                    </span>
+                                {!simple && (
+                                    <>
+                                        <MatchOverall match={match} players={players} />
+                                        <RallyGraph match={match} rallies={rallies} players={players} />
+                                        {insights && (
+                                            <MatchInsightsCard match={match} insights={insights} players={players} />
+                                        )}
+                                    </>
                                 )}
-                            </div>
-                        )}
 
-                        {editable && (
-                            <div className="squash-card squash-manage">
-                                <button
-                                    type="button"
-                                    className="squash-secondary-button"
-                                    onClick={() => setEditing(true)}
-                                >
-                                    Edit details
-                                </button>
-                                {match.status !== "cancelled" && !merging && (
-                                    <button
-                                        type="button"
-                                        className="squash-secondary-button"
-                                        onClick={() => setMerging(true)}
-                                    >
-                                        Merge with another match
-                                    </button>
-                                )}
-                                {isLive(match) && confirming !== "cancel" && (
-                                    <button
-                                        type="button"
-                                        className="squash-secondary-button"
-                                        onClick={() => setConfirming("cancel")}
-                                    >
-                                        Cancel match
-                                    </button>
-                                )}
-                                {confirming === "cancel" && (
-                                    <span className="squash-confirm">
-                                        Mark it cancelled?
+                                <Comments match={match} />
+
+                                {/* Greyed out for anyone else, so they can see why they can't */}
+                                {(!canChange || (finished && !unlocked)) && (
+                                    <div className="squash-card squash-manage">
                                         <button
                                             type="button"
                                             className="squash-secondary-button"
-                                            onClick={() => setConfirming(null)}
+                                            disabled={!canChange}
+                                            onClick={() => setUnlocked(true)}
                                         >
-                                            No
+                                            ✏️ Edit
                                         </button>
+                                        {!canChange && (
+                                            <span className="squash-muted">
+                                                Only the match's players, whoever arranged it and admins can edit it.
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {editable && (
+                                    <div className="squash-card squash-manage">
                                         <button
                                             type="button"
-                                            className="squash-danger-button"
-                                            disabled={busy}
-                                            onClick={() =>
-                                                act(async () =>
-                                                    applyMatch(
-                                                        await squashApi.updateMatch(
-                                                            match.id,
-                                                            toInput(match, { status: "cancelled" })
+                                            className="squash-secondary-button"
+                                            onClick={() => setEditing(true)}
+                                        >
+                                            Edit details
+                                        </button>
+                                        {match.status !== "cancelled" && !merging && (
+                                            <button
+                                                type="button"
+                                                className="squash-secondary-button"
+                                                onClick={() => setMerging(true)}
+                                            >
+                                                Merge with another match
+                                            </button>
+                                        )}
+                                        {isLive(match) && confirming !== "cancel" && (
+                                            <button
+                                                type="button"
+                                                className="squash-secondary-button"
+                                                onClick={() => setConfirming("cancel")}
+                                            >
+                                                Cancel match
+                                            </button>
+                                        )}
+                                        {confirming === "cancel" && (
+                                            <span className="squash-confirm">
+                                                Mark it cancelled?
+                                                <button
+                                                    type="button"
+                                                    className="squash-secondary-button"
+                                                    onClick={() => setConfirming(null)}
+                                                >
+                                                    No
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="squash-danger-button"
+                                                    disabled={busy}
+                                                    onClick={() =>
+                                                        act(async () =>
+                                                            applyMatch(
+                                                                await squashApi.updateMatch(
+                                                                    match.id,
+                                                                    toInput(match, { status: "cancelled" })
+                                                                )
+                                                            )
                                                         )
-                                                    )
-                                                )
-                                            }
-                                        >
-                                            Cancel it
-                                        </button>
-                                    </span>
+                                                    }
+                                                >
+                                                    Cancel it
+                                                </button>
+                                            </span>
+                                        )}
+                                        {!canDelete ? null : confirming !== "delete" ? (
+                                            <button
+                                                type="button"
+                                                className="squash-danger-button"
+                                                onClick={() => setConfirming("delete")}
+                                            >
+                                                Delete
+                                            </button>
+                                        ) : (
+                                            <span className="squash-confirm">
+                                                Delete this match and its scores for good?
+                                                <button
+                                                    type="button"
+                                                    className="squash-secondary-button"
+                                                    onClick={() => setConfirming(null)}
+                                                >
+                                                    No
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="squash-danger-button"
+                                                    disabled={busy}
+                                                    onClick={() =>
+                                                        act(async () => {
+                                                            await squashApi.deleteMatch(match.id)
+                                                            navigate("/squash/matches")
+                                                        })
+                                                    }
+                                                >
+                                                    Delete
+                                                </button>
+                                            </span>
+                                        )}
+                                        {finished && (
+                                            <button
+                                                type="button"
+                                                className="squash-secondary-button"
+                                                onClick={() => {
+                                                    setUnlocked(false)
+                                                    setEditingGame(null)
+                                                    setConfirming(null)
+                                                }}
+                                            >
+                                                Done
+                                            </button>
+                                        )}
+                                        {actionError && (
+                                            <p className="error-message squash-inline-error">{actionError}</p>
+                                        )}
+                                    </div>
                                 )}
-                                {!canDelete ? null : confirming !== "delete" ? (
-                                    <button
-                                        type="button"
-                                        className="squash-danger-button"
-                                        onClick={() => setConfirming("delete")}
-                                    >
-                                        Delete
-                                    </button>
-                                ) : (
-                                    <span className="squash-confirm">
-                                        Delete this match and its scores for good?
-                                        <button
-                                            type="button"
-                                            className="squash-secondary-button"
-                                            onClick={() => setConfirming(null)}
-                                        >
-                                            No
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="squash-danger-button"
-                                            disabled={busy}
-                                            onClick={() =>
-                                                act(async () => {
-                                                    await squashApi.deleteMatch(match.id)
-                                                    navigate("/squash/matches")
-                                                })
+
+                                {merging && (
+                                    <MergeMatches
+                                        key={match.id}
+                                        match={match}
+                                        onClose={() => setMerging(false)}
+                                        onMerged={(kept) => {
+                                            setMerging(false)
+                                            // This match may be the one that was deleted.
+                                            if (kept.id === match.id) {
+                                                applyMatch(kept)
+                                            } else {
+                                                navigate(`/squash/matches/${kept.id}`, { replace: true })
                                             }
-                                        >
-                                            Delete
-                                        </button>
-                                    </span>
-                                )}
-                                {finished && (
-                                    <button
-                                        type="button"
-                                        className="squash-secondary-button"
-                                        onClick={() => {
-                                            setUnlocked(false)
-                                            setEditingGame(null)
-                                            setConfirming(null)
                                         }}
-                                    >
-                                        Done
-                                    </button>
+                                    />
                                 )}
-                                {actionError && <p className="error-message squash-inline-error">{actionError}</p>}
-                            </div>
-                        )}
 
-                        {merging && (
-                            <MergeMatches
-                                key={match.id}
-                                match={match}
-                                onClose={() => setMerging(false)}
-                                onMerged={(kept) => {
-                                    setMerging(false)
-                                    // This match may be the one that was deleted.
-                                    if (kept.id === match.id) {
-                                        applyMatch(kept)
-                                    } else {
-                                        navigate(`/squash/matches/${kept.id}`, { replace: true })
-                                    }
-                                }}
-                            />
-                        )}
-
-                        {editing && (
-                            <MatchForm
-                                players={players.filter(
-                                    (p) => p.is_active || match.players.some((mp) => mp.player_id === p.id)
+                                {editing && (
+                                    <MatchForm
+                                        players={players.filter(
+                                            (p) => p.is_active || match.players.some((mp) => mp.player_id === p.id)
+                                        )}
+                                        me={me}
+                                        match={match}
+                                        onClose={() => setEditing(false)}
+                                        onSaved={(saved) => {
+                                            setEditing(false)
+                                            applyMatch(saved)
+                                        }}
+                                    />
                                 )}
-                                me={me}
-                                match={match}
-                                onClose={() => setEditing(false)}
-                                onSaved={(saved) => {
-                                    setEditing(false)
-                                    applyMatch(saved)
-                                }}
-                            />
-                        )}
-                    </>
+                            </>
+                        )
+                    })()
                 )
-            }}
+            }
         </SquashPage>
     )
 }

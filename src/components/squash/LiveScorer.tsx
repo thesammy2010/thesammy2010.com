@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Box, Match, Player, Rally, RallyInput, Side, squashApi, StaleMatchError } from "./api"
 import { advancedTracking, ballFor, currentGame, SIDES, sideNames, toInput } from "./format"
 import { serviceBox } from "./serve"
+import { sideColourStyle } from "./colours"
 
 interface Props {
     match: Match
@@ -143,7 +144,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     }
 
     return (
-        <section className="squash-scorer" aria-label="Live scoring">
+        <section className="squash-scorer" aria-label="Live scoring" style={sideColourStyle(match)}>
             <div className="squash-scorer-head">
                 <span>Game {game.number}</span>
                 {ball && (

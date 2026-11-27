@@ -17,6 +17,7 @@ import MatchCard from "../../components/squash/MatchCard"
 import { Ladder } from "../../components/squash/EloLadder"
 import MatchForm from "../../components/squash/MatchForm"
 import PendingRequests from "../../components/squash/PendingRequests"
+import ColourPreference from "../../components/squash/ColourPreference"
 import ServePreference from "../../components/squash/ServePreference"
 import Sparkline from "../../components/squash/Sparkline"
 import SquashPage from "../../components/squash/SquashPage"
@@ -283,6 +284,13 @@ export default function SquashHome() {
                             <ServePreference
                                 key={me.id}
                                 // The list is loaded with the page, so it's the freshest copy
+                                player={players.find((p) => p.id === me.id) ?? me}
+                                mine
+                            />
+                        )}
+                        {me && (
+                            <ColourPreference
+                                key={`colours-${me.id}`}
                                 player={players.find((p) => p.id === me.id) ?? me}
                                 mine
                             />

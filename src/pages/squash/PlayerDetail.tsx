@@ -19,6 +19,7 @@ import RatingChart from "../../components/squash/RatingChart"
 import DisplayName from "../../components/squash/DisplayName"
 import PlayerAvatar from "../../components/squash/PlayerAvatar"
 import ProfilePicture from "../../components/squash/ProfilePicture"
+import ColourPreference from "../../components/squash/ColourPreference"
 import ServePreference from "../../components/squash/ServePreference"
 import SquashPage from "../../components/squash/SquashPage"
 import { RATING_SETTLED_AFTER, ratingToGo, winRate } from "../../components/squash/format"
@@ -274,6 +275,7 @@ export default function PlayerDetail() {
                         )}
                     </div>
                     <ServePreference key={player.id} player={player} mine={player.id === me?.id} />
+                    <ColourPreference key={`colours-${player.id}`} player={player} mine={player.id === me?.id} />
 
                     <div className="stats-grid">
                         <Tile value={String(stats.matches_played)} label="Matches" />

@@ -17,6 +17,7 @@ import { formatDuration, formatWhen, SIDES, sideNames } from "../../components/s
 import { dayBound } from "../../components/squash/dateRange"
 import { GAME_LENGTHS, GameEntry, gamesOf, GameSort } from "../../components/squash/games"
 import { dedupeById } from "../../components/go_heavier/pagination"
+import { sideColourStyle } from "../../components/squash/colours"
 
 interface GamesData {
     // Everyone, inactive included, so older games still get names
@@ -35,7 +36,11 @@ const FORMATS: { value: MatchFormat | ""; label: string }[] = [
 function GameCard({ entry, players, me }: { entry: GameEntry; players: Player[]; me: Player | null }) {
     const { match, game, deuce } = entry
     return (
-        <Link to={`/squash/matches/${match.id}/games/${game.number}`} className="squash-card squash-match-card">
+        <Link
+            to={`/squash/matches/${match.id}/games/${game.number}`}
+            className="squash-card squash-match-card"
+            style={sideColourStyle(match)}
+        >
             <div className="squash-card-head">
                 <span className="squash-when">
                     {formatWhen(match.played_at)}
