@@ -35,7 +35,7 @@ function match(games: Game[], overrides: Partial<Match> = {}): Match {
         points_to: 11,
         best_of: 5,
         notes: null,
-        is_private: false,
+        is_unranked: false,
         hidden: false,
         players: [
             { player_id: "a", side: 1 },

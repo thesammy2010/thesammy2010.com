@@ -29,7 +29,7 @@ export default function MatchCard({ match, players, me }: Props) {
                     {formatWhen(match.played_at)}
                     {match.venue && <span className="squash-muted"> · {match.venue}</span>}
                 </span>
-                {match.is_private && <span className="squash-private-badge">🔒 Private</span>}
+                {match.is_unranked && <span className="squash-unranked-badge">Unranked</span>}
                 <span className={`squash-status squash-status-${match.status}`}>{STATUS_LABELS[match.status]}</span>
             </div>
 
@@ -84,7 +84,6 @@ export default function MatchCard({ match, players, me }: Props) {
                     <span className="squash-pending-result"> · ⏳ Awaiting confirmation</span>
                 )}
                 {match.confirmation === "disputed" && <span className="squash-disputed-result"> · ⚠️ Disputed</span>}
-                {match.hidden && " · score private"}
             </div>
         </Link>
     )

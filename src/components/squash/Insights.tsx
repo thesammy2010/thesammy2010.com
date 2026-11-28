@@ -147,7 +147,8 @@ export function PlayerInsightsCard({
             <p className="squash-muted">
                 From {insights.games_scored_live} {insights.games_scored_live === 1 ? "game" : "games"} scored point by
                 point; tie-breaks from every game.
-                {compared && ` Green where it beats ${otherName === "You" ? "yours" : `${otherName}'s`}, red where not.`}
+                {compared &&
+                    ` Green where it beats ${otherName === "You" ? "yours" : `${otherName}'s`}, red where not.`}
             </p>
             <StatRings figures={insightFigures(insights, compared, otherName)} />
         </>

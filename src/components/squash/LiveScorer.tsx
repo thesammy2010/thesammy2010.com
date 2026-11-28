@@ -36,8 +36,9 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const [busy, setBusy] = useState(false)
     // Chosen here as a game starts, over the side the API gives
     const [firstServer, setFirstServer] = useState<{ game: number; side: Side } | null>(null)
-    // The partner serving for each side in doubles, while it's not the first
-    const [partners, setPartners] = useState<Partial<Record<Side, string>>>({})
+    // In doubles, a partner said here to be serving instead of the one the
+    // API has, until the score moves on
+    const [chosenServer, setChosenServer] = useState<{ version: number; id: string } | null>(null)
     // Hands whose server chose the other box to start
     const [switched, setSwitched] = useState<Set<string>>(new Set())
     const [notice, setNotice] = useState<string | null>(null)
@@ -50,7 +51,18 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
     const picked = atGameStart && firstServer?.game === game.number ? firstServer.side : null
     const serving = picked ?? match.serving_side
     const onSide = (side: Side) => match.players.filter((p) => p.side === side).map((p) => p.player_id)
-    const serverId = (side: Side) => partners[side] ?? onSide(side)[0] ?? null
+    // Who serves for a side: one chosen here, else the API's (which in
+    // doubles goes round all four in turn), else the side's first player
+    const serverId = (side: Side) => {
+        const ids = onSide(side)
+        if (chosenServer?.version === match.version && ids.includes(chosenServer.id)) {
+            return chosenServer.id
+        }
+        if (match.serving_player_id && ids.includes(match.serving_player_id)) {
+            return match.serving_player_id
+        }
+        return ids[0] ?? null
+    }
     const playerOf = (playerId: string | null) => players.find((p) => p.id === playerId)
     const nameOf = (playerId: string | null) => playerOf(playerId)?.name ?? "Unknown player"
     // The API's box, unless it's from before it gave one, or the side
@@ -63,8 +75,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
         !tracked || boxFromApi
             ? null
             : serviceBox(match, rallies, picked, switched, (side) => playerOf(serverId(side))?.preferred_box ?? "right")
-    const box: Box | null =
-        !tracked ? null : boxFromApi ? match.serving_box ?? null : localBox?.box ?? null
+    const box: Box | null = !tracked ? null : boxFromApi ? match.serving_box ?? null : localBox?.box ?? null
     const canSwitchBox = boxFromApi ? match.can_choose_box === true && box !== null : localBox !== null
     const across = (side: Box): Box => (side === "right" ? "left" : "right")
     const switchBox = () => {
@@ -194,7 +205,7 @@ export default function LiveScorer({ match, rallies, players, onMatch }: Props) 
                                 const ids = onSide(serving)
                                 const current = serverId(serving)
                                 const next = ids[(ids.indexOf(current ?? "") + 1) % ids.length]
-                                setPartners({ ...partners, [serving]: next })
+                                setChosenServer({ version: match.version, id: next })
                             }}
                         >
                             Other partner serving

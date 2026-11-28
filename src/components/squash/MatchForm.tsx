@@ -50,7 +50,7 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
     const [newVenue, setNewVenue] = useState("")
     const canAddVenue = useCanAccess("POST", "/squash/venues")
     const [notes, setNotes] = useState(match?.notes ?? "")
-    const [isPrivate, setIsPrivate] = useState(match?.is_private ?? false)
+    const [isUnranked, setIsUnranked] = useState(match?.is_unranked ?? match?.is_private ?? false)
     const [tracking, setTracking] = useState(match ? advancedTracking(match) : true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -112,7 +112,8 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                 points_to: Number(pointsTo),
                 best_of: bestOf === "" ? null : Number(bestOf),
                 notes: notes.trim() || null,
-                is_private: isPrivate,
+                is_unranked: isUnranked,
+                is_private: isUnranked,
                 advanced_tracking: tracking,
                 tracks_box: tracking,
                 players: slots.flatMap((side, i) =>
@@ -260,13 +261,15 @@ export default function MatchForm({ players, me, match, defaultFormat, onClose, 
                     </label>
 
                     <label className="squash-checkbox">
-                        <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-                        <span>Private: only its players and admins see the score</span>
+                        <input type="checkbox" checked={isUnranked} onChange={(e) => setIsUnranked(e.target.checked)} />
+                        <span>Unranked: everyone sees it, but it doesn't count towards the ratings</span>
                     </label>
 
                     <label className="squash-checkbox">
                         <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} />
-                        <span>Advanced tracking: scoring shows which box to serve from, and takes lets and strokes</span>
+                        <span>
+                            Advanced tracking: scoring shows which box to serve from, and takes lets and strokes
+                        </span>
                     </label>
 
                     {error && <p className="error-message">{error}</p>}

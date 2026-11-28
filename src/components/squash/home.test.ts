@@ -12,7 +12,7 @@ function match(overrides: Partial<Match>): Match {
         points_to: 11,
         best_of: null,
         notes: null,
-        is_private: false,
+        is_unranked: false,
         hidden: false,
         players: [
             { player_id: "a", side: 1 },
@@ -68,7 +68,7 @@ describe("calendarMark", () => {
     // A private match someone isn't in gives no result, rather than a draw
     it("shows a private match's result to nobody it's hidden from", () => {
         const hidden = match({
-            is_private: true,
+            is_unranked: true,
             hidden: true,
             winning_side: null,
             side1_games: null,

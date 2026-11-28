@@ -82,8 +82,11 @@ export interface MatchInput {
     points_to: number
     best_of: number | null
     notes: string | null
-    // Only admins and its players see how it went
-    is_private: boolean
+    // Left out of the ratings, though everyone sees it and it counts in stats
+    is_unranked: boolean
+    // The same, as the API named it when only a match's players saw how a
+    // "private" one went; sent too, as an API from before reads it
+    is_private?: boolean
     // Advanced tracking: whether the scorers follow which service box each
     // serve is from, and the referee's calls (lets, strokes and no lets).
     // Missing from an API from before, which called it tracks_box and only
@@ -98,8 +101,8 @@ export interface Match extends MatchInput {
     id: string
     // The venue's name, for showing
     venue: string | null
-    // A private match the caller isn't in: only who played and when are
-    // given, with no venue, notes or games, and null games won and winner
+    // From when a match could be private and the caller not in it: only who
+    // played and when were given. Always false from the API now
     hidden: boolean
     games: Game[]
     side1_games: number | null
@@ -108,6 +111,9 @@ export interface Match extends MatchInput {
     // Its timed games' seconds together; null with none timed
     duration_seconds?: number | null
     serving_side: Side | null
+    // Who serves next while it's played; in doubles it goes round all four
+    // in turn. Missing from an API from before
+    serving_player_id?: string | null
     // Who serves first, from the racket the API spins as the match is
     // arranged. Null for a match arranged before then, or when hidden
     first_serving_side?: Side | null
@@ -254,6 +260,20 @@ export interface Rating {
     // Each finished game moves a rating; missing from an API from before
     games_rated?: number
     // Too few games for the rating to mean much yet
+    provisional: boolean
+    peak: number
+    last_change: number
+}
+
+// A doubles pair's place on their own ladder, rated as one from the games
+// they've played together
+export interface PartnershipRating {
+    rank: number
+    player_ids: string[]
+    names: string[]
+    rating: number
+    matches_rated: number
+    games_rated: number
     provisional: boolean
     peak: number
     last_change: number
@@ -598,6 +618,11 @@ export const squashApi = {
     ratings: (format?: MatchFormat, includeInactive = false) =>
         request<Rating[]>("GET", "/ratings", "Failed to load the ratings", {
             query: { format, include_inactive: includeInactive }
+        }),
+    // Highest rated first
+    partnershipRatings: (includeInactive = false, includeProvisional = false) =>
+        request<PartnershipRating[]>("GET", "/ratings/partnerships", "Failed to load the partnerships", {
+            query: { include_inactive: includeInactive, include_provisional: includeProvisional }
         }),
     ratingMethod: () => request<RatingMethod>("GET", "/ratings/method", "Failed to load how ratings work"),
     // Oldest first

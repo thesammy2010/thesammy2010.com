@@ -58,7 +58,7 @@ function Scoreboard({ match, players }: { match: Match; players: Player[] }) {
                     {formatWhen(match.played_at)}
                     {match.venue && <span className="squash-muted"> · {match.venue}</span>}
                 </span>
-                {match.is_private && <span className="squash-private-badge">🔒 Private</span>}
+                {match.is_unranked && <span className="squash-unranked-badge">Unranked</span>}
                 <span className={`squash-status squash-status-${match.status}`}>{STATUS_LABELS[match.status]}</span>
             </div>
             <div className="squash-scoreboard-sides">
@@ -307,7 +307,7 @@ export default function MatchDetail() {
                         // the API allows. Whoever arranged a private one can't unless they play in it
                         const canChange =
                             isAdmin ||
-                            (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
+                            (ownUserId !== null && match.created_by_id === ownUserId) ||
                             (me !== null && match.players.some((p) => p.player_id === me.id))
                         // A confirmed result only an admin can delete, as the API allows
                         const canDelete = isAdmin || match.confirmation !== "confirmed"

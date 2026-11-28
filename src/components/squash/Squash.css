@@ -1921,7 +1921,7 @@ select.squash-pill,
 }
 
 /* A private match: only its players and admins see the score */
-.squash-private-badge {
+.squash-unranked-badge {
     margin-left: auto;
     font-size: 0.75rem;
     font-weight: 600;

@@ -22,7 +22,7 @@ function match(games: Game[], overrides: Partial<Match> = {}): Match {
         points_to: 11,
         best_of: 5,
         notes: null,
-        is_private: false,
+        is_unranked: false,
         hidden: false,
         players: [
             { player_id: "a", side: 1 },
@@ -84,7 +84,7 @@ describe("formFor", () => {
     })
 
     it("skips private matches hidden from the viewer, rather than counting a draw", () => {
-        const hidden = match([], { is_private: true, hidden: true, winning_side: null })
+        const hidden = match([], { is_unranked: true, hidden: true, winning_side: null })
         expect(formFor([hidden, match([game(1, 11, 5)])], "a").results.map((r) => r.result)).toEqual(["W"])
     })
 
