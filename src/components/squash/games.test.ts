@@ -16,7 +16,7 @@ function match(id: string, games: Game[], overrides: Partial<Match> = {}): Match
         points_to: 11,
         best_of: null,
         notes: null,
-        is_private: false,
+        is_unranked: false,
         hidden: false,
         players: [],
         games,
@@ -53,7 +53,7 @@ describe("gamesOf", () => {
 
     it("leaves out cancelled matches and hidden ones' missing games", () => {
         const cancelled = match("c", [game(1, 11, 2)], { status: "cancelled" })
-        const hidden = match("h", [], { is_private: true, hidden: true })
+        const hidden = match("h", [], { is_unranked: true, hidden: true })
         expect(gamesOf([cancelled, hidden, older]).map((e) => e.match.id)).toEqual(["old"])
     })
 

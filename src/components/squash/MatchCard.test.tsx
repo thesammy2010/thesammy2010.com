@@ -21,7 +21,7 @@ function match(overrides: Partial<Match> = {}): Match {
         points_to: 11,
         best_of: 1,
         notes: null,
-        is_private: false,
+        is_unranked: false,
         hidden: false,
         players: [
             { player_id: "a", side: 1 },
@@ -48,39 +48,17 @@ function renderCard(m: Match) {
 }
 
 describe("MatchCard", () => {
-    it("shows the result of a match that isn't private", () => {
+    it("shows the result of a ranked match without a badge", () => {
         renderCard(match())
 
         expect(screen.getByText("🏆 Won")).toBeInTheDocument()
-        expect(screen.queryByText("🔒 Private")).not.toBeInTheDocument()
+        expect(screen.queryByText("Unranked")).not.toBeInTheDocument()
     })
 
-    it("marks a private match its viewer can see", () => {
-        renderCard(match({ is_private: true }))
+    it("marks an unranked match, still with its result", () => {
+        renderCard(match({ is_unranked: true }))
 
-        expect(screen.getByText("🔒 Private")).toBeInTheDocument()
+        expect(screen.getByText("Unranked")).toBeInTheDocument()
         expect(screen.getByText("🏆 Won")).toBeInTheDocument()
-    })
-
-    it("shows only who played in a private match hidden from its viewer", () => {
-        renderCard(
-            match({
-                is_private: true,
-                hidden: true,
-                venue: null,
-                venue_id: null,
-                games: [],
-                side1_games: null,
-                side2_games: null,
-                winning_side: null
-            })
-        )
-
-        expect(screen.getByText("Alex")).toBeInTheDocument()
-        expect(screen.getByText("Sam")).toBeInTheDocument()
-        expect(screen.getByText("🔒 Private")).toBeInTheDocument()
-        expect(screen.queryByText("🏆 Won")).not.toBeInTheDocument()
-        expect(screen.getByText(/score private/)).toBeInTheDocument()
-        expect(screen.queryByText(/drawn/)).not.toBeInTheDocument()
     })
 })

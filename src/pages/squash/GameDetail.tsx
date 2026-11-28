@@ -66,7 +66,7 @@ export default function GameDetail() {
                         // Its players, whoever arranged it and admins, as the API allows
                         const canChange =
                             isAdmin ||
-                            (!match.is_private && ownUserId !== null && match.created_by_id === ownUserId) ||
+                            (ownUserId !== null && match.created_by_id === ownUserId) ||
                             (me !== null && match.players.some((p) => p.player_id === me.id))
                         // Every rally in the order played, for a rally's neighbours
                         const allOrdered = [...rallies].sort((a, b) => a.game - b.game || a.number - b.number)

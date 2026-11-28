@@ -14,6 +14,7 @@ import {
     counts
 } from "../../components/squash/api"
 import EloLadder from "../../components/squash/EloLadder"
+import PartnershipLadder from "../../components/squash/PartnershipLadder"
 import SquashPage from "../../components/squash/SquashPage"
 import { formatDuration, formatWhen, sideNames } from "../../components/squash/format"
 import MatchRecord from "../../components/squash/MatchRecord"
@@ -177,7 +178,7 @@ export default function Stats() {
                             b.form.results.length - a.form.results.length || a.player.name.localeCompare(b.player.name)
                     )
                 const topRivalries = rivalries(matches).slice(0, PAIRS_SHOWN)
-                const topPartnerships = partnerships(matches).slice(0, PAIRS_SHOWN)
+                const topPartnerships = partnerships(matches)
 
                 return (
                     <>
@@ -197,6 +198,8 @@ export default function Stats() {
                         </div>
 
                         <EloLadder ratings={ratings[format]} format={format} players={players} me={me} />
+
+                        {format === "doubles" && <PartnershipLadder players={players} me={me} />}
 
                         <div className="squash-card">
                             <h4 className="squash-card-title">Form</h4>
@@ -343,7 +346,7 @@ export default function Stats() {
                         {topPartnerships.length > 0 && (
                             <div className="squash-card">
                                 <h4 className="squash-card-title">Partnerships</h4>
-                                <p className="squash-muted">The pairs who've played together most.</p>
+                                <p className="squash-muted">Every pair who's played together, the most played first.</p>
                                 <table className="squash-table">
                                     <thead>
                                         <tr>
